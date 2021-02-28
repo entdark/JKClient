@@ -171,18 +171,12 @@ namespace JKClient {
 			if (msg.CurSize <= 12) {
 				return;
 			}
-			int srdc = msg.ReadCount;
-			int sbit = msg.Bit;
-			bool soob = msg.OOB;
-			msg.OOB = false;
-			msg.Bit = 0;
-			msg.ReadCount = 0;
+			msg.SaveState();
+			msg.ResetState();
 			int serverId = msg.ReadLong();
 			int messageAcknowledge = msg.ReadLong();
 			int reliableAcknowledge = msg.ReadLong();
-			msg.OOB = soob;
-			msg.Bit = sbit;
-			msg.ReadCount = srdc;
+			msg.RestoreState();
 			fixed (sbyte *b = this.serverCommands[reliableAcknowledge & (JKClient.MaxReliableCommands-1)]) {
 				fixed (byte *d = msg.Data) {
 					byte *str = (byte*)b;
@@ -203,14 +197,10 @@ namespace JKClient {
 			}
 		}
 		private unsafe void Decode(Message msg) {
-			int srdc = msg.ReadCount;
-			int sbit = msg.Bit;
-			bool soob = msg.OOB;
-			msg.OOB = false;
+			msg.SaveState();
+			msg.Bitstream();
 			int reliableAcknowledge = msg.ReadLong();
-			msg.OOB = soob;
-			msg.Bit = sbit;
-			msg.ReadCount = srdc;
+			msg.RestoreState();
 			fixed (sbyte *b = this.reliableCommands[reliableAcknowledge & (JKClient.MaxReliableCommands-1)]) {
 				fixed (byte *d = msg.Data) {
 					byte *str = (byte*)b;

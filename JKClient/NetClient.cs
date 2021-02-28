@@ -62,8 +62,7 @@ namespace JKClient {
 			msg[3] = 0xff;
 			byte []dataMsg = Common.Encoding.GetBytes(data);
 			dataMsg.CopyTo(msg, 4);
-			var mbuf = new Message() {
-				Data = msg,
+			var mbuf = new Message(msg, msg.Length) {
 				CurSize = length+4
 			};
 			Huffman.Compress(mbuf, 12);

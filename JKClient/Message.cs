@@ -8,15 +8,18 @@ namespace JKClient {
 		private const int FloatIntBias = (1<<(Message.FloatIntBits-1));
 		public const int MaxMsgLen = 49152;
 		private int bit = 0;
+		private int bitSaved = 0;
+		private bool oobSaved = false;
+		private int readCountSaved = 0;
 		public bool Overflowed { get; private set; }
-		public bool OOB { get; set; }
-		public byte []Data { get; set; }
+		public bool OOB { get; private set; }
+		public byte []Data { get; private set; }
 		public int MaxSize { get; private set; }
 		public int CurSize { get; set; } = 0;
-		public int ReadCount { get; set; } = 0;
+		public int ReadCount { get; private set; } = 0;
 		public int Bit {
 			get => this.bit;
-			set => this.bit = value;
+			private set => this.bit = value;
 		}
 		private static Huffman compressor, decompressor;
 		static Message() {
@@ -37,6 +40,21 @@ namespace JKClient {
 		}
 		public void Bitstream() {
 			this.OOB = false;
+		}
+		public void SaveState() {
+			this.bitSaved = this.bit;
+			this.oobSaved = this.OOB;
+			this.readCountSaved = this.ReadCount;
+		}
+		public void RestoreState() {
+			this.bit = this.bitSaved;
+			this.OOB = this.oobSaved;
+			this.ReadCount = this.readCountSaved;
+		}
+		public void ResetState() {
+			this.bit = 0;
+			this.OOB = false;
+			this.ReadCount = 0;
 		}
 		public unsafe void WriteBits(int value, int bits) {
 			if (this.MaxSize - this.CurSize < 4) {

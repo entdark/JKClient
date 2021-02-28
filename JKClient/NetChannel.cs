@@ -26,6 +26,7 @@ namespace JKClient {
 		public unsafe bool Process(Message msg) {
 			msg.BeginReading(true);
 			int sequence = msg.ReadLong();
+			msg.SaveState();
 			bool fragmented;
 			if ((sequence & NetChannel.FragmentBit) != 0) {
 				sequence &= ~NetChannel.FragmentBit;
@@ -71,8 +72,7 @@ namespace JKClient {
 				Array.Copy(this.fragmentBuffer, 0, msg.Data, 4, this.fragmentLength);
 				msg.CurSize = this.fragmentLength + 4;
 				this.fragmentLength = 0;
-				msg.ReadCount = 4;
-				msg.Bit = 32;
+				msg.RestoreState();
 				return true;
 			}
 			this.incomingSequence = sequence;
