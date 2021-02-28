@@ -5,7 +5,7 @@ An assetsless (headless) game client library for Jedi Knight: Jedi Academy and J
 ```csharp
 var jkclient = new JKClient();
 jkclient.Start(ExceptionCallback);
-jkclient.Connect("192.168.0.1", ProtocolVersion.Protocol26);
+await jkclient.Connect("192.168.0.1", ProtocolVersion.Protocol26);
 jkclient.ServerCommandExecutedCallback = ServerCommandExecutedCallback;
 jkclient.Disconnect();
 jkclient.Stop();
@@ -21,21 +21,21 @@ void ServerCommandExecutedCallback(Command command) {
 ```csharp
 var serverBrowser = new ServerBrowser();
 serverBrowser.Start(ExceptionCallback);
-var servers = serverBrowser.GetNewList();
-servers = serverBrowser.RefreshList();
+var servers = await serverBrowser.GetNewList();
+servers = await serverBrowser.RefreshList();
 serverBrowser.Stop();
 serverBrowser.Dispose();
 ```
 
 ```csharp
-void Task ExceptionCallback(JKClientException exception) {
+Task ExceptionCallback(JKClientException exception) {
 	Debug.WriteLine(exception);
 }
 ```
 
 ## Supported OSs
 The library targets .NET Standard 2.1 (optionally .NET Standard 2.0), that means that the library can be ran on Windows, Mac, Linux, iOS, Android and others:
-https://docs.microsoft.com/ru-ru/dotnet/standard/net-standard
+https://docs.microsoft.com/en-us/dotnet/standard/net-standard
 
 ## License
 Dual license:
