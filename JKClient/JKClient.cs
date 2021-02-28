@@ -11,11 +11,10 @@ namespace JKClient {
 		private const int MaxReliableCommands = 128;
 		private const int MaxPacketUserCmds = 32;
 		private const string DefaultName = "AssetslessClient";
-		private const string UserInfo = "\\name\\"+JKClient.DefaultName+"\\rate\\25000\\snaps\\40\\model\\kyle/default\\forcepowers\\7-1-032330000000001333\\color1\\4\\color2\\4\\handicap\\100\\teamtask\\0\\sex\\male\\password\\\\cg_predictItems\\1\\saber1\\single_1\\saber2\\none\\char_color_red\\255\\char_color_green\\255\\char_color_blue\\255";
+		private const string UserInfo = "\\name\\"+JKClient.DefaultName+"\\rate\\25000\\snaps\\40\\model\\kyle/default\\forcepowers\\7-1-032330000000001333\\color1\\4\\color2\\4\\handicap\\100\\teamtask\\0\\sex\\male\\password\\\\cg_predictItems\\1\\saber1\\single_1\\saber2\\none\\char_color_red\\255\\char_color_green\\255\\char_color_blue\\255\\engine\\jkclient\\assets\\0";
 		private readonly Random random = new Random();
 		private readonly int port;
 		private readonly InfoString userInfoString = new InfoString(UserInfo);
-		private bool userInfoSent = false;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
 		private int clientNum = 0;
@@ -34,13 +33,13 @@ namespace JKClient {
 		private int lastExecutedServerCommand = 0;
 		private sbyte [][]serverCommands = new sbyte[JKClient.MaxReliableCommands][];
 		private NetChannel netChannel;
-		public Action<ServerInfo> ServerInfoChangedCallback;
 #endregion
 #region ClientStatic
 		private int realTime = 0;
 		public ConnectionStatus Status { get; private set; }
 		private string servername;
 #endregion
+		public Action<ServerInfo> ServerInfoChangedCallback;
 		internal ProtocolVersion Protocol { get; private set; } = ProtocolVersion.Protocol26;
 		internal ClientVersion Version { get; private set; } = ClientVersion.JA_v1_01;
 		public string Name {
@@ -53,20 +52,21 @@ namespace JKClient {
 					name = name.Substring(0, 31);
 				}
 				this.userInfoString["name"] = name;
-				if (this.Status < ConnectionStatus.Challenging) {
-					return;
-				}
-				this.AddReliableCommand($"userinfo \"{this.userInfoString}\"");
+				this.UpdateUserInfo();
 			}
 		}
 		public string Password {
 			get => this.userInfoString["password"];
 			set {
 				this.userInfoString["password"] = value;
-				if (this.Status < ConnectionStatus.Challenging) {
-					return;
-				}
-				this.AddReliableCommand($"userinfo \"{this.userInfoString}\"");
+				this.UpdateUserInfo();
+			}
+		}
+		public Guid JAGuid {
+			get => Guid.TryParse(this.userInfoString["ja_guid"], out Guid guid) ? guid : Guid.Empty;
+			set {
+				this.userInfoString["ja_guid"] = value.ToString();
+				this.UpdateUserInfo();
 			}
 		}
 		private ClientInfo []clientInfo = new ClientInfo[Common.MaxClients];
@@ -120,7 +120,6 @@ namespace JKClient {
 				}
 				lastTime = frameTime;
 				this.realTime += msec;
-//				this.CheckUserinfo();
 				this.SendCmd();
 				this.CheckForResend();
 				this.SetTime();
@@ -130,14 +129,24 @@ namespace JKClient {
 				await Task.Delay(8);
 			}
 		}
-		private void CheckUserinfo() {
+		public void SetUserInfoKeyValue(string key, string value) {
+			key = key.ToLower();
+			if (key == "name") {
+				this.Name = value;
+			} else if (key == "password") {
+				this.Password = value;
+			} else if (key == "ja_guid") {
+				this.JAGuid = Guid.TryParse(value, out Guid guid) ? guid : Guid.Empty;
+			} else {
+				this.userInfoString[key] = value;
+				this.UpdateUserInfo();
+			}
+		}
+		private void UpdateUserInfo() {
 			if (this.Status < ConnectionStatus.Challenging) {
 				return;
 			}
-			if (!userInfoSent) {
-				userInfoSent = true;
-				this.AddReliableCommand($"userinfo \"{userInfoString}\"");
-			}
+			this.AddReliableCommand($"userinfo \"{userInfoString}\"");
 		}
 		private void CheckForResend() {
 			if (this.Status != ConnectionStatus.Connecting && this.Status != ConnectionStatus.Challenging) {
@@ -155,7 +164,6 @@ namespace JKClient {
 			case ConnectionStatus.Challenging:
 				string data = $"connect \"{this.userInfoString}\\protocol\\{this.Protocol.ToString("d")}\\qport\\{this.port}\\challenge\\{this.challenge}\"";
 				this.OutOfBandData(this.serverAddress, data, data.Length);
-				userInfoSent = true;
 				break;
 			}
 		}
