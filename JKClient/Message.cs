@@ -508,7 +508,7 @@ namespace JKClient {
 				});
 			}
 			public void Add(string fieldName, int extraOffset, int bits, NetFieldAdjust adjust = null) {
-				this.Add(Marshal.OffsetOf(netType, fieldName).ToInt32() + extraOffset, bits, adjust);
+				this.Add(Marshal.OffsetOf(this.netType, fieldName).ToInt32() + extraOffset, bits, adjust);
 			}
 			public void Add(string fieldName, int bits, NetFieldAdjust adjust = null) {
 				this.Add(fieldName, 0, bits, adjust);

@@ -18,7 +18,7 @@ namespace JKClient {
 			}
 			this.Started = true;
 			this.cts = new CancellationTokenSource();
-			Task.Run(this.Run, cts.Token)
+			Task.Run(this.Run, this.cts.Token)
 				.ContinueWith((t) => {
 					exceptionCallback?.Invoke(new JKClientException(t.Exception));
 				}, TaskContinuationOptions.OnlyOnFaulted);
