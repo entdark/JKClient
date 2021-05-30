@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 namespace JKClient {
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct PlayerState {
 		public int Dummy;
 		public PlayerMoveType PlayerMoveType;
@@ -16,8 +16,8 @@ namespace JKClient {
 		public int ClientNum;
 		public int EntityEventSequence;
 		public int VehicleNum;
-		//IMPORTANT: update all playerStateFields in Message after adding new fields
 		public unsafe fixed int Stats[(int)Stat.Max];
+		//IMPORTANT: update all playerStateFields in Message after adding new fields
 		public static readonly PlayerState Null = new PlayerState();
 		public const int MaxEvents = 2;
 		public unsafe void ToEntityState(ref EntityState es) {
