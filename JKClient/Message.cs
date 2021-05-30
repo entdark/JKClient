@@ -21,7 +21,7 @@ namespace JKClient {
 			get => this.bit;
 			private set => this.bit = value;
 		}
-		private static Huffman compressor, decompressor;
+		private static readonly Huffman compressor, decompressor;
 		static Message() {
 			Message.compressor = new Huffman();
 			Message.decompressor = new Huffman(true);
