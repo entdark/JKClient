@@ -11,18 +11,28 @@ namespace JKClient {
 		private const ushort PortMasterJO = 28060;
 		private const ushort PortMasterJA = 29060;
 		private const int RefreshTimeout = 3000;
-		private readonly KeyValuePair<string, ushort> []masterServers;
+		private readonly List<ServerAddress> masterServers;
 		private readonly Dictionary<NetAddress, ServerInfo> globalServers;
 		private TaskCompletionSource<IEnumerable<ServerInfo>> getListTCS, refreshListTCS;
 		private long serverRefreshTimeout = 0L;
-		public ServerBrowser() {
-			this.masterServers = new KeyValuePair<string, ushort>[] {
-				new KeyValuePair<string, ushort>(ServerBrowser.MasterServerName, NetSystem.PortMasterJA),
-				new KeyValuePair<string, ushort>(ServerBrowser.MasterServerName2, NetSystem.PortMasterJA),
-				new KeyValuePair<string, ushort>(ServerBrowser.MasterServerName2, NetSystem.PortMasterJO),
-				new KeyValuePair<string, ushort>(ServerBrowser.MasterServerName3, NetSystem.PortMasterJO),
-				new KeyValuePair<string, ushort>(ServerBrowser.MasterServerName4, NetSystem.PortMasterJO)
-			};
+		public ServerBrowser(IEnumerable<ServerAddress> customMasterServers = null, bool customOnly = false) {
+			if (customOnly && customMasterServers == null) {
+				throw new JKClientException(new ArgumentNullException(nameof(customMasterServers)));
+			}
+			if (customOnly) {
+				this.masterServers = new List<ServerAddress>(customMasterServers);
+			} else {
+				this.masterServers = new List<ServerAddress>() {
+					new ServerAddress(ServerBrowser.MasterServerName, ServerBrowser.PortMasterJA),
+					new ServerAddress(ServerBrowser.MasterServerName2, ServerBrowser.PortMasterJA),
+					new ServerAddress(ServerBrowser.MasterServerName2, ServerBrowser.PortMasterJO),
+					new ServerAddress(ServerBrowser.MasterServerName3, ServerBrowser.PortMasterJO),
+					new ServerAddress(ServerBrowser.MasterServerName4, ServerBrowser.PortMasterJO)
+				};
+				if (customMasterServers != null) {
+					this.masterServers.AddRange(customMasterServers);
+				}
+			}
 			this.globalServers = new Dictionary<NetAddress, ServerInfo>(new NetAddressComparer());
 		}
 		private protected override async Task Run() {
@@ -45,7 +55,7 @@ namespace JKClient {
 			this.getListTCS = new TaskCompletionSource<IEnumerable<ServerInfo>>();
 			this.globalServers.Clear();
 			foreach (var masterServer in this.masterServers) {
-				var address = NetSystem.StringToAddress(masterServer.Key, masterServer.Value);
+				var address = NetSystem.StringToAddress(masterServer.Name, masterServer.Port);
 				if (address == null) {
 					continue;
 				}
@@ -150,6 +160,14 @@ namespace JKClient {
 					this.OutOfBandPrint(serverInfo.Address, "getstatus");
 				}
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
+			}
+		}
+		public sealed class ServerAddress {
+			public string Name { get; private set; }
+			public ushort Port { get; private set; }
+			public ServerAddress(string name, ushort port) {
+				this.Name = name;
+				this.Port = port;
 			}
 		}
 	}
