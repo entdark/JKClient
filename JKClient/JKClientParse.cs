@@ -169,13 +169,10 @@ namespace JKClient {
 				msg.ReadLong();
 			}
 		}
-		private unsafe void SystemInfoChanged() {
-			fixed (sbyte *s = this.gameState.StringData) {
-				sbyte *systemInfoCS = s + this.gameState.StringOffsets[GameState.SystemInfo];
-				string systemInfoCSStr = Common.ToString(systemInfoCS, Common.StrLen(systemInfoCS));
-				var infoString = new InfoString(systemInfoCSStr);
-				this.serverId = infoString["sv_serverid"].Atoi();
-			}
+		private void SystemInfoChanged() {
+			string systemInfo = this.GetConfigstring(GameState.SystemInfo);
+			var infoString = new InfoString(systemInfo);
+			this.serverId = infoString["sv_serverid"].Atoi();
 		}
 		private unsafe void ClearState() {
 			this.snap = new Snapshot();
