@@ -69,13 +69,13 @@ namespace JKClient {
 				this.UpdateUserInfo();
 			}
 		}
-		private ClientInfo []clientInfo = new ClientInfo[Common.MaxClients];
+		private readonly ClientInfo []clientInfo = new ClientInfo[Common.MaxClients];
 		public ClientInfo []ClientInfo {
 			get {
 				return this.clientInfo;
 			}
 		}
-		private ServerInfo serverInfo = new ServerInfo();
+		private readonly ServerInfo serverInfo = new ServerInfo();
 		public unsafe ServerInfo ServerInfo {
 			get {
 				fixed (sbyte *s = this.gameState.StringData) {
