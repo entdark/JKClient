@@ -102,9 +102,9 @@ namespace JKClient {
 		public void WriteByte(int c) {
 			this.WriteBits(c, 8);
 		}
-		public void WriteData(byte []data, int length) {
-			for (int i = 0; i < length; i++) {
-				this.WriteByte(data[i]);
+		public unsafe void WriteData(byte []data, int length) {
+			fixed (byte *d = data) {
+				this.WriteData(d, length);
 			}
 		}
 		public unsafe void WriteData(byte *data, int length) {
@@ -120,11 +120,11 @@ namespace JKClient {
 		}
 		public unsafe void WriteString(sbyte []s) {
 			if (s == null || s.Length <= 0) {
-				this.WriteData(new byte []{ 0 }, 1);
+				this.WriteByte(0);
 			} else {
 				int l = Common.StrLen(s);
 				if (l >= Common.MaxStringChars) {
-					this.WriteData(new byte []{ 0 }, 1);
+					this.WriteByte(0);
 					return;
 				}
 				byte []b = new byte[l+1];
