@@ -51,11 +51,6 @@ namespace JKClient {
 			this.OOB = this.oobSaved;
 			this.ReadCount = this.readCountSaved;
 		}
-		public void ResetState() {
-			this.bit = 0;
-			this.OOB = false;
-			this.ReadCount = 0;
-		}
 		public unsafe void WriteBits(int value, int bits) {
 			if (this.MaxSize - this.CurSize < 4) {
 				this.Overflowed = true;

@@ -172,7 +172,7 @@ namespace JKClient {
 				return;
 			}
 			msg.SaveState();
-			msg.ResetState();
+			msg.BeginReading();
 			int serverId = msg.ReadLong();
 			int messageAcknowledge = msg.ReadLong();
 			int reliableAcknowledge = msg.ReadLong();
