@@ -494,7 +494,7 @@ namespace JKClient {
 				fromHandle.Free();
 			}
 		}
-		public unsafe delegate void NetFieldAdjust(int *value);
+		private unsafe delegate void NetFieldAdjust(int *value);
 		private class NetFieldsArray : List<NetField> {
 			private readonly Type netType;
 			public NetFieldsArray(Type netType) {
