@@ -8,7 +8,7 @@ namespace JKClient {
 		private Snapshot? cgSnap = null, cgNextSnap = null;
 		private int cgServerCommandSequence = 0;
 		private ClientEntity []cgEntities = new ClientEntity[Common.MaxGEntities];
-		public Action<Command> ServerCommandExecutedCallback;
+		public event Action<CommandEventArgs> ServerCommandExecuted;
 		private unsafe void InitCGame() {
 			this.Status = ConnectionStatus.Primed;
 			this.cgServerCommandSequence = this.serverCommandSequence;
@@ -212,14 +212,14 @@ namespace JKClient {
 			string s = Common.ToString(sc);
 			var command = new Command(s);
 			string cmd = command.Argv(0);
-			this.ServerCommandExecutedCallback?.Invoke(command);
+			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
 			if (string.Compare(cmd, "disconnect", true) == 0) {
 				this.Disconnect();
 				return true;
 			} else if (string.Compare(cmd, "cs", true) == 0) {
 				this.ConfigstringModified(command, sc);
 				this.CGConfigstringModified(command);
-				this.ServerInfoChangedCallback?.Invoke(this.ServerInfo);
+				this.ServerInfoChanged?.Invoke(this.ServerInfo);
 				return true;
 			}
 			return true;
@@ -365,7 +365,7 @@ namespace JKClient {
 					string description = this.GetConfigstring(this.GetConfigstringIndex(Configstring.Sounds) + es.EventParm);
 					string message = $"<{this.ClientInfo[clientNum].Name}^7\u0019: {description}>";
 					var command = new Command(new string []{ "chat", message });
-					this.ServerCommandExecutedCallback?.Invoke(command);
+					this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
 				}
 				break;
 			}

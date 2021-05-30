@@ -135,7 +135,7 @@ namespace JKClient {
 					throw new JKClientException("ParseGamestate: bad command byte");
 				}
 			}
-			this.ServerInfoChangedCallback?.Invoke(this.ServerInfo);
+			this.ServerInfoChanged?.Invoke(this.ServerInfo);
 			this.clientNum = msg.ReadLong();
 			this.checksumFeed = msg.ReadLong();
 			if (!this.IsJO()) {

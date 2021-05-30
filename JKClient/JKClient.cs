@@ -39,7 +39,7 @@ namespace JKClient {
 		public ConnectionStatus Status { get; private set; }
 		private string servername;
 #endregion
-		public Action<ServerInfo> ServerInfoChangedCallback;
+		public event Action<ServerInfo> ServerInfoChanged;
 		internal ProtocolVersion Protocol { get; private set; } = ProtocolVersion.Protocol26;
 		internal ClientVersion Version { get; private set; } = ClientVersion.JA_v1_01;
 		public string Name {
@@ -107,7 +107,7 @@ namespace JKClient {
 			while (true) {
 				if (this.realTime - this.lastPacketTime > JKClient.LastPacketTimeOut && this.Status == ConnectionStatus.Active) {
 					var cmd = new Command(new string []{ "disconnect", "Last packet from server was too long ago" });
-					this.ServerCommandExecutedCallback?.Invoke(cmd);
+					this.ServerCommandExecuted?.Invoke(new CommandEventArgs(cmd));
 				}
 				if (!this.Started) {
 					break;
@@ -285,7 +285,7 @@ namespace JKClient {
 				if (this.realTime - this.lastPacketTime < 3000) {
 					return;
 				}
-				this.ServerCommandExecutedCallback?.Invoke(command);
+				this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
 				this.Disconnect();
 			} else if (string.Compare(c, "echo", true) == 0) {
 				this.OutOfBandPrint(address, command.Argv(1));
@@ -293,7 +293,7 @@ namespace JKClient {
 				if (address == this.serverAddress) {
 					s = msg.ReadStringAsString();
 					var cmd = new Command(new string []{ "print", s });
-					this.ServerCommandExecutedCallback?.Invoke(cmd);
+					this.ServerCommandExecuted?.Invoke(new CommandEventArgs(cmd));
 					Debug.WriteLine(s);
 				}
 			} else {
