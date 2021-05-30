@@ -134,26 +134,28 @@ namespace JKClient {
 			hash = (hash ^ (hash >> 10) ^ (hash >> 20));
 			return hash;
 		}
-		internal static unsafe string ToString(byte *b, int len) {
-			byte []s = Common.FilterUnusedEncodingCharacters(b, len);
-			return Common.Encoding.GetString(s).TrimEnd('\0');
+		internal static unsafe string ToString(byte *b, int len, Encoding encoding = null) {
+			bool allowAll = encoding != null || Common.AllowAllEncodingCharacters;
+			byte []s = Common.FilterUnusedEncodingCharacters(b, len, allowAll);
+			encoding = encoding ?? Common.Encoding;
+			return encoding.GetString(s).TrimEnd('\0');
 		}
-		internal static unsafe string ToString(sbyte* b, int len) {
-			return Common.ToString((byte*)b, len);
+		internal static unsafe string ToString(sbyte* b, int len, Encoding encoding = null) {
+			return Common.ToString((byte*)b, len, encoding);
 		}
-		internal static unsafe string ToString(byte []b) {
+		internal static unsafe string ToString(byte []b, Encoding encoding = null) {
 			fixed (byte *s = b) {
-				return Common.ToString(s, b.Length);
+				return Common.ToString(s, b.Length, encoding);
 			}
 		}
-		internal static string ToString(sbyte []b) {
-			return Common.ToString((byte[])(Array)b);
+		internal static string ToString(sbyte []b, Encoding encoding = null) {
+			return Common.ToString((byte[])(Array)b, encoding);
 		}
-		private static unsafe byte []FilterUnusedEncodingCharacters(byte *b, int len) {
+		private static unsafe byte []FilterUnusedEncodingCharacters(byte *b, int len, bool allowAll) {
 			byte []s = new byte[len];
 			Marshal.Copy((IntPtr)b, s, 0, len);
 			//fonts in JK don't support fancy characters, so we won't
-			if (!Common.AllowAllEncodingCharacters) {
+			if (!allowAll) {
 				for (int i = 0; i < len; i++) {
 					if (s[i] > 126 && s[i] < 160) { //'~' ' '
 						s[i] = 46; //'.'

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace JKClient {
@@ -364,22 +365,23 @@ namespace JKClient {
 				this.netChannel.TransmitNextFragment();
 			}
 		}
-		private unsafe void AddReliableCommand(string cmd, bool disconnect = false) {
+		private unsafe void AddReliableCommand(string cmd, bool disconnect = false, Encoding encoding = null) {
 			int unacknowledged = this.reliableSequence - this.reliableAcknowledge;
 			lock (this.reliableCommands.SyncRoot) {
 				fixed (sbyte *reliableCommand = this.reliableCommands[++this.reliableSequence & (JKClient.MaxReliableCommands-1)]) {
-					Marshal.Copy(Common.Encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), cmd.Length+1);
+					encoding = encoding ?? Common.Encoding;
+					Marshal.Copy(encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), encoding.GetByteCount(cmd)+1);
 				}
 			}
 		}
-		public void ExecuteCommand(string cmd) {
+		public void ExecuteCommand(string cmd, Encoding encoding = null) {
 			if (cmd.StartsWith("rcon ")) {
-				this.ExecuteCommandDirectly(cmd);
+				this.ExecuteCommandDirectly(cmd, encoding);
 			} else {
-				this.AddReliableCommand(cmd);
+				this.AddReliableCommand(cmd, encoding: encoding);
 			}
 		}
-		private void ExecuteCommandDirectly(string cmd) {
+		private void ExecuteCommandDirectly(string cmd, Encoding encoding) {
 			this.OutOfBandPrint(this.serverAddress, cmd);
 			return;
 			byte []cmdBytes = Common.Encoding.GetBytes(cmd+'\0');

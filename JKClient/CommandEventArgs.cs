@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace JKClient {
-	public class CommandEventArgs : EventArgs {
-		public string Command { get; internal set; }
-		public Command Arguments { get; internal set; }
+	public sealed class CommandEventArgs {
+		public Command Command { get; private set; }
+		public Command UTF8Command { get; private set; }
 		internal CommandEventArgs() {}
-		internal CommandEventArgs(Command command) {
-			this.Command = command.Argv(0);
-			this.Arguments = command;
+		internal CommandEventArgs(Command command, Command utf8Command = null) {
+			this.Command = command;
+			this.UTF8Command = utf8Command;
 		}
 	}
 }

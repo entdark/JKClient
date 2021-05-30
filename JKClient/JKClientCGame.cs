@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace JKClient {
 	public sealed partial class JKClient {
@@ -211,8 +212,10 @@ namespace JKClient {
 			sbyte []sc = this.serverCommands[serverCommandNumber & (JKClient.MaxReliableCommands - 1)];
 			string s = Common.ToString(sc);
 			var command = new Command(s);
+			s = Common.ToString(sc, Encoding.UTF8);
+			var utf8Command = new Command(s);
 			string cmd = command.Argv(0);
-			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
+			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command, utf8Command));
 			if (string.Compare(cmd, "disconnect", true) == 0) {
 				this.Disconnect();
 				return true;
