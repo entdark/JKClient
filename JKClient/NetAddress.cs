@@ -61,7 +61,7 @@ namespace JKClient {
 			return NetSystem.StringToAddress(address);
 		}
 	}
-	internal sealed class NetAddressComparer : IEqualityComparer<NetAddress> {
+	public sealed class NetAddressComparer : IEqualityComparer<NetAddress> {
 		public bool Equals(NetAddress x, NetAddress y) {
 			return x == y;
 		}
