@@ -6,15 +6,16 @@ An assetsless (headless) game client library for Jedi Knight: Jedi Academy and J
 var jkclient = new JKClient();
 jkclient.Start(ExceptionCallback);
 await jkclient.Connect("192.168.0.1", ProtocolVersion.Protocol26);
-jkclient.ServerCommandExecutedCallback = ServerCommandExecutedCallback;
+jkclient.ServerCommandExecuted += ServerCommandExecuted;
 jkclient.Disconnect();
+jkclient.ServerCommandExecuted -= ServerCommandExecuted;
 jkclient.Stop();
 jkclient.Dispose();
 ```
 
 ```csharp
-void ServerCommandExecutedCallback(Command command) {
-	Debug.WriteLine(command.Argv(0));
+void ServerCommandExecuted(CommandEventArgs commandEventArgs) {
+	Debug.WriteLine(commandEventArgs.Command.Argv(0));
 }
 ```
 
