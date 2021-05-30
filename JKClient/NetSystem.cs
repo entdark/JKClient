@@ -6,8 +6,6 @@ using System.Net.Sockets;
 
 namespace JKClient {
 	internal sealed class NetSystem : IDisposable {
-		public const ushort PortMasterJO = 28060;
-		public const ushort PortMasterJA = 29060;
 		private const ushort PortServer = 29070;
 		private Socket ipSocket;
 		private IPEndPoint endPoint;

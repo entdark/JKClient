@@ -8,6 +8,8 @@ namespace JKClient {
 		private const string MasterServerName2 = "master.jkhub.org";
 		private const string MasterServerName3 = "masterjk2.ravensoft.com";
 		private const string MasterServerName4 = "master.jk2mv.org";
+		private const ushort PortMasterJO = 28060;
+		private const ushort PortMasterJA = 29060;
 		private const int RefreshTimeout = 3000;
 		private readonly KeyValuePair<string, ushort> []masterServers;
 		private readonly Dictionary<NetAddress, ServerInfo> globalServers;
