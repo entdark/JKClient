@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 namespace JKClient {
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct EntityState {
 		//Dummy is used as any value parsed in ReadDeltaEntity, as being offset by 0
 		public int Dummy;
