@@ -85,14 +85,14 @@ namespace JKClient {
 						int nbits = bits&7;
 						for (int i = 0; i < nbits; i++) {
 							Message.compressor.PutBit((value&1), this.Data, ref this.bit);
-							value = (value>>1);
+							value >>= 1;
 						}
-						bits = bits - nbits;
+						bits -= nbits;
 					}
 					if (bits != 0) {
 						for (int i = 0; i < bits; i+=8) {
 							Message.compressor.OffsetTransmit((value&0xff), this.Data, ref this.bit);
-							value = (value>>8);
+							value >>= 8;
 						}
 					}
 					this.CurSize = (this.bit>>3)+1;
@@ -184,7 +184,7 @@ namespace JKClient {
 						for (int i = 0; i < nbits; i++) {
 							value |= (Message.decompressor.GetBit(this.Data, ref this.bit)<<i);
 						}
-						bits = bits - nbits;
+						bits -= nbits;
 					}
 					if (bits != 0) {
 						for (int i = 0; i < bits; i+=8) {
