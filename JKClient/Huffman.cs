@@ -30,8 +30,9 @@ namespace JKClient {
 			this.tree->weight = 0;
 			this.lhead->next = this.lhead->prev = null;
 			this.tree->parent = this.tree->left = this.tree->right = null;
-			if (!decompressor)
+			if (!decompressor) {
 				((Node**)this.locP)[Huffman.NotYetTransmitted] = this.tree;
+			}
 		}
 		private void Transmit(int ch, byte []fout) {
 			if (((Node**)this.locP)[ch] == null) {
