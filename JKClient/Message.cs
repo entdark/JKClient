@@ -380,10 +380,12 @@ namespace JKClient {
 			}
 		}
 		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, ClientVersion version, GameMod gameMod, bool isVehicle = false) {
-			var fromHandle = new GCHandle();
+			GCHandle fromHandle;
 			if (from == null) {
 				fromHandle = GCHandle.Alloc(PlayerState.Null, GCHandleType.Pinned);
 				from = (PlayerState *)fromHandle.AddrOfPinnedObject();
+			} else {
+				fromHandle = new GCHandle();
 			}
 			*to = *from;
 			bool isPilot = false;
