@@ -79,18 +79,12 @@ namespace JKClient {
 		private readonly ServerInfo serverInfo = new ServerInfo();
 		public unsafe ServerInfo ServerInfo {
 			get {
-				fixed (sbyte *s = this.gameState.StringData) {
-					sbyte *serverInfoCS = s + this.gameState.StringOffsets[GameState.ServerInfo];
-					string serverInfoCSStr = Common.ToString(serverInfoCS, Common.StrLen(serverInfoCS));
-					var infoString = new InfoString(serverInfoCSStr);
-					serverInfo.Address = this.serverAddress;
-					serverInfo.Clients = this.ClientInfo.Count(ci => ci.InfoValid);
-					serverInfo.SetConfigstringInfo(infoString);
-					if (serverInfo.Protocol == ProtocolVersion.Protocol15 && infoString["version"].Contains("v1.03")) {
-						serverInfo.Version = ClientVersion.JO_v1_03;
-					}
-					return serverInfo;
-				}
+				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
+				var infoString = new InfoString(serverInfoCSStr);
+				serverInfo.Address = this.serverAddress;
+				serverInfo.Clients = this.ClientInfo.Count(ci => ci.InfoValid);
+				serverInfo.SetConfigstringInfo(infoString);
+				return serverInfo;
 			}
 		}
 		public JKClient() {

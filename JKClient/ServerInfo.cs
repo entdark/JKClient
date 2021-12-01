@@ -55,7 +55,11 @@ namespace JKClient {
 			this.MaxClients = info["sv_maxclients"].Atoi();
 			this.GameType = (GameType)info["g_gametype"].Atoi();
 			this.Protocol = (ProtocolVersion)info["protocol"].Atoi();
-			this.Version = JKClient.GetVersion(this.Protocol);
+			if (this.Protocol == ProtocolVersion.Protocol15 && info["version"].Contains("v1.03")) {
+				this.Version = ClientVersion.JO_v1_03;
+			} else {
+				this.Version = JKClient.GetVersion(this.Protocol);
+			}
 			//JO doesn't have Power Duel, the rest game types match
 			if (JKClient.IsJO(this.Protocol) && this.GameType >= GameType.PowerDuel) {
 				this.GameType++;
