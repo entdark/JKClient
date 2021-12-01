@@ -294,36 +294,31 @@ namespace JKClient {
 			this.snapshots[this.snap.MessageNum & JKClient.PacketMask] = this.snap;
 			this.newSnapshots = true;
 		}
-		private unsafe void ParsePacketEntities(Message msg, Snapshot *oldSnap, Snapshot* newSnap) {
+		private unsafe void ParsePacketEntities(Message msg, Snapshot *oldSnap, Snapshot *newSnap) {
 			newSnap->ParseEntitiesNum = this.parseEntitiesNum;
 			newSnap->NumEntities = 0;
-			bool hasOldstate;
+			EntityState *oldstate;
+			GCHandle oldstateHandle = GCHandle.Alloc(this.parseEntities, GCHandleType.Pinned);
 			int oldindex = 0;
 			int oldnum;
 			int newnum = msg.ReadBits(Common.GEntitynumBits);
 			while (true) {
 				if (oldSnap != null && oldindex < oldSnap->NumEntities) {
-					hasOldstate = true;
-					fixed (EntityState *oldstate = &this.parseEntities[(oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1)]) {
-						oldnum = oldstate->Number;
-					}
+					oldstate = ((EntityState *)oldstateHandle.AddrOfPinnedObject()) + ((oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1));
+					oldnum = oldstate->Number;
 				} else {
-					hasOldstate = false;
+					oldstate = null;
 					oldnum = 99999;
 				}
 				fixed (EntityState *newstate = &this.parseEntities[this.parseEntitiesNum]) {
-					if (!hasOldstate && (newnum == (Common.MaxGEntities-1))) {
+					if (oldstate == null && (newnum == (Common.MaxGEntities-1))) {
 						break;
 					} else if (oldnum < newnum) {
-						fixed (EntityState *oldstate = &this.parseEntities[(oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1)]) {
-							*newstate = *oldstate;
-						}
+						*newstate = *oldstate;
 						oldindex++;
 					} else if (oldnum == newnum) {
-						fixed (EntityState *oldstate = &this.parseEntities[(oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1)]) {
-							msg.ReadDeltaEntity(oldstate, newstate, newnum, this.Version, this.gameMod);
-						}
 						oldindex++;
+						msg.ReadDeltaEntity(oldstate, newstate, newnum, this.Version, this.gameMod);
 						newnum = msg.ReadBits(Common.GEntitynumBits);
 					} else if (oldnum > newnum) {
 						fixed (EntityState *bl = &this.entityBaselines[newnum]) {
@@ -338,6 +333,7 @@ namespace JKClient {
 					newSnap->NumEntities++;
 				}
 			}
+			oldstateHandle.Free();
 		}
 		private bool CanParseSnapshot() {
 			switch (this.gameMod) {
