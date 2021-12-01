@@ -61,12 +61,11 @@ namespace JKClient {
 			return NetSystem.StringToAddress(address);
 		}
 	}
-	public sealed class NetAddressComparer : IEqualityComparer<NetAddress> {
-		public bool Equals(NetAddress x, NetAddress y) {
+	public sealed class NetAddressComparer : EqualityComparer<NetAddress> {
+		public override bool Equals(NetAddress x, NetAddress y) {
 			return x == y;
 		}
-
-		public int GetHashCode(NetAddress obj) {
+		public override int GetHashCode(NetAddress obj) {
 			return obj.GetHashCode();
 		}
 	}
