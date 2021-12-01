@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JKClient {
+﻿namespace JKClient {
 	public enum ClientVersion {
 		JA_v1_00 = 1_00,
 		JA_v1_01 = 1_01,
