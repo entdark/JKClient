@@ -26,7 +26,7 @@ namespace JKClient {
 			Message.compressor = new Huffman();
 			Message.decompressor = new Huffman(true);
 			for (int i = 0; i < 256; i++) {
-				for (int j = 0; j < hData[i]; j++) {
+				for (int j = 0; j < Message.hData[i]; j++) {
 					Message.compressor.AddReference((byte)i);
 					Message.decompressor.AddReference((byte)i);
 				}
