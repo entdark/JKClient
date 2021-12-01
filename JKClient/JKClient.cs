@@ -369,7 +369,7 @@ namespace JKClient {
 			}
 		}
 		public void ExecuteCommand(string cmd, Encoding encoding = null) {
-			if (cmd.StartsWith("rcon ")) {
+			if (cmd.StartsWith("rcon ", StringComparison.OrdinalIgnoreCase)) {
 				this.ExecuteCommandDirectly(cmd, encoding);
 			} else {
 				this.AddReliableCommand(cmd, encoding: encoding);
