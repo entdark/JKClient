@@ -54,8 +54,9 @@ namespace JKClient {
 #if NETSTANDARD2_1
 			memSetDelegate(dst, val, size);
 #else
+			byte *dstp = (byte *)dst;
 			for (int i = 0; i < size; i++) {
-				((byte*)dst)[i] = val;
+				dstp[i] = val;
 			}
 #endif
 		}
