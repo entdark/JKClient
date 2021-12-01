@@ -372,7 +372,7 @@ namespace JKClient {
 				}
 			}
 			int size = msg.ReadShort();
-			if (size < 0 || size > sizeof(byte)*Message.MaxMsgLen) {
+			if (size < 0 || size > sizeof(byte)*Message.MaxLength) {
 				throw new JKClientException($"ParseDownload: Invalid size {size} for download chunk");
 			}
 			msg.ReadData(null, size);

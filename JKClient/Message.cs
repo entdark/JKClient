@@ -6,7 +6,7 @@ namespace JKClient {
 	internal sealed class Message {
 		private const int FloatIntBits = 13;
 		private const int FloatIntBias = (1<<(Message.FloatIntBits-1));
-		public const int MaxMsgLen = 49152;
+		public const int MaxLength = 49152;
 		private int bit = 0;
 		private int bitSaved = 0;
 		private bool oobSaved = false;

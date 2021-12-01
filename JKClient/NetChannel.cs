@@ -11,10 +11,10 @@ namespace JKClient {
 		private int incomingSequence = 0;
 		private int fragmentSequence = 0;
 		private int fragmentLength = 0;
-		private byte []fragmentBuffer = new byte[Message.MaxMsgLen];
+		private byte []fragmentBuffer = new byte[Message.MaxLength];
 		private int unsentFragmentStart = 0;
 		private int unsentLength = 0;
-		private byte []unsentBuffer = new byte[Message.MaxMsgLen];
+		private byte []unsentBuffer = new byte[Message.MaxLength];
 		public int OutgoingSequence { get; private set; } = 1;
 		public bool UnsentFragments { get; private set; } = false;
 		public NetAddress Address { get; private set; }
@@ -55,7 +55,7 @@ namespace JKClient {
 					return false;
 				}
 				if (fragmentLength < 0 || (msg.ReadCount + fragmentLength) > msg.CurSize ||
-					(this.fragmentLength + fragmentLength) > sizeof(byte)*Message.MaxMsgLen) {
+					(this.fragmentLength + fragmentLength) > sizeof(byte)*Message.MaxLength) {
 					return false;
 				}
 				Array.Copy(msg.Data, msg.ReadCount, this.fragmentBuffer, this.fragmentLength, fragmentLength);
@@ -79,7 +79,7 @@ namespace JKClient {
 			return true;
 		}
 		public void Transmit(int length, byte []data) {
-			if (length > Message.MaxMsgLen) {
+			if (length > Message.MaxLength) {
 				throw new JKClientException($"Transmit: length = {length}");
 			}
 			this.unsentFragmentStart = 0;
