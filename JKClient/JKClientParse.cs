@@ -29,43 +29,43 @@ namespace JKClient {
 				this.reliableAcknowledge = this.reliableSequence;
 			}
 			bool eof = false;
-			ServerCommandOperation cmd;
+			ServerCommandOperations cmd;
 			while (true) {
 				if (msg.ReadCount > msg.CurSize) {
 					throw new JKClientException("ParseServerMessage: read past end of server message");
 				}
-				cmd = (ServerCommandOperation)msg.ReadByte();
+				cmd = (ServerCommandOperations)msg.ReadByte();
 				//JO doesn't have setgame command, the rest commands match
-				if (this.IsJO() && cmd >= ServerCommandOperation.SetGame) {
+				if (this.IsJO() && cmd >= ServerCommandOperations.SetGame) {
 					cmd++;
 				}
-				if (cmd == ServerCommandOperation.EOF) {
+				if (cmd == ServerCommandOperations.EOF) {
 					break;
 				}
 				switch (cmd) {
 				default:
 					throw new JKClientException("ParseServerMessage: Illegible server message");
-				case ServerCommandOperation.Nop:
+				case ServerCommandOperations.Nop:
 					break;
-				case ServerCommandOperation.ServerCommand:
+				case ServerCommandOperations.ServerCommand:
 					this.ParseCommandString(msg);
 					break;
-				case ServerCommandOperation.Gamestate:
+				case ServerCommandOperations.Gamestate:
 					this.ParseGamestate(msg);
 					break;
-				case ServerCommandOperation.Snapshot:
+				case ServerCommandOperations.Snapshot:
 					this.ParseSnapshot(msg);
 					eof = true;
 					break;
-				case ServerCommandOperation.SetGame:
+				case ServerCommandOperations.SetGame:
 //					this.ParseSetGame(msg);
 					eof = true;
 					break;
-				case ServerCommandOperation.Download:
+				case ServerCommandOperations.Download:
 //					this.ParseDownload(msg);
 					eof = true;
 					break;
-				case ServerCommandOperation.MapChange:
+				case ServerCommandOperations.MapChange:
 					break;
 				}
 				if (eof) {
@@ -78,16 +78,16 @@ namespace JKClient {
 			this.ClearState();
 			this.serverCommandSequence = msg.ReadLong();
 			this.gameState.DataCount = 1;
-			ServerCommandOperation cmd;
+			ServerCommandOperations cmd;
 			while (true) {
-				cmd = (ServerCommandOperation)msg.ReadByte();
+				cmd = (ServerCommandOperations)msg.ReadByte();
 				//JO doesn't have setgame command, the rest commands match
-				if (this.IsJO() && cmd >= ServerCommandOperation.SetGame) {
+				if (this.IsJO() && cmd >= ServerCommandOperations.SetGame) {
 					cmd++;
 				}
-				if (cmd == ServerCommandOperation.EOF) {
+				if (cmd == ServerCommandOperations.EOF) {
 					break;
-				} else if (cmd == ServerCommandOperation.Configstring) {
+				} else if (cmd == ServerCommandOperations.Configstring) {
 					int i = msg.ReadShort();
 					if (i < 0 || i > GameState.MaxConfigstrings) {
 						throw new JKClientException("configstring > MaxConfigStrings");
@@ -121,7 +121,7 @@ namespace JKClient {
 						Marshal.Copy((byte[])(Array)s, 0, (IntPtr)(stringData+this.gameState.DataCount), len+1);
 					}
 					this.gameState.DataCount += len + 1;
-				} else if (cmd == ServerCommandOperation.Baseline) {
+				} else if (cmd == ServerCommandOperations.Baseline) {
 					int newnum = msg.ReadBits(Common.GEntitynumBits);
 					if (newnum < 0 || newnum >= Common.MaxGEntities) {
 						throw new JKClientException($"Baseline number out of range: {newnum}");
