@@ -376,14 +376,6 @@ namespace JKClient {
 		private void ExecuteCommandDirectly(string cmd, Encoding encoding) {
 			this.OutOfBandPrint(this.serverAddress, cmd);
 			return;
-			byte []cmdBytes = Common.Encoding.GetBytes(cmd+'\0');
-			byte []message = new byte[cmdBytes.Length + 4];
-			message[0] = unchecked((byte)-1);
-			message[1] = unchecked((byte)-1);
-			message[2] = unchecked((byte)-1);
-			message[3] = unchecked((byte)-1);
-			Array.Copy(cmdBytes, 0, message, 4, cmdBytes.Length);
-			this.net.SendPacket(message.Length, message, this.serverAddress);
 		}
 		public async Task Connect(ServerInfo serverInfo) {
 			if (serverInfo == null) {
