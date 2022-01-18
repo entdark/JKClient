@@ -318,10 +318,12 @@ namespace JKClient {
 			msg.WriteLong(this.serverId);
 			msg.WriteLong(this.serverMessageSequence);
 			msg.WriteLong(this.serverCommandSequence);
-			for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
-				msg.WriteByte((int)ClientCommandOperations.ClientCommand);
-				msg.WriteLong(i);
-				msg.WriteString(this.reliableCommands[i & (JKClient.MaxReliableCommands-1)]);
+			lock (this.reliableCommands.SyncRoot) {
+				for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
+					msg.WriteByte((int)ClientCommandOperations.ClientCommand);
+					msg.WriteLong(i);
+					msg.WriteString(this.reliableCommands[i & (JKClient.MaxReliableCommands-1)]);
+				}
 			}
 			int oldPacketNum = (this.netChannel.OutgoingSequence - 1 - 1) & JKClient.PacketMask;
 			int count = this.cmdNumber - this.outPackets[oldPacketNum].CommandNumber;
