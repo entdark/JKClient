@@ -16,6 +16,7 @@ namespace JKClient {
 		private readonly Random random = new Random();
 		private readonly int port;
 		private readonly InfoString userInfoString = new InfoString(UserInfo);
+		private bool disconnect = false;
 		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
@@ -96,6 +97,12 @@ namespace JKClient {
 			int msec;
 			this.realTime = 0;
 			while (true) {
+				if (this.disconnect) {
+					this.disconnect = false;
+					this.Status = ConnectionStatus.Disconnected;
+					this.ClearState();
+					this.ClearConnection();
+				}
 				if (this.realTime - this.lastPacketTime > JKClient.LastPacketTimeOut && this.Status == ConnectionStatus.Active) {
 					var cmd = new Command(new string []{ "disconnect", "Last packet from server was too long ago" });
 					this.ServerCommandExecuted?.Invoke(new CommandEventArgs(cmd));
@@ -407,9 +414,7 @@ namespace JKClient {
 				this.WritePacket();
 				this.WritePacket();
 			}
-			this.Status = ConnectionStatus.Disconnected;
-			this.ClearState();
-			this.ClearConnection();
+			this.disconnect = true;
 		}
 		private bool IsJO() {
 			return JKClient.IsJO(this.Protocol);
