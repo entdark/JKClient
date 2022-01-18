@@ -8,7 +8,7 @@ namespace JKClient {
 		private const int PacketMask = (JKClient.PacketBackup-1);
 		private const int MaxParseEntities = 2048;
 #region ClientActive
-		private Snapshot snap = new Snapshot();
+		private ClientSnapshot snap = new ClientSnapshot();
 		private int serverTime = 0;
 		private bool newSnapshots = false;
 		private GameState gameState = new GameState();
@@ -17,7 +17,7 @@ namespace JKClient {
 		private int cmdNumber = 0;
 		private OutPacket []outPackets = new OutPacket[JKClient.PacketBackup];
 		private int serverId = 0;
-		private Snapshot []snapshots = new Snapshot[JKClient.PacketBackup];
+		private ClientSnapshot []snapshots = new ClientSnapshot[JKClient.PacketBackup];
 		private EntityState []entityBaselines = new EntityState[Common.MaxGEntities];
 		private EntityState []parseEntities = new EntityState[JKClient.MaxParseEntities];
 #endregion
@@ -142,7 +142,7 @@ namespace JKClient {
 				this.ParseRMG(msg);
 			}
 			this.SystemInfoChanged();
-			this.InitCGame();
+			this.clientGame = this.InitClientGame();
 		}
 		private void ParseRMG(Message msg) {
 			ushort rmgHeightMapSize = (ushort)msg.ReadShort();
@@ -174,8 +174,17 @@ namespace JKClient {
 			var infoString = new InfoString(systemInfo);
 			this.serverId = infoString["sv_serverid"].Atoi();
 		}
+		internal unsafe string GetConfigstring(int index) {
+			if (index < 0 || index >= GameState.MaxConfigstrings) {
+				throw new JKClientException($"Configstring: bad index: {index}");
+			}
+			fixed (sbyte* s = this.gameState.StringData) {
+				sbyte* cs = s + this.gameState.StringOffsets[index];
+				return Common.ToString(cs, Common.StrLen(cs));
+			}
+		}
 		private unsafe void ClearState() {
-			this.snap = new Snapshot();
+			this.snap = new ClientSnapshot();
 			this.serverTime = 0;
 			this.newSnapshots = false;
 			fixed (GameState *gs = &this.gameState) {
@@ -186,10 +195,11 @@ namespace JKClient {
 			this.cmdNumber = 0;
 			Common.MemSet(this.outPackets, 0, sizeof(OutPacket)*JKClient.PacketBackup);
 			this.serverId = 0;
-			Common.MemSet(this.snapshots, 0, sizeof(Snapshot)*JKClient.PacketBackup);
+			Common.MemSet(this.snapshots, 0, sizeof(ClientSnapshot)*JKClient.PacketBackup);
 			Common.MemSet(this.entityBaselines, 0, sizeof(EntityState)*Common.MaxGEntities);
 			Common.MemSet(this.parseEntities, 0, sizeof(EntityState)*JKClient.MaxParseEntities);
 			this.gameMod = GameMod.Undefined;
+			this.clientGame = null;
 		}
 		private void ClearConnection() {
 			for (int i = 0; i < JKClient.MaxReliableCommands; i++) {
@@ -224,7 +234,7 @@ namespace JKClient {
 		private unsafe void ParseSnapshot(Message msg) {
 			bool oldSnap;
 			int oldSnapNum = -1;
-			var newSnap = new Snapshot() {
+			var newSnap = new ClientSnapshot() {
 				ServerCommandNum = this.serverCommandSequence,
 				ServerTime = msg.ReadLong(),
 				MessageNum = this.serverMessageSequence
@@ -273,7 +283,7 @@ namespace JKClient {
 					}
 				}
 				if (oldSnap) {
-					fixed (Snapshot *old = &this.snapshots[oldSnapNum]) {
+					fixed (ClientSnapshot *old = &this.snapshots[oldSnapNum]) {
 						this.ParsePacketEntities(msg, old, &newSnap);
 					}
 				} else {
@@ -294,7 +304,7 @@ namespace JKClient {
 			this.snapshots[this.snap.MessageNum & JKClient.PacketMask] = this.snap;
 			this.newSnapshots = true;
 		}
-		private unsafe void ParsePacketEntities(Message msg, Snapshot *oldSnap, Snapshot *newSnap) {
+		private unsafe void ParsePacketEntities(Message msg, ClientSnapshot *oldSnap, ClientSnapshot *newSnap) {
 			newSnap->ParseEntitiesNum = this.parseEntitiesNum;
 			newSnap->NumEntities = 0;
 			EntityState *oldstate;

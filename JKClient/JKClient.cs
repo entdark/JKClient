@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace JKClient {
-	public sealed partial class JKClient : NetClient {
+	public sealed partial class JKClient : NetClient/*, IJKClientImport*/ {
 		private const int LastPacketTimeOut = 5 * 60000;
 		private const int RetransmitTimeOut = 3000;
 		private const int MaxReliableCommands = 128;
@@ -16,6 +16,7 @@ namespace JKClient {
 		private readonly Random random = new Random();
 		private readonly int port;
 		private readonly InfoString userInfoString = new InfoString(UserInfo);
+		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
 		private int clientNum = 0;
@@ -70,19 +71,14 @@ namespace JKClient {
 				this.UpdateUserInfo();
 			}
 		}
-		private readonly ClientInfo []clientInfo = new ClientInfo[Common.MaxClients];
-		public ClientInfo []ClientInfo {
-			get {
-				return this.clientInfo;
-			}
-		}
+		public ClientInfo []ClientInfo => this.clientGame?.ClientInfo;
 		private readonly ServerInfo serverInfo = new ServerInfo();
-		public unsafe ServerInfo ServerInfo {
+		public ServerInfo ServerInfo {
 			get {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
 				var infoString = new InfoString(serverInfoCSStr);
 				serverInfo.Address = this.serverAddress;
-				serverInfo.Clients = this.ClientInfo.Count(ci => ci.InfoValid);
+				serverInfo.Clients = this.ClientInfo?.Count(ci => ci.InfoValid) ?? 0;
 				serverInfo.SetConfigstringInfo(infoString);
 				return serverInfo;
 			}
@@ -119,7 +115,7 @@ namespace JKClient {
 				this.CheckForResend();
 				this.SetTime();
 				if (this.Status >= ConnectionStatus.Primed) {
-					this.ProcessSnapshots();
+					this.clientGame.Frame(this.serverTime);
 				}
 				await Task.Delay(8);
 			}

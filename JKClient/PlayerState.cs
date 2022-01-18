@@ -22,11 +22,11 @@ namespace JKClient {
 		public const int MaxEvents = 2;
 		public unsafe void ToEntityState(ref EntityState es) {
 			if (this.PlayerMoveType == PlayerMoveType.Intermission || this.PlayerMoveType == PlayerMoveType.Spectator) {
-				es.EntityType = (int)EntityType.Invisible;
+				es.EntityType = (int)ClientGame.EntityType.Invisible;
 			} else if (this.Stats[(int)Stat.Health] <= Common.GibHealth) {
-				es.EntityType = (int)EntityType.Invisible;
+				es.EntityType = (int)ClientGame.EntityType.Invisible;
 			} else {
-				es.EntityType = (int)EntityType.Player;
+				es.EntityType = (int)ClientGame.EntityType.Player;
 			}
 			es.Number = es.ClientNum = this.ClientNum;
 			if (this.ExternalEvent != 0) {
