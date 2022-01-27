@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -16,7 +17,7 @@ namespace JKClient {
 		private readonly Random random = new Random();
 		private readonly int port;
 		private readonly InfoString userInfoString = new InfoString(UserInfo);
-		private bool disconnect = false;
+		private readonly Queue<Action> actionsQueue = new Queue<Action>();
 		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
@@ -97,24 +98,24 @@ namespace JKClient {
 			int msec;
 			this.realTime = 0;
 			while (true) {
-				if (this.disconnect) {
-					this.disconnect = false;
-					this.Status = ConnectionStatus.Disconnected;
-					this.ClearState();
-					this.ClearConnection();
+				if (!this.Started) {
+					break;
 				}
 				if (this.realTime - this.lastPacketTime > JKClient.LastPacketTimeOut && this.Status == ConnectionStatus.Active) {
 					var cmd = new Command(new string []{ "disconnect", "Last packet from server was too long ago" });
+					this.Disconnect();
 					this.ServerCommandExecuted?.Invoke(new CommandEventArgs(cmd));
-				}
-				if (!this.Started) {
-					break;
 				}
 				this.GetPacket();
 				frameTime = Common.Milliseconds;
 				msec = (int)(frameTime - lastTime);
 				if (msec > 5000) {
 					msec = 5000;
+				}
+				lock (this.actionsQueue) {
+					while (this.actionsQueue.Count > 0) {
+						this.actionsQueue.Dequeue()?.Invoke();
+					}
 				}
 				lastTime = frameTime;
 				this.realTime += msec;
@@ -144,7 +145,7 @@ namespace JKClient {
 			if (this.Status < ConnectionStatus.Challenging) {
 				return;
 			}
-			this.AddReliableCommand($"userinfo \"{userInfoString}\"");
+			this.ExecuteCommand($"userinfo \"{userInfoString}\"");
 		}
 		private void CheckForResend() {
 			if (this.Status != ConnectionStatus.Connecting && this.Status != ConnectionStatus.Challenging) {
@@ -325,12 +326,10 @@ namespace JKClient {
 			msg.WriteLong(this.serverId);
 			msg.WriteLong(this.serverMessageSequence);
 			msg.WriteLong(this.serverCommandSequence);
-			lock (this.reliableCommands.SyncRoot) {
-				for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
-					msg.WriteByte((int)ClientCommandOperations.ClientCommand);
-					msg.WriteLong(i);
-					msg.WriteString(this.reliableCommands[i & (JKClient.MaxReliableCommands-1)]);
-				}
+			for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
+				msg.WriteByte((int)ClientCommandOperations.ClientCommand);
+				msg.WriteLong(i);
+				msg.WriteString(this.reliableCommands[i & (JKClient.MaxReliableCommands-1)]);
 			}
 			int oldPacketNum = (this.netChannel.OutgoingSequence - 1 - 1) & JKClient.PacketMask;
 			int count = this.cmdNumber - this.outPackets[oldPacketNum].CommandNumber;
@@ -366,23 +365,23 @@ namespace JKClient {
 		}
 		private unsafe void AddReliableCommand(string cmd, bool disconnect = false, Encoding encoding = null) {
 			int unacknowledged = this.reliableSequence - this.reliableAcknowledge;
-			lock (this.reliableCommands.SyncRoot) {
-				fixed (sbyte *reliableCommand = this.reliableCommands[++this.reliableSequence & (JKClient.MaxReliableCommands-1)]) {
-					encoding = encoding ?? Common.Encoding;
-					Marshal.Copy(encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), encoding.GetByteCount(cmd)+1);
-				}
+			fixed (sbyte *reliableCommand = this.reliableCommands[++this.reliableSequence & (JKClient.MaxReliableCommands-1)]) {
+				encoding = encoding ?? Common.Encoding;
+				Marshal.Copy(encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), encoding.GetByteCount(cmd)+1);
 			}
 		}
 		public void ExecuteCommand(string cmd, Encoding encoding = null) {
-			if (cmd.StartsWith("rcon ", StringComparison.OrdinalIgnoreCase)) {
-				this.ExecuteCommandDirectly(cmd, encoding);
-			} else {
-				this.AddReliableCommand(cmd, encoding: encoding);
+			void executeCommand() {
+				if (cmd.StartsWith("rcon ", StringComparison.OrdinalIgnoreCase)) {
+					this.ExecuteCommandDirectly(cmd, encoding);
+				} else {
+					this.AddReliableCommand(cmd, encoding: encoding);
+				}
 			}
+			this.actionsQueue.Enqueue(executeCommand);
 		}
 		private void ExecuteCommandDirectly(string cmd, Encoding encoding) {
 			this.OutOfBandPrint(this.serverAddress, cmd);
-			return;
 		}
 		public async Task Connect(ServerInfo serverInfo) {
 			if (serverInfo == null) {
@@ -393,28 +392,37 @@ namespace JKClient {
 		public async Task Connect(string address, ProtocolVersion protocol) {
 			this.connectTCS?.TrySetCanceled();
 			this.connectTCS = new TaskCompletionSource<bool>();
-			this.servername = address;
-			this.serverAddress = NetSystem.StringToAddress(address);
-			if (this.serverAddress == null) {
-				throw new JKClientException("Bad server address");
+			void connect() {
+				var serverAddress = NetSystem.StringToAddress(address);
+				if (serverAddress == null) {
+					throw new JKClientException("Bad server address");
+				}
+				this.servername = address;
+				this.serverAddress = serverAddress;
+				this.challenge = ((random.Next() << 16) ^ random.Next()) ^ (int)Common.Milliseconds;
+				this.connectTime = -9999;
+				this.connectPacketCount = 0;
+				this.Protocol = protocol;
+				this.Version = this.GetVersion();
+				this.Status = ConnectionStatus.Connecting;
 			}
-			this.challenge = ((random.Next() << 16) ^ random.Next()) ^ (int)Common.Milliseconds;
-			this.connectTime = -9999;
-			this.connectPacketCount = 0;
-			this.Protocol = protocol;
-			this.Version = this.GetVersion();
-			this.Status = ConnectionStatus.Connecting;
+			this.actionsQueue.Enqueue(connect);
 			await this.connectTCS.Task;
 		}
 		public void Disconnect() {
-			this.connectTCS?.TrySetCanceled();
-			if (this.Status >= ConnectionStatus.Connected) {
-				this.AddReliableCommand("disconnect", true);
-				this.WritePacket();
-				this.WritePacket();
-				this.WritePacket();
+			void disconnect() {
+				this.connectTCS?.TrySetCanceled();
+				if (this.Status >= ConnectionStatus.Connected) {
+					this.AddReliableCommand("disconnect", true);
+					this.WritePacket();
+					this.WritePacket();
+					this.WritePacket();
+				}
+				this.Status = ConnectionStatus.Disconnected;
+				this.ClearState();
+				this.ClearConnection();
 			}
-			this.disconnect = true;
+			this.actionsQueue.Enqueue(disconnect);
 		}
 		private bool IsJO() {
 			return JKClient.IsJO(this.Protocol);
