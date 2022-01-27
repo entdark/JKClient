@@ -94,6 +94,8 @@ namespace JKClient {
 			}
 			if (index == GameState.SystemInfo) {
 				this.SystemInfoChanged();
+			} else if (index == GameState.ServerInfo) {
+				this.ServerInfoChanged?.Invoke(this.ServerInfo);
 			}
 		}
 		internal void GetCurrentSnapshotNumber(out int snapshotNumber, out int serverTime) {
@@ -147,7 +149,6 @@ namespace JKClient {
 				return true;
 			} else if (string.Compare(cmd, "cs", true) == 0) {
 				this.ConfigstringModified(command, sc);
-				this.ServerInfoChanged?.Invoke(this.ServerInfo);
 				return true;
 			}
 			return true;
