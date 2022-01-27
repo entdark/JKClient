@@ -25,13 +25,12 @@ namespace JKClient {
 			int i;
 			bool tryToReuse = false;
 			if (reinit) {
-				this.ipSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 				i = this.endPoint.Port - NetSystem.PortServer;
 				if (i < 0) {
-					this.ipSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, false);
 					i = 0;
 					tryToReuse = false;
 				} else {
+					this.ipSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 					tryToReuse = true;
 				}
 			} else {
