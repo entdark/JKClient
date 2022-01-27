@@ -43,9 +43,12 @@ namespace JKClient {
 		public ConnectionStatus Status { get; private set; }
 		private string servername;
 #endregion
-		public event Action<ServerInfo> ServerInfoChanged;
 		internal ProtocolVersion Protocol { get; private set; } = ProtocolVersion.Protocol26;
 		internal ClientVersion Version { get; private set; } = ClientVersion.JA_v1_01;
+		public event Action<ServerInfo> ServerInfoChanged;
+		internal void NotifyServerInfoChanged() {
+			this.ServerInfoChanged?.Invoke(this.ServerInfo);
+		}
 		public string Name {
 			get => this.userInfoString["name"];
 			set {

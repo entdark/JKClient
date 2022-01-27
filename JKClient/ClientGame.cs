@@ -9,6 +9,7 @@ namespace JKClient {
 		internal string GetConfigstring(int index);
 	}*/
 	internal abstract class ClientGame {
+		protected bool Initialized = false;
 		protected readonly int ClientNum;
 		protected int LatestSnapshotNum = 0;
 		protected int ProcessedSnapshotNum = 0;
@@ -34,6 +35,7 @@ namespace JKClient {
 			for (int i = 0; i < Common.MaxClients; i++) {
 				this.NewClientInfo(i);
 			}
+			this.Initialized = true;
 		}
 		public virtual void Frame(int serverTime) {
 			this.ServerTime = serverTime;
@@ -193,13 +195,16 @@ namespace JKClient {
 			if (string.IsNullOrEmpty(configstring) || configstring[0] == '\0'
 				|| !configstring.Contains("n")) {
 				this.ClientInfo[clientNum].Clear();
-				return;
+			} else {
+				var clientInfoString = new InfoString(configstring);
+				this.ClientInfo[clientNum].ClientNum = clientNum;
+//				this.ClientInfo[clientNum].Team = (Team)clientInfoString["t"].Atoi();
+				this.ClientInfo[clientNum].Name = clientInfoString["n"];
+				this.ClientInfo[clientNum].InfoValid = true;
 			}
-			var clientInfoString = new InfoString(configstring);
-			this.ClientInfo[clientNum].ClientNum = clientNum;
-//			this.ClientInfo[clientNum].Team = (Team)clientInfoString["t"].Atoi();
-			this.ClientInfo[clientNum].Name = clientInfoString["n"];
-			this.ClientInfo[clientNum].InfoValid = true;
+			if (this.Initialized) {
+				this.Client.NotifyServerInfoChanged();
+			}
 		}
 		protected virtual void CheckEvents(ref ClientEntity cent) {
 			ref var es = ref cent.CurrentState;
