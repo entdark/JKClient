@@ -13,11 +13,15 @@ namespace JKClient {
 		protected readonly int ClientNum;
 		protected int LatestSnapshotNum = 0;
 		protected int ProcessedSnapshotNum = 0;
-		protected Snapshot? Snap = null, NextSnap = null;
+		protected Snapshot Snap = null, NextSnap = null;
 		protected int ServerCommandSequence = 0;
 		protected readonly ClientEntity []Entities = new ClientEntity[Common.MaxGEntities];
 		protected readonly /*IJKClientImport*/JKClient Client;
 		protected int ServerTime;
+		protected readonly Snapshot []ActiveSnapshots = new Snapshot[2] {
+			new Snapshot(),
+			new Snapshot()
+		};
 		public ClientInfo []ClientInfo {
 			get;
 			protected set;
@@ -51,47 +55,55 @@ namespace JKClient {
 				}
 				this.LatestSnapshotNum = n;
 			}
-			Snapshot snap = new Snapshot();
+			Snapshot snap;
 			while (this.Snap == null) {
-				if (!this.ReadNextSnapshot(ref snap)) {
+				snap = this.ReadNextSnapshot();
+				if (snap == null) {
 					return;
 				}
 				if ((snap.Flags & ClientSnapshot.NotActive) == 0) {
-					this.SetInitialSnapshot(in snap);
+					this.SetInitialSnapshot(snap);
 				}
 			}
 			do {
 				if (this.NextSnap == null) {
-					if (!this.ReadNextSnapshot(ref snap)) {
+					snap = this.ReadNextSnapshot();
+					if (snap == null) {
 						break;
 					}
-					this.SetNextSnap(in snap);
-					if (this.NextSnap.Value.ServerTime < this.Snap.Value.ServerTime) {
+					this.SetNextSnap(snap);
+					if (this.NextSnap.ServerTime < this.Snap.ServerTime) {
 						throw new JKClientException("ProcessSnapshots: Server time went backwards");
 					}
 				}
-				if (this.ServerTime >= this.Snap.Value.ServerTime && this.ServerTime < this.NextSnap.Value.ServerTime) {
+				if (this.ServerTime >= this.Snap.ServerTime && this.ServerTime < this.NextSnap.ServerTime) {
 					break;
 				}
 				this.TransitionSnapshot();
 			} while (true);
 		}
-		protected virtual bool ReadNextSnapshot(ref Snapshot dest) {
+		protected virtual Snapshot ReadNextSnapshot() {
+			Snapshot dest;
 			while (this.ProcessedSnapshotNum < this.LatestSnapshotNum) {
+				if (this.Snap == this.ActiveSnapshots[0]) {
+					dest = this.ActiveSnapshots[1];
+				} else {
+					dest = this.ActiveSnapshots[0];
+				}
 				this.ProcessedSnapshotNum++;
 				if (this.Client.GetSnapshot(this.ProcessedSnapshotNum, ref dest)) {
-					return true;
+					return dest;
 				}
 			}
-			return false;
+			return null;
 		}
 		protected virtual void SetInitialSnapshot(in Snapshot snap) {
 			this.Snap = snap;
-			this.Snap.Value.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].CurrentState);
+			this.Snap.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].CurrentState);
 			this.ExecuteNewServerCommands(snap.ServerCommandSequence);
-			int count = this.Snap.Value.NumEntities;
+			int count = this.Snap.NumEntities;
 			for (int i = 0; i < count; i++) {
-				ref var es = ref this.Snap.Value.Entities[i];
+				ref var es = ref this.Snap.Entities[i];
 				ref var cent = ref this.Entities[es.Number];
 				cent.CurrentState = es;
 				cent.Interpolate = false;
@@ -102,10 +114,10 @@ namespace JKClient {
 		}
 		protected virtual void SetNextSnap(in Snapshot snap) {
 			this.NextSnap = snap;
-			this.NextSnap.Value.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].NextState);
-			int count = this.NextSnap.Value.NumEntities;
+			this.NextSnap.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].NextState);
+			int count = this.NextSnap.NumEntities;
 			for (int i = 0; i < count; i++) {
-				ref var es = ref this.NextSnap.Value.Entities[i];
+				ref var es = ref this.NextSnap.Entities[i];
 				ref var cent = ref this.Entities[es.Number];
 				cent.NextState = es;
 				if (!cent.CurrentValid || (((cent.CurrentState.EntityFlags ^ es.EntityFlags) & this.GetEntityFlag(EntityFlag.TeleportBit)) != 0)) {
@@ -116,20 +128,20 @@ namespace JKClient {
 			}
 		}
 		protected virtual void TransitionSnapshot() {
-			this.ExecuteNewServerCommands(this.NextSnap.Value.ServerCommandSequence);
-			int count = this.Snap.Value.NumEntities;
+			this.ExecuteNewServerCommands(this.NextSnap.ServerCommandSequence);
+			int count = this.Snap.NumEntities;
 			for (int i = 0; i < count; i++) {
-				ref var es = ref this.Snap.Value.Entities[i];
+				ref var es = ref this.Snap.Entities[i];
 				ref var cent = ref this.Entities[es.Number];
 				cent.CurrentValid = false;
 			}
 			var oldFrame = this.Snap;
 			this.Snap = this.NextSnap;
-			this.Snap.Value.PlayerState.ToEntityState(ref this.Entities[this.Snap.Value.PlayerState.ClientNum].CurrentState);
-			this.Entities[this.Snap.Value.PlayerState.ClientNum].Interpolate = false;
-			count = this.Snap.Value.NumEntities;
+			this.Snap.PlayerState.ToEntityState(ref this.Entities[this.Snap.PlayerState.ClientNum].CurrentState);
+			this.Entities[this.Snap.PlayerState.ClientNum].Interpolate = false;
+			count = this.Snap.NumEntities;
 			for (int i = 0; i < count; i++) {
-				ref var es = ref this.Snap.Value.Entities[i];
+				ref var es = ref this.Snap.Entities[i];
 				ref var cent = ref this.Entities[es.Number];
 				cent.CurrentState = cent.NextState;
 				cent.CurrentValid = true;
@@ -138,13 +150,10 @@ namespace JKClient {
 				}
 				cent.Interpolate = false;
 				this.CheckEvents(ref cent);
-				cent.SnapshotTime = this.Snap.Value.ServerTime;
+				cent.SnapshotTime = this.Snap.ServerTime;
 			}
 			this.NextSnap = null;
-			PlayerState ops = oldFrame.Value.PlayerState,
-				ps = this.Snap.Value.PlayerState;
-			this.TransitionPlayerState(ref ps, ref ops);
-			this.Snap.Value.SetPlayerState(ps);
+			this.TransitionPlayerState(ref this.Snap.PlayerState, ref oldFrame.PlayerState);
 		}
 		protected virtual void ResetEntity(ref ClientEntity cent) {
 			if (cent.SnapshotTime < this.ServerTime - ClientEntity.EventValidMsec) {

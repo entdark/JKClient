@@ -122,7 +122,6 @@ namespace JKClient {
 			snapshot.PlayerState = clSnapshot.PlayerState;
 			snapshot.VehiclePlayerState = clSnapshot.VehiclePlayerState;
 			snapshot.NumEntities = Math.Min(clSnapshot.NumEntities, Snapshot.MaxEntities);
-			snapshot.Entities = new EntityState[Snapshot.MaxEntities];
 			for (int i = 0; i < snapshot.NumEntities; i++) {
 				int entNum = (clSnapshot.ParseEntitiesNum + i) & (JKClient.MaxParseEntities-1);
 				snapshot.Entities[i] = this.parseEntities[entNum];
