@@ -143,10 +143,10 @@ namespace JKClient {
 			var utf8Command = new Command(s);
 			string cmd = command.Argv(0);
 			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command, utf8Command));
-			if (string.Compare(cmd, "disconnect", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Compare(cmd, "disconnect", StringComparison.Ordinal) == 0) {
 				this.Disconnect();
 				return true;
-			} else if (string.Compare(cmd, "cs", StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Compare(cmd, "cs", StringComparison.Ordinal) == 0) {
 				this.ConfigstringModified(command, sc);
 				return true;
 			}
