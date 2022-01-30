@@ -266,7 +266,7 @@ namespace JKClient {
 			string s = msg.ReadStringLineAsString();
 			var command = new Command(s);
 			string c = command.Argv(0);
-			if (string.Compare(c, "challengeResponse", true) == 0) {
+			if (string.Compare(c, "challengeResponse", StringComparison.OrdinalIgnoreCase) == 0) {
 				if (this.Status != ConnectionStatus.Connecting) {
 					return;
 				}
@@ -280,7 +280,7 @@ namespace JKClient {
 				this.connectPacketCount = 0;
 				this.connectTime = -99999;
 				this.serverAddress = address;
-			} else if (string.Compare(c, "connectResponse", true) == 0) {
+			} else if (string.Compare(c, "connectResponse", StringComparison.OrdinalIgnoreCase) == 0) {
 				if (this.Status != ConnectionStatus.Challenging) {
 					return;
 				}
@@ -290,7 +290,7 @@ namespace JKClient {
 				this.netChannel = new NetChannel(this.net, address, this.port);
 				this.Status = ConnectionStatus.Connected;
 				this.lastPacketSentTime = -9999;
-			} else if (string.Compare(c, "disconnect", true) == 0) {
+			} else if (string.Compare(c, "disconnect", StringComparison.OrdinalIgnoreCase) == 0) {
 				if (this.netChannel == null) {
 					return;
 				}
@@ -302,9 +302,9 @@ namespace JKClient {
 				}
 				this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
 				this.Disconnect();
-			} else if (string.Compare(c, "echo", true) == 0) {
+			} else if (string.Compare(c, "echo", StringComparison.OrdinalIgnoreCase) == 0) {
 				this.OutOfBandPrint(address, command.Argv(1));
-			} else if (string.Compare(c, "print", true) == 0) {
+			} else if (string.Compare(c, "print", StringComparison.OrdinalIgnoreCase) == 0) {
 				if (address == this.serverAddress) {
 					s = msg.ReadStringAsString();
 					var cmd = new Command(new string []{ "print", s });

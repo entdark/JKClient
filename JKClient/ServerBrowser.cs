@@ -91,11 +91,11 @@ namespace JKClient {
 					string s = msg.ReadStringLineAsString();
 					var command = new Command(s);
 					string c = command.Argv(0);
-					if (string.Compare(c, "infoResponse", true) == 0) {
+					if (string.Compare(c, "infoResponse", StringComparison.OrdinalIgnoreCase) == 0) {
 						this.ServerInfoPacket(address, msg);
-					} else if (string.Compare(c, "statusResponse", true) == 0) {
+					} else if (string.Compare(c, "statusResponse", StringComparison.OrdinalIgnoreCase) == 0) {
 						this.ServerStatusResponse(address, msg);
-					} else if (string.Compare(c, 0, "getserversResponse", 0, 18, false) == 0) {
+					} else if (string.Compare(c, 0, "getserversResponse", 0, 18, StringComparison.Ordinal) == 0) {
 						this.ServersResponsePacket(address, msg);
 					}
 				}
