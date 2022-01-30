@@ -31,10 +31,11 @@ namespace JKClient {
 			}
 			var builder = new StringBuilder();
 			foreach (var keyValuePair in this) {
-				builder.Append(InfoString.Delimiter);
-				builder.Append(keyValuePair.Key);
-				builder.Append(InfoString.Delimiter);
-				builder.Append(keyValuePair.Value);
+				builder
+					.Append(InfoString.Delimiter)
+					.Append(keyValuePair.Key)
+					.Append(InfoString.Delimiter)
+					.Append(keyValuePair.Value);
 			}
 			return builder.ToString();
 		}
