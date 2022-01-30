@@ -186,7 +186,10 @@ namespace JKClient {
 			}
 		}
 		protected virtual void ServerCommand(Command command) {
-			this.ConfigstringModified(command);
+			string cmd = command.Argv(0);
+			if (string.Compare(cmd, "cs", StringComparison.OrdinalIgnoreCase) == 0) {
+				this.ConfigstringModified(command);
+			}
 		}
 		protected virtual void ConfigstringModified(Command command) {
 			int num = command.Argv(1).Atoi();
