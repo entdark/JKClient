@@ -394,12 +394,12 @@ namespace JKClient {
 		}
 		public async Task Connect(string address, ProtocolVersion protocol) {
 			this.connectTCS?.TrySetCanceled();
+			var serverAddress = NetSystem.StringToAddress(address);
+			if (serverAddress == null) {
+				throw new JKClientException("Bad server address");
+			}
 			this.connectTCS = new TaskCompletionSource<bool>();
 			void connect() {
-				var serverAddress = NetSystem.StringToAddress(address);
-				if (serverAddress == null) {
-					throw new JKClientException("Bad server address");
-				}
 				this.servername = address;
 				this.serverAddress = serverAddress;
 				this.challenge = ((random.Next() << 16) ^ random.Next()) ^ (int)Common.Milliseconds;
