@@ -379,7 +379,7 @@ namespace JKClient {
 				fields[i].Adjust?.Invoke(toF);
 			}
 		}
-		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, ClientVersion version, GameMod gameMod, bool isVehicle = false) {
+		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, bool isVehicle, ClientVersion version, GameMod gameMod) {
 			GCHandle fromHandle;
 			if (from == null) {
 				fromHandle = GCHandle.Alloc(PlayerState.Null, GCHandleType.Pinned);

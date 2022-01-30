@@ -233,8 +233,8 @@ namespace JKClient {
 			Array.Copy(s, 0, this.serverCommands[index], 0, Common.MaxStringChars);
 		}
 		private unsafe void ParseSnapshot(Message msg) {
-			bool oldSnap;
-			int oldSnapNum = -1;
+			ClientSnapshot *oldSnap;
+			var oldSnapHandle = GCHandle.Alloc(this.snapshots, GCHandleType.Pinned);
 			var newSnap = new ClientSnapshot() {
 				ServerCommandNum = this.serverCommandSequence,
 				ServerTime = msg.ReadLong(),
@@ -249,15 +249,14 @@ namespace JKClient {
 			newSnap.Flags = msg.ReadByte();
 			if (newSnap.DeltaNum <= 0) {
 				newSnap.Valid = true;
-				oldSnap = false;
+				oldSnap = null;
 			} else {
-				oldSnap = true;
-				oldSnapNum = newSnap.DeltaNum & JKClient.PacketMask;
-				if (!this.snapshots[oldSnapNum].Valid) {
+				oldSnap = ((ClientSnapshot *)oldSnapHandle.AddrOfPinnedObject()) + (newSnap.DeltaNum & JKClient.PacketMask);
+				if (!oldSnap->Valid) {
 
-				} else if (this.snapshots[oldSnapNum].MessageNum != newSnap.DeltaNum) {
+				} else if (oldSnap->MessageNum != newSnap.DeltaNum) {
 
-				} else if (this.parseEntitiesNum - this.snapshots[oldSnapNum].ParseEntitiesNum > JKClient.MaxParseEntities-128) {
+				} else if (this.parseEntitiesNum - oldSnap->ParseEntitiesNum > JKClient.MaxParseEntities-128) {
 
 				} else {
 					newSnap.Valid = true;
@@ -269,28 +268,13 @@ namespace JKClient {
 			}
 			msg.ReadData(null, len);
 			if (this.CanParseSnapshot()) {
-				if (oldSnap) {
-					fixed (PlayerState *ps = &this.snapshots[oldSnapNum].PlayerState,
-						vps = &this.snapshots[oldSnapNum].VehiclePlayerState) {
-						msg.ReadDeltaPlayerstate(ps, &newSnap.PlayerState, this.Version, this.gameMod);
-						if (!this.IsJO() && newSnap.PlayerState.VehicleNum != 0) {
-							msg.ReadDeltaPlayerstate(vps, &newSnap.VehiclePlayerState, this.Version, this.gameMod, true);
-						}
-					}
-				} else {
-					msg.ReadDeltaPlayerstate(null, &newSnap.PlayerState, this.Version, this.gameMod);
-					if (!this.IsJO() && newSnap.PlayerState.VehicleNum != 0) {
-						msg.ReadDeltaPlayerstate(null, &newSnap.VehiclePlayerState, this.Version, this.gameMod, true);
-					}
+				msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->PlayerState : null, &newSnap.PlayerState, false, this.Version, this.gameMod);
+				if (!this.IsJO() && newSnap.PlayerState.VehicleNum != 0) {
+					msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->VehiclePlayerState : null, &newSnap.VehiclePlayerState, true, this.Version, this.gameMod);
 				}
-				if (oldSnap) {
-					fixed (ClientSnapshot *old = &this.snapshots[oldSnapNum]) {
-						this.ParsePacketEntities(msg, old, &newSnap);
-					}
-				} else {
-					this.ParsePacketEntities(msg, null, &newSnap);
-				}
+				this.ParsePacketEntities(msg, oldSnap, &newSnap);
 			}
+			oldSnapHandle.Free();
 			if (!newSnap.Valid) {
 				return;
 			}
@@ -309,7 +293,7 @@ namespace JKClient {
 			newSnap->ParseEntitiesNum = this.parseEntitiesNum;
 			newSnap->NumEntities = 0;
 			EntityState *oldstate;
-			GCHandle oldstateHandle = GCHandle.Alloc(this.parseEntities, GCHandleType.Pinned);
+			var oldstateHandle = GCHandle.Alloc(this.parseEntities, GCHandleType.Pinned);
 			int oldindex = 0;
 			int oldnum;
 			int newnum = msg.ReadBits(Common.GEntitynumBits);
