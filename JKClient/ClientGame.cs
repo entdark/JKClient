@@ -172,6 +172,11 @@ namespace JKClient {
 					this.HandleEvent(ref cent);
 				}
 			}
+			if (ps.ClientNum != ops.ClientNum) {
+				for (int i = 0; i < Common.MaxClients; i++) {
+					this.NewClientInfo(i);
+				}
+			}
 		}
 		protected virtual void ExecuteNewServerCommands(int latestSequence) {
 			while (this.ServerCommandSequence < latestSequence) {
