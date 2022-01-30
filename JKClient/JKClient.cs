@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -17,7 +17,7 @@ namespace JKClient {
 		private readonly Random random = new Random();
 		private readonly int port;
 		private readonly InfoString userInfoString = new InfoString(UserInfo);
-		private readonly Queue<Action> actionsQueue = new Queue<Action>();
+		private readonly ConcurrentQueue<Action> actionsQueue = new ConcurrentQueue<Action>();
 		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
@@ -100,6 +100,8 @@ namespace JKClient {
 			long frameTime, lastTime = Common.Milliseconds;
 			int msec;
 			this.realTime = 0;
+			//don't start with any pending actions
+			this.DequeueActions(false);
 			while (true) {
 				if (!this.Started) {
 					break;
@@ -115,11 +117,7 @@ namespace JKClient {
 				if (msec > 5000) {
 					msec = 5000;
 				}
-				lock (this.actionsQueue) {
-					while (this.actionsQueue.Count > 0) {
-						this.actionsQueue.Dequeue()?.Invoke();
-					}
-				}
+				this.DequeueActions();
 				lastTime = frameTime;
 				this.realTime += msec;
 				this.SendCmd();
@@ -129,6 +127,21 @@ namespace JKClient {
 					this.clientGame.Frame(this.serverTime);
 				}
 				await Task.Delay(8);
+			}
+			//complete all actions after stop
+			this.DequeueActions();
+		}
+		private void DequeueActions(bool invoke = true) {
+#if NETSTANDARD2_1
+			if (!invoke) {
+				this.actionsQueue.Clear();
+				return;
+			}
+#endif
+			while (this.actionsQueue.TryDequeue(out var action)) {
+				if (invoke) {
+					action?.Invoke();
+				}
 			}
 		}
 		public void SetUserInfoKeyValue(string key, string value) {
