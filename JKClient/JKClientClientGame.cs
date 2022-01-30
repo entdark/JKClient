@@ -137,7 +137,7 @@ namespace JKClient {
 				throw new JKClientException("GetServerCommand: requested a command not received");
 			}
 			this.lastExecutedServerCommand = serverCommandNumber;
-			sbyte[] sc = this.serverCommands[serverCommandNumber & (JKClient.MaxReliableCommands - 1)];
+			sbyte []sc = this.serverCommands[serverCommandNumber & (JKClient.MaxReliableCommands - 1)];
 			string s = Common.ToString(sc);
 			command = new Command(s);
 			s = Common.ToString(sc, Encoding.UTF8);

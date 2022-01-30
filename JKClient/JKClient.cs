@@ -335,7 +335,7 @@ namespace JKClient {
 			this.WritePacket();
 		}
 		private void WritePacket() {
-			UserCommand oldcmd = new UserCommand();
+			var oldcmd = new UserCommand();
 			byte []data = new byte[Message.MaxLength];
 			var msg = new Message(data, sizeof(byte)*Message.MaxLength);
 			msg.Bitstream();

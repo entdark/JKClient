@@ -176,7 +176,7 @@ namespace JKClient {
 		protected virtual void ExecuteNewServerCommands(int latestSequence) {
 			while (this.ServerCommandSequence < latestSequence) {
 				if (this.Client.GetServerCommand(++this.ServerCommandSequence, out var command)) {
-					ServerCommand(command);
+					this.ServerCommand(command);
 				}
 			}
 		}
