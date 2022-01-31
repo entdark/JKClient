@@ -23,6 +23,7 @@ namespace JKClient {
 				char nextChar = '\0';
 				char currentChar = '\0';
 				bool inString = false;
+				bool wasInString = false;
 				var token = new StringBuilder();
 				for (int i = 0; i < line.Length; i++) {
 					currentChar = line[i];
@@ -40,9 +41,14 @@ namespace JKClient {
 					}
 					if (currentChar == textQualifier && (nextChar == '\0' || nextChar == delimiter || nextChar == '\n') && inString) {
 						inString = false;
+						wasInString = true;
 						continue;
 					}
 					if ((currentChar == delimiter || currentChar == '\n') && !inString) {
+						if (token.Length <= 0 && !wasInString) {
+							continue;
+						}
+						wasInString = false;
 						yield return token.ToString();
 						token = token.Remove(0, token.Length);
 						continue;
