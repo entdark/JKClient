@@ -96,12 +96,15 @@ namespace JKClient {
 				this.reliableCommands[i] = new sbyte[Common.MaxStringChars];
 			}
 		}
+		private protected override void OnStart() {
+			//don't start with any pending actions
+			this.DequeueActions(false);
+			base.OnStart();
+		}
 		private protected override async Task Run() {
 			long frameTime, lastTime = Common.Milliseconds;
 			int msec;
 			this.realTime = 0;
-			//don't start with any pending actions
-			this.DequeueActions(false);
 			while (true) {
 				if (!this.Started) {
 					break;
