@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace JKClient {
 	public sealed class ServerBrowser : NetClient {
-		private const string MasterServerName = "masterjk3.ravensoft.com";
-		private const string MasterServerName2 = "master.jkhub.org";
-		private const string MasterServerName3 = "masterjk2.ravensoft.com";
-		private const string MasterServerName4 = "master.jk2mv.org";
+		private const string MasterJK3RavenSoftware = "masterjk3.ravensoft.com";
+		private const string MasterJKHub = "master.jkhub.org";
+		private const string MasterJK2RavenSoftware = "masterjk2.ravensoft.com";
+		private const string MasterJK2MV = "master.jk2mv.org";
+		private const string MasterQuake3Arena = "master.quake3arena.com";
+		private const string MasterIOQuake3 = "master.ioquake3.org";
+		private const string MasterMaverickServers = "master.maverickservers.com";
+		private const ushort PortMasterQ3 = 27950;
 		private const ushort PortMasterJO = 28060;
 		private const ushort PortMasterJA = 29060;
 		private const int RefreshTimeout = 3000;
@@ -23,11 +28,14 @@ namespace JKClient {
 				this.masterServers = new List<ServerAddress>(customMasterServers);
 			} else {
 				this.masterServers = new List<ServerAddress>() {
-					new ServerAddress(ServerBrowser.MasterServerName, ServerBrowser.PortMasterJA),
-					new ServerAddress(ServerBrowser.MasterServerName2, ServerBrowser.PortMasterJA),
-					new ServerAddress(ServerBrowser.MasterServerName2, ServerBrowser.PortMasterJO),
-					new ServerAddress(ServerBrowser.MasterServerName3, ServerBrowser.PortMasterJO),
-					new ServerAddress(ServerBrowser.MasterServerName4, ServerBrowser.PortMasterJO)
+					new ServerAddress(ServerBrowser.MasterJK3RavenSoftware, ServerBrowser.PortMasterJA),
+					new ServerAddress(ServerBrowser.MasterJKHub, ServerBrowser.PortMasterJA),
+					new ServerAddress(ServerBrowser.MasterJK2RavenSoftware, ServerBrowser.PortMasterJO),
+					new ServerAddress(ServerBrowser.MasterJKHub, ServerBrowser.PortMasterJO),
+					new ServerAddress(ServerBrowser.MasterJK2MV, ServerBrowser.PortMasterJO)/*,
+					new ServerAddress(ServerBrowser.MasterQuake3Arena, ServerBrowser.PortMasterQ3),
+					new ServerAddress(ServerBrowser.MasterIOQuake3, ServerBrowser.PortMasterQ3),
+					new ServerAddress(ServerBrowser.MasterMaverickServers, ServerBrowser.PortMasterQ3)*/
 				};
 				if (customMasterServers != null) {
 					this.masterServers.AddRange(customMasterServers);

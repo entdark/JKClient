@@ -6,7 +6,6 @@ namespace JKClient {
 	internal sealed class Message {
 		private const int FloatIntBits = 13;
 		private const int FloatIntBias = (1<<(Message.FloatIntBits-1));
-		public const int MaxLength = 49152;
 		private int bit = 0;
 		private int bitSaved = 0;
 		private bool oobSaved = false;
@@ -32,6 +31,7 @@ namespace JKClient {
 				}
 			}
 		}
+		public static int MaxLength(ProtocolVersion protocol) => !JKClient.IsJA(protocol) ? 16384 : 49152;
 		public Message() {}
 		public Message(byte []data, int length, bool oob = false) {
 			this.Data = data;
@@ -246,7 +246,7 @@ namespace JKClient {
 			}
 			return str;
 		}
-		public unsafe string ReadStringAsString() {
+		public string ReadStringAsString() {
 			sbyte []str = this.ReadString();
 			return Common.ToString(str);
 		}
@@ -268,7 +268,7 @@ namespace JKClient {
 			str[l] = 0;
 			return str;
 		}
-		public unsafe string ReadBigStringAsString() {
+		public string ReadBigStringAsString() {
 			sbyte []str = this.ReadBigString();
 			return Common.ToString(str);
 		}
@@ -290,7 +290,7 @@ namespace JKClient {
 			str[l] = 0;
 			return str;
 		}
-		public unsafe string ReadStringLineAsString() {
+		public string ReadStringLineAsString() {
 			sbyte []str = this.ReadStringLine();
 			return Common.ToString(str);
 		}
@@ -300,7 +300,7 @@ namespace JKClient {
 				/*data[i] = (byte)*/this.ReadByte();
 			}
 		}
-		public unsafe void ReadDeltaEntity(EntityState *from, EntityState *to, int number, ClientVersion version, GameMod gameMod) {
+		public unsafe void ReadDeltaEntity(EntityState *from, EntityState *to, int number, ProtocolVersion protocol, GameMod gameMod) {
 			if (number < 0 || number >= Common.MaxGEntities) {
 				throw new JKClientException($"Bad delta entity number: {number}");
 			}
@@ -315,10 +315,10 @@ namespace JKClient {
 				return;
 			}
 			NetFieldsArray fields;
-			switch (version) {
+			switch (protocol) {
 			default:
-			case ClientVersion.JA_v1_00:
-			case ClientVersion.JA_v1_01:
+			case ProtocolVersion.Protocol25:
+			case ProtocolVersion.Protocol26:
 				switch (gameMod) {
 				default:
 				case GameMod.Base:
@@ -332,12 +332,15 @@ namespace JKClient {
 					break;
 				}
 				break;
-			case ClientVersion.JO_v1_02:
+			case ProtocolVersion.Protocol15:
 				fields = Message.entityStateFields15;
 				break;
-			case ClientVersion.JO_v1_03:
-			case ClientVersion.JO_v1_04:
+			case ProtocolVersion.Protocol16:
 				fields = Message.entityStateFields16;
+				break;
+			case ProtocolVersion.Protocol68:
+			case ProtocolVersion.Protocol71:
+				fields = Message.entityStateFields68;
 				break;
 			}
 			int lc = this.ReadByte();
@@ -379,7 +382,7 @@ namespace JKClient {
 				fields[i].Adjust?.Invoke(toF);
 			}
 		}
-		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, bool isVehicle, ClientVersion version, GameMod gameMod) {
+		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, bool isVehicle, ProtocolVersion protocol, GameMod gameMod) {
 			GCHandle fromHandle;
 			if (from == null) {
 				fromHandle = GCHandle.Alloc(PlayerState.Null, GCHandleType.Pinned);
@@ -390,10 +393,10 @@ namespace JKClient {
 			*to = *from;
 			bool isPilot = false;
 			NetFieldsArray fields;
-			switch (version) {
+			switch (protocol) {
 			default:
-			case ClientVersion.JA_v1_00:
-			case ClientVersion.JA_v1_01:
+			case ProtocolVersion.Protocol25:
+			case ProtocolVersion.Protocol26:
 				if (isVehicle) {
 					fields = Message.vehPlayerStateFields;
 				} else {
@@ -416,12 +419,15 @@ namespace JKClient {
 					}
 				}
 				break;
-			case ClientVersion.JO_v1_02:
+			case ProtocolVersion.Protocol15:
 				fields = Message.playerStateFields15;
 				break;
-			case ClientVersion.JO_v1_03:
-			case ClientVersion.JO_v1_04:
+			case ProtocolVersion.Protocol16:
 				fields = Message.playerStateFields16;
+				break;
+			case ProtocolVersion.Protocol68:
+			case ProtocolVersion.Protocol71:
+				fields = Message.playerStateFields68;
 				break;
 			}
 			int lc = this.ReadByte();
@@ -458,8 +464,7 @@ namespace JKClient {
 					int bits = this.ReadShort();
 					for (int i = 0; i < 16; i++) {
 						if ((bits & (1<<i)) != 0) {
-							if (i == 4
-								&& (version == ClientVersion.JA_v1_00 || version == ClientVersion.JA_v1_01)) {
+							if (i == 4 && JKClient.IsJA(protocol)) {
 								to->Stats[i] = this.ReadBits(19);
 							} else {
 								to->Stats[i] = this.ReadShort();
@@ -939,6 +944,59 @@ namespace JKClient {
 			{	0	,	8	},
 			{	0	,	32	},
 			{	0	,	1   }
+		};
+		private static readonly NetFieldsArray entityStateFields68 = new NetFieldsArray(typeof(EntityState)) {
+			{	0	,	32	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	nameof(EntityState.Event)	,	10	},
+			{	0	,	0	},
+			{	nameof(EntityState.EntityType)	,	8	},
+			{	0	,	8	},
+			{   nameof(EntityState.EventParm)   ,	8	},
+			{	0	,	8	},
+			{	nameof(EntityState.GroundEntityNum)	,	Common.GEntitynumBits	},
+			{	0	,	8	},
+			{	nameof(EntityState.EntityFlags)	,	19	},
+			{	nameof(EntityState.OtherEntityNum)	,	Common.GEntitynumBits	},
+			{	0	,	8	},
+			{	nameof(EntityState.ClientNum)	,	8	},
+			{	0	,	0	},
+			{	0	,	32	},
+			{	0	,	8	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	24	},
+			{	0	,	16	},
+			{	0	,	8	},
+			{	0	,	Common.GEntitynumBits	},
+			{	0	,	8	},
+			{	0	,	8	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	8	},
+			{	0	,	0	},
+			{	0	,	32	},
+			{	0	,	32	},
+			{	0	,	32	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	32	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	32	},
+			{	0	,	16	}
 		};
 #endregion
 #region PlayerStateFields
@@ -1666,6 +1724,64 @@ namespace JKClient {
 			{	0	,	1	},
 			{	0	,	1	},
 			{	0	,	1   }
+		};
+		private static unsafe readonly NetFieldsArray playerStateFields68 = new NetFieldsArray(typeof(PlayerState)) {
+			{	0	,	32	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	8	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	-16	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	8	},
+			{	0	,	-16	},
+			{   nameof(PlayerState.EventSequence) ,	16	},
+			{	0	,	8	},
+			{	0	,	4	},
+			{	nameof(PlayerState.Events)  ,   sizeof(int)*0	,   8	},
+			{	0	,	8	},
+			{	nameof(PlayerState.Events)	,	sizeof(int)*1	,	8	},
+			{   nameof(PlayerState.PlayerMoveFlags) ,	16	},
+			{	nameof(PlayerState.GroundEntityNum)	,	Common.GEntitynumBits	},
+			{	0	,	4	},
+			{   nameof(PlayerState.EntityFlags) ,	16	},
+			{   nameof(PlayerState.ExternalEvent) ,	10	},
+			{	0	,	16	},
+			{	0	,	16	},
+			{	0	,	16	},
+			{	nameof(PlayerState.ExternalEventParm)	,	8	},
+			{	0	,	-8	},
+			{	0	,	8	},
+			{	0	,	8	},
+			{	0	,	8	},
+			{	0	,	8	},
+			{	0	,	8	},
+			{	nameof(PlayerState.PlayerMoveType)	,	8	, (value) => {
+				if (Enum.IsDefined(typeof(PlayerMoveType), *value)) {
+					var pmType = (PlayerMoveType)(*value);
+					//Q3 doesn't have jetpack and float player movements, the rest movements match
+					if (pmType >= PlayerMoveType.Jetpack) {
+						(*value)+=2;
+					}
+				}
+			}	},
+			{	0	,	16	},
+			{	0	,	16	},
+			{	0	,	12	},
+			{   nameof(PlayerState.EventParms)  ,   sizeof(int)*1   ,   8	},
+			{   nameof(PlayerState.EventParms)  ,   sizeof(int)*0   ,   8	},
+			{   nameof(PlayerState.ClientNum) ,	8	},
+			{	0	,	5	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	0	},
+			{	0	,	10	},
+			{	0	,	16	}
 		};
 #endregion
 		private static readonly int []hData = new int[256]{

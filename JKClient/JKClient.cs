@@ -4,13 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace JKClient {
 	public sealed partial class JKClient : NetClient/*, IJKClientImport*/ {
 		private const int LastPacketTimeOut = 5 * 60000;
 		private const int RetransmitTimeOut = 3000;
-		private const int MaxReliableCommands = 128;
+		private const int MaxReliableCommandsQ3 = 64;
+		private const int MaxReliableCommandsJK = 128;
 		private const int MaxPacketUserCmds = 32;
 		private const string DefaultName = "AssetslessClient";
 		private const string UserInfo = "\\name\\"+JKClient.DefaultName+"\\rate\\25000\\snaps\\40\\model\\kyle/default\\forcepowers\\7-1-032330000000001333\\color1\\4\\color2\\4\\handicap\\100\\teamtask\\0\\sex\\male\\password\\\\cg_predictItems\\1\\saber1\\single_1\\saber2\\none\\char_color_red\\255\\char_color_green\\255\\char_color_blue\\255\\engine\\jkclient\\assets\\0";
@@ -31,24 +33,22 @@ namespace JKClient {
 		private int checksumFeed = 0;
 		private int reliableSequence = 0;
 		private int reliableAcknowledge = 0;
-		private sbyte [][]reliableCommands = new sbyte[JKClient.MaxReliableCommands][];
+		private sbyte [][]reliableCommands = new sbyte[JKClient.MaxReliableCommandsJK][];
 		private int serverMessageSequence = 0;
 		private int serverCommandSequence = 0;
 		private int lastExecutedServerCommand = 0;
-		private sbyte [][]serverCommands = new sbyte[JKClient.MaxReliableCommands][];
+		private sbyte [][]serverCommands = new sbyte[JKClient.MaxReliableCommandsJK][];
 		private NetChannel netChannel;
 #endregion
 #region ClientStatic
 		private int realTime = 0;
-		public ConnectionStatus Status { get; private set; }
 		private string servername;
+		private NetAddress authorizeServer;
+		public ConnectionStatus Status { get; private set; }
 #endregion
-		internal ProtocolVersion Protocol { get; private set; } = ProtocolVersion.Protocol26;
 		internal ClientVersion Version { get; private set; } = ClientVersion.JA_v1_01;
-		public event Action<ServerInfo> ServerInfoChanged;
-		internal void NotifyServerInfoChanged() {
-			this.ServerInfoChanged?.Invoke(this.ServerInfo);
-		}
+		private int MaxReliableCommands => this.IsQ3() ? JKClient.MaxReliableCommandsQ3 : JKClient.MaxReliableCommandsJK;
+		private string GuidKey => this.IsQ3() ? "cl_guid" : "ja_guid";
 		public string Name {
 			get => this.userInfoString["name"];
 			set {
@@ -69,29 +69,35 @@ namespace JKClient {
 				this.UpdateUserInfo();
 			}
 		}
-		public Guid JAGuid {
-			get => Guid.TryParse(this.userInfoString["ja_guid"], out Guid guid) ? guid : Guid.Empty;
+		public Guid Guid {
+			get => Guid.TryParse(this.userInfoString[this.GuidKey], out Guid guid) ? guid : Guid.Empty;
 			set {
-				this.userInfoString["ja_guid"] = value.ToString();
+				this.userInfoString[this.GuidKey] = value.ToString();
 				this.UpdateUserInfo();
 			}
 		}
+		public string CDKey { get; set; } = string.Empty;
 		public ClientInfo []ClientInfo => this.clientGame?.ClientInfo;
 		private readonly ServerInfo serverInfo = new ServerInfo();
 		public ServerInfo ServerInfo {
 			get {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
 				var infoString = new InfoString(serverInfoCSStr);
-				serverInfo.Address = this.serverAddress;
-				serverInfo.Clients = this.ClientInfo?.Count(ci => ci.InfoValid) ?? 0;
-				serverInfo.SetConfigstringInfo(infoString);
-				return serverInfo;
+				this.serverInfo.Address = this.serverAddress;
+				this.serverInfo.Clients = this.ClientInfo?.Count(ci => ci.InfoValid) ?? 0;
+				this.serverInfo.SetConfigstringInfo(infoString);
+				return this.serverInfo;
 			}
 		}
-		public JKClient() {
+		public event Action<ServerInfo> ServerInfoChanged;
+		internal void NotifyServerInfoChanged() {
+			this.ServerInfoChanged?.Invoke(this.ServerInfo);
+		}
+		public JKClient(ProtocolVersion protocol = ProtocolVersion.Unknown) {
+			this.Protocol = protocol;
 			this.Status = ConnectionStatus.Disconnected;
 			this.port = random.Next(1, 0xffff) & 0xffff;
-			for (int i = 0; i < JKClient.MaxReliableCommands; i++) {
+			for (int i = 0; i < JKClient.MaxReliableCommandsJK; i++) {
 				this.serverCommands[i] = new sbyte[Common.MaxStringChars];
 				this.reliableCommands[i] = new sbyte[Common.MaxStringChars];
 			}
@@ -153,8 +159,8 @@ namespace JKClient {
 				this.Name = value;
 			} else if (key == "password") {
 				this.Password = value;
-			} else if (key == "ja_guid") {
-				this.JAGuid = Guid.TryParse(value, out Guid guid) ? guid : Guid.Empty;
+			} else if (key == this.GuidKey) {
+				this.Guid = Guid.TryParse(value, out Guid guid) ? guid : Guid.Empty;
 			} else {
 				this.userInfoString[key] = value;
 				this.UpdateUserInfo();
@@ -177,6 +183,7 @@ namespace JKClient {
 			this.connectPacketCount++;
 			switch (this.Status) {
 			case ConnectionStatus.Connecting:
+				this.RequestAuthorization();
 				this.OutOfBandPrint(this.serverAddress, $"getchallenge {this.challenge}");
 				break;
 			case ConnectionStatus.Challenging:
@@ -184,6 +191,20 @@ namespace JKClient {
 				this.OutOfBandData(this.serverAddress, data, data.Length);
 				break;
 			}
+		}
+		private void RequestAuthorization() {
+			if (!this.IsQ3()) {
+				return;
+			}
+			if (this.authorizeServer == null) {
+				this.authorizeServer = NetSystem.StringToAddress("authorize.quake3arena.com", 27952);
+				if (this.authorizeServer == null) {
+					Debug.WriteLine("Couldn't resolve authorize address");
+					return;
+				}
+			}
+			var nums = Regex.Replace(CDKey, "[^a-zA-Z0-9]", string.Empty);
+			this.OutOfBandPrint(this.authorizeServer, $"getKeyAuthorize {0} {nums}");
 		}
 		private unsafe void Encode(Message msg) {
 			if (msg.CurSize <= 12) {
@@ -195,7 +216,7 @@ namespace JKClient {
 			int messageAcknowledge = msg.ReadLong();
 			int reliableAcknowledge = msg.ReadLong();
 			msg.RestoreState();
-			fixed (sbyte *b = this.serverCommands[reliableAcknowledge & (JKClient.MaxReliableCommands-1)]) {
+			fixed (sbyte *b = this.serverCommands[reliableAcknowledge & (this.MaxReliableCommands-1)]) {
 				fixed (byte *d = msg.Data) {
 					byte *str = (byte*)b;
 					int index = 0;
@@ -203,7 +224,7 @@ namespace JKClient {
 					for (int i = 12; i < msg.CurSize; i++) {
 						if (str[index] == 0)
 							index = 0;
-						if ((this.IsJO() && str[index] > 127) || str[index] == 37) { //'%'
+						if ((!this.IsJA() && str[index] > 127) || str[index] == 37) { //'%'
 							key ^= (byte)(46 << (i & 1)); //'.'
 						} else {
 							key ^= (byte)(str[index] << (i & 1));
@@ -219,7 +240,7 @@ namespace JKClient {
 			msg.Bitstream();
 			int reliableAcknowledge = msg.ReadLong();
 			msg.RestoreState();
-			fixed (sbyte *b = this.reliableCommands[reliableAcknowledge & (JKClient.MaxReliableCommands-1)]) {
+			fixed (sbyte *b = this.reliableCommands[reliableAcknowledge & (this.MaxReliableCommands-1)]) {
 				fixed (byte *d = msg.Data) {
 					byte *str = (byte*)b;
 					int index = 0;
@@ -227,7 +248,7 @@ namespace JKClient {
 					for (int i = msg.ReadCount + 4; i < msg.CurSize; i++) {
 						if (str[index] == 0)
 							index = 0;
-						if ((this.IsJO() && str[index] > 127) || str[index] == 37) { //'%'
+						if ((!this.IsJA() && str[index] > 127) || str[index] == 37) { //'%'
 							key ^= (byte)(46 << (i & 1)); //'.'
 						} else {
 							key ^= (byte)(str[index] << (i & 1));
@@ -240,7 +261,7 @@ namespace JKClient {
 		}
 		private protected override unsafe void PacketEvent(NetAddress address, Message msg) {
 //			this.lastPacketTime = this.realTime;
-			fixed (byte* b = msg.Data) {
+			fixed (byte *b = msg.Data) {
 				if (msg.CurSize >= 4 && *(int*)b == -1) {
 					this.ConnectionlessPacket(address, msg);
 					return;
@@ -290,7 +311,7 @@ namespace JKClient {
 				if (address != this.serverAddress) {
 					return;
 				}
-				this.netChannel = new NetChannel(this.net, address, this.port);
+				this.netChannel = new NetChannel(this.net, address, this.port, this.Protocol);
 				this.Status = ConnectionStatus.Connected;
 				this.lastPacketSentTime = -9999;
 			} else if (string.Compare(c, "disconnect", StringComparison.OrdinalIgnoreCase) == 0) {
@@ -339,8 +360,8 @@ namespace JKClient {
 		}
 		private void WritePacket() {
 			var oldcmd = new UserCommand();
-			byte []data = new byte[Message.MaxLength];
-			var msg = new Message(data, sizeof(byte)*Message.MaxLength);
+			byte []data = new byte[Message.MaxLength(this.Protocol)];
+			var msg = new Message(data, sizeof(byte)*Message.MaxLength(this.Protocol));
 			msg.Bitstream();
 			msg.WriteLong(this.serverId);
 			msg.WriteLong(this.serverMessageSequence);
@@ -348,7 +369,7 @@ namespace JKClient {
 			for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
 				msg.WriteByte((int)ClientCommandOperations.ClientCommand);
 				msg.WriteLong(i);
-				msg.WriteString(this.reliableCommands[i & (JKClient.MaxReliableCommands-1)]);
+				msg.WriteString(this.reliableCommands[i & (this.MaxReliableCommands-1)]);
 			}
 			int oldPacketNum = (this.netChannel.OutgoingSequence - 1 - 1) & JKClient.PacketMask;
 			int count = this.cmdNumber - this.outPackets[oldPacketNum].CommandNumber;
@@ -364,7 +385,7 @@ namespace JKClient {
 				msg.WriteByte(count);
 				int key = this.checksumFeed;
 				key ^= this.serverMessageSequence;
-				key ^= Common.HashKey(this.serverCommands[this.serverCommandSequence & (JKClient.MaxReliableCommands-1)], 32);
+				key ^= Common.HashKey(this.serverCommands[this.serverCommandSequence & (this.MaxReliableCommands-1)], 32);
 				for (int i = 0; i < count; i++) {
 					int j = (this.cmdNumber - count + i + 1) & UserCommand.CommandMask;
 					msg.WriteDeltaUsercmdKey(key, ref oldcmd, ref this.cmds[j]);
@@ -384,7 +405,7 @@ namespace JKClient {
 		}
 		private unsafe void AddReliableCommand(string cmd, bool disconnect = false, Encoding encoding = null) {
 			int unacknowledged = this.reliableSequence - this.reliableAcknowledge;
-			fixed (sbyte *reliableCommand = this.reliableCommands[++this.reliableSequence & (JKClient.MaxReliableCommands-1)]) {
+			fixed (sbyte *reliableCommand = this.reliableCommands[++this.reliableSequence & (this.MaxReliableCommands-1)]) {
 				encoding = encoding ?? Common.Encoding;
 				Marshal.Copy(encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), encoding.GetByteCount(cmd)+1);
 			}
@@ -408,11 +429,14 @@ namespace JKClient {
 			}
 			await this.Connect(serverInfo.Address.ToString(), serverInfo.Protocol);
 		}
-		public async Task Connect(string address, ProtocolVersion protocol) {
+		public async Task Connect(string address, ProtocolVersion protocol = ProtocolVersion.Unknown) {
 			this.connectTCS?.TrySetCanceled();
 			var serverAddress = NetSystem.StringToAddress(address);
 			if (serverAddress == null) {
 				throw new JKClientException("Bad server address");
+			}
+			if (this.Protocol == ProtocolVersion.Unknown && protocol == ProtocolVersion.Unknown) {
+				throw new JKClientException("Unknown protocol to connect to");
 			}
 			this.connectTCS = new TaskCompletionSource<bool>();
 			void connect() {
@@ -443,17 +467,32 @@ namespace JKClient {
 			}
 			this.actionsQueue.Enqueue(disconnect);
 		}
+		private bool IsJA() {
+			return JKClient.IsJA(this.Protocol);
+		}
+		internal static bool IsJA(ProtocolVersion protocol) {
+			return protocol == ProtocolVersion.Protocol25 || protocol == ProtocolVersion.Protocol26;
+		}
 		private bool IsJO() {
 			return JKClient.IsJO(this.Protocol);
 		}
 		internal static bool IsJO(ProtocolVersion protocol) {
 			return protocol == ProtocolVersion.Protocol15 || protocol == ProtocolVersion.Protocol16;
 		}
+		private bool IsQ3() {
+			return JKClient.IsQ3(this.Protocol);
+		}
+		internal static bool IsQ3(ProtocolVersion protocol) {
+			return protocol == ProtocolVersion.Protocol68 || protocol == ProtocolVersion.Protocol71;
+		}
 		private ClientVersion GetVersion() {
 			return JKClient.GetVersion(this.Protocol);
 		}
 		internal static ClientVersion GetVersion(ProtocolVersion protocol) {
 			switch (protocol) {
+			case ProtocolVersion.Protocol68:
+			case ProtocolVersion.Protocol71:
+				return ClientVersion.Q3_v1_32;
 			case ProtocolVersion.Protocol15:
 				return ClientVersion.JO_v1_02;
 			case ProtocolVersion.Protocol16:

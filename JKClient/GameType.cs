@@ -9,6 +9,9 @@
 		Team,
 		Siege,
 		CTF,
-		CTY
+		CTY,
+		OneFlagCTF,
+		Obelisk,
+		Harvester
 	}
 }

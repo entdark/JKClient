@@ -8,6 +8,10 @@
 		//JA v1.00
 		Protocol25 = 25,
 		//JA v1.01
-		Protocol26 = 26
+		Protocol26 = 26,
+		//Q3 v1.32
+		Protocol68 = 68,
+		//Q3 v1.32
+		Protocol71 = 71
 	}
 }

@@ -4,7 +4,8 @@ using System.Text;
 
 namespace JKClient {
 	public sealed partial class JKClient {
-		public readonly StringBuilder bigInfoString = new StringBuilder(Common.BigInfoString, Common.BigInfoString);
+		private readonly StringBuilder bigInfoString = new StringBuilder(Common.BigInfoString, Common.BigInfoString);
+		internal int MaxClients => Common.MaxClients(this.Protocol);
 		public event Action<CommandEventArgs> ServerCommandExecuted;
 		internal void ExecuteServerCommand(CommandEventArgs eventArgs) {
 			this.ServerCommandExecuted?.Invoke(eventArgs);
@@ -30,23 +31,22 @@ namespace JKClient {
 		}
 		private ClientGame InitClientGame() {
 			this.Status = ConnectionStatus.Primed;
-			switch (this.Version) {
-			default:
-			case ClientVersion.JA_v1_00:
-			case ClientVersion.JA_v1_01:
+			if (this.IsJA()) {
 				switch (this.gameMod) {
 				default:
 					return new ClientGameJA(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
 				}
-			case ClientVersion.JO_v1_02:
-			case ClientVersion.JO_v1_03:
-			case ClientVersion.JO_v1_04:
+			} else if (this.IsJO()) {
 				return new ClientGameJO(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
+			} else if (this.IsQ3()) {
+				return new ClientGameQ3(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
+			} else {
+				throw new JKClientException("Failed to create client game for unknown protocol");
 			}
 		}
 		private unsafe void ConfigstringModified(Command command, sbyte []s) {
 			int index = command.Argv(1).Atoi();
-			if (index < 0 || index >= GameState.MaxConfigstrings) {
+			if (index < 0 || index >= this.MaxConfigstrings) {
 				throw new JKClientException($"ConfigstringModified: bad index {index}");
 			}
 			int start = 4 + command.Argv(1).Length;
@@ -70,7 +70,7 @@ namespace JKClient {
 				}
 				this.gameState.DataCount = 1;
 				int len;
-				for (int i = 0; i < GameState.MaxConfigstrings; i++) {
+				for (int i = 0; i < this.MaxConfigstrings; i++) {
 					byte []dup = new byte[GameState.MaxGameStateChars];
 					if (i == index) {
 						len = Common.StrLen(sb);
@@ -129,15 +129,15 @@ namespace JKClient {
 			}
 			return true;
 		}
-		internal bool GetServerCommand(int serverCommandNumber, out Command command) {
-			if (serverCommandNumber <= this.serverCommandSequence - JKClient.MaxReliableCommands) {
+		internal unsafe bool GetServerCommand(int serverCommandNumber, out Command command) {
+			if (serverCommandNumber <= this.serverCommandSequence - this.MaxReliableCommands) {
 				throw new JKClientException("GetServerCommand: a reliable command was cycled out");
 			}
 			if (serverCommandNumber > this.serverCommandSequence) {
 				throw new JKClientException("GetServerCommand: requested a command not received");
 			}
 			this.lastExecutedServerCommand = serverCommandNumber;
-			sbyte []sc = this.serverCommands[serverCommandNumber & (JKClient.MaxReliableCommands - 1)];
+			sbyte []sc = this.serverCommands[serverCommandNumber & (this.MaxReliableCommands - 1)];
 rescan:
 			string s = Common.ToString(sc);
 			command = new Command(s);

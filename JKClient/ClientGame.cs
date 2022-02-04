@@ -35,8 +35,8 @@ namespace JKClient {
 			this.Snap = null;
 			this.NextSnap = null;
 			Common.MemSet(this.Entities, 0, sizeof(ClientEntity)*Common.MaxGEntities);
-			this.ClientInfo = new ClientInfo[Common.MaxClients];
-			for (int i = 0; i < Common.MaxClients; i++) {
+			this.ClientInfo = new ClientInfo[this.Client.MaxClients];
+			for (int i = 0; i < this.Client.MaxClients; i++) {
 				this.NewClientInfo(i);
 			}
 			this.Initialized = true;
@@ -182,7 +182,7 @@ namespace JKClient {
 				}
 			}
 			if (ps.ClientNum != ops.ClientNum) {
-				for (int i = 0; i < Common.MaxClients; i++) {
+				for (int i = 0; i < this.Client.MaxClients; i++) {
 					this.NewClientInfo(i);
 				}
 			}
@@ -203,7 +203,7 @@ namespace JKClient {
 		protected virtual void ConfigstringModified(Command command) {
 			int num = command.Argv(1).Atoi();
 			int configstringPlayers = this.GetConfigstringIndex(Configstring.Players);
-			if (num >= configstringPlayers && num < configstringPlayers+Common.MaxClients) {
+			if (num >= configstringPlayers && num < configstringPlayers+this.Client.MaxClients) {
 				this.NewClientInfo(num - configstringPlayers);
 			}
 		}
@@ -245,33 +245,23 @@ namespace JKClient {
 			}
 			this.HandleEvent(ref cent);
 		}
-		protected virtual void HandleEvent(ref ClientEntity cent) {
+		protected virtual EntityEvent HandleEvent(ref ClientEntity cent) {
 			ref var es = ref cent.CurrentState;
 			int entityEvent = es.Event & ~(int)EntityEvent.Bits;
 			var ev = this.GetEntityEvent(entityEvent);
 			if (ev == EntityEvent.None) {
-				return;
+				return EntityEvent.None;
 			}
 			int clientNum = es.ClientNum;
-			if (clientNum < 0 || clientNum >= Common.MaxClients) {
+			if (clientNum < 0 || clientNum >= this.Client.MaxClients) {
 				clientNum = 0;
 			}
 			if (es.EntityType == this.GetEntityType(EntityType.Player)) {
 				if (!this.ClientInfo[clientNum].InfoValid) {
-					return;
+					return EntityEvent.None;
 				}
 			}
-			switch (ev) {
-			case EntityEvent.VoiceCommandSound:
-				if (es.GroundEntityNum >= 0 && es.GroundEntityNum < Common.MaxClients) {
-					clientNum = es.GroundEntityNum;
-					string description = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Sounds) + es.EventParm);
-					string message = $"<{this.ClientInfo[clientNum].Name}^7\u0019: {description}>";
-					var command = new Command(new string[] { "chat", message });
-					this.Client.ExecuteServerCommand(new CommandEventArgs(command));
-				}
-				break;
-			}
+			return ev;
 		}
 		protected abstract int GetConfigstringIndex(Configstring index);
 		protected abstract EntityEvent GetEntityEvent(int entityEvent);
@@ -355,12 +345,24 @@ namespace JKClient {
 				throw new JKClientException($"Invalid entity type: {entityType}");
 			}
 		}
-		protected override void HandleEvent(ref ClientEntity cent) {
+		protected override EntityEvent HandleEvent(ref ClientEntity cent) {
 			ref var es = ref cent.CurrentState;
 			if (es.EntityType == this.GetEntityType(EntityType.NPC)) {
-				return;
+				return EntityEvent.None;
 			}
-			base.HandleEvent(ref cent);
+			var ev = base.HandleEvent(ref cent);
+			switch (ev) {
+			case EntityEvent.VoiceCommandSound:
+				if (es.GroundEntityNum >= 0 && es.GroundEntityNum < this.Client.MaxClients) {
+					int clientNum = es.GroundEntityNum;
+					string description = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Sounds) + es.EventParm);
+					string message = $"<{this.ClientInfo[clientNum].Name}^7\u0019: {description}>";
+					var command = new Command(new string[] { "chat", message });
+					this.Client.ExecuteServerCommand(new CommandEventArgs(command));
+				}
+				break;
+			}
+			return ev;
 		}
 		internal enum ConfigstringJA {
 			Sounds = 811,
@@ -373,8 +375,7 @@ namespace JKClient {
 		}
 		internal enum EntityEventJA : int {
 			None,
-			VoiceCommandSound = 75,
-			Bits = 0x300
+			VoiceCommandSound = 75
 		}
 		internal enum EntityTypeJA : int {
 			General,
@@ -473,6 +474,86 @@ namespace JKClient {
 			Grapple,
 			Team,
 			Body,
+			Events
+		}
+	}
+	internal class ClientGameQ3 : ClientGame {
+		public ClientGameQ3(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
+			: base(client, serverMessageNum, serverCommandSequence, clientNum) {}
+		protected override int GetConfigstringIndex(Configstring index) {
+			switch (index) {
+			case Configstring.Sounds:
+				return (int)ConfigstringQ3.Sounds;
+			case Configstring.Players:
+				return (int)ConfigstringQ3.Players;
+			}
+			return 0;
+		}
+		protected override EntityEvent GetEntityEvent(int entityEvent) {
+			if (Enum.IsDefined(typeof(EntityEventQ3), entityEvent)) {
+				switch ((EntityEventQ3)entityEvent) {
+				default:
+					break;
+				}
+			}
+			return EntityEvent.None;
+		}
+		protected override int GetEntityFlag(EntityFlag entityFlag) {
+			if (Enum.IsDefined(typeof(EntityFlagQ3), (int)entityFlag)) {
+				switch (entityFlag) {
+				case EntityFlag.TeleportBit:
+					return (int)EntityFlagQ3.TeleportBit;
+				case EntityFlag.PlayerEvent:
+					return (int)EntityFlagQ3.PlayerEvent;
+				}
+			}
+			return 0;
+		}
+		protected override int GetEntityType(EntityType entityType) {
+			if (entityType >= EntityType.Mover && entityType <= EntityType.Invisible) {
+				entityType-=2;
+			}
+			switch (entityType) {
+			default:
+				return (int)entityType;
+			case EntityType.Grapple:
+				return (int)EntityTypeQ3.Grapple;
+			case EntityType.Team:
+				return (int)EntityTypeQ3.Team;
+			case EntityType.Events:
+				return (int)EntityTypeQ3.Events;
+			case EntityType.Special:
+			case EntityType.Holocron:
+			case EntityType.NPC:
+				throw new JKClientException($"Invalid entity type: {entityType}");
+			}
+		}
+		internal enum ConfigstringQ3 {
+			Sounds = 288,
+			Players = 544
+		}
+		[Flags]
+		internal enum EntityFlagQ3 : int {
+			TeleportBit = (1<<2),
+			PlayerEvent = (1<<4)
+		}
+		internal enum EntityEventQ3 : int {
+			None
+		}
+		internal enum EntityTypeQ3 : int {
+			General,
+			Player,
+			Item,
+			Missile,
+			Mover,
+			Beam,
+			Portal,
+			Speaker,
+			PushTrigger,
+			TeleportTrigger,
+			Invisible,
+			Grapple,
+			Team,
 			Events
 		}
 	}
