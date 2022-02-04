@@ -165,7 +165,11 @@ rescan:
 					.Append(command.Argv(2))
 					.Append("\"");
 				s = this.bigInfoString.ToString();
-				sc = (sbyte[])(Array)Common.Encoding.GetBytes(s);
+				sc = new sbyte[Common.BigInfoString];
+				var bsc = Common.Encoding.GetBytes(s);
+				fixed (sbyte *psc = sc) {
+					Marshal.Copy(bsc, 0, (IntPtr)psc, bsc.Length);
+				}
 				goto rescan;
 			} else if (string.Compare(cmd, "cs", StringComparison.Ordinal) == 0) {
 				this.ConfigstringModified(command, sc);
