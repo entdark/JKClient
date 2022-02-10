@@ -1,5 +1,5 @@
 ﻿namespace JKClient {
-	internal enum ServerCommandOperations {
+	public enum ServerCommandOperations {
 		Bad,
 		Nop,
 		Gamestate,

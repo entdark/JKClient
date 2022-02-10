@@ -5,12 +5,18 @@ using System.Threading.Tasks;
 namespace JKClient {
 	public abstract class NetClient : IDisposable {
 		private protected readonly NetSystem net;
-		private readonly byte []packetReceived = new byte[Message.MaxLength(ProtocolVersion.Protocol26)];
+		private readonly byte []packetReceived;
 		private CancellationTokenSource cts;
 		public bool Started { get; private set; }
-		protected ProtocolVersion Protocol { get; set; }
-		internal NetClient() {
+		private readonly protected INetHandler NetHandler;
+		private protected ProtocolVersion Protocol => this.NetHandler.Protocol;
+		internal NetClient(INetHandler netHandler) {
+			if (netHandler == null) {
+				throw new JKClientException(new ArgumentNullException(nameof(netHandler)));
+			}
 			this.net = new NetSystem();
+			this.NetHandler = netHandler;
+			this.packetReceived = new byte[this.NetHandler.MaxMessageLength];
 		}
 		public void Start(Func<JKClientException, Task> exceptionCallback) {
 			if (this.Started) {
@@ -39,7 +45,7 @@ namespace JKClient {
 			}
 		}
 		private protected void GetPacket() {
-			var netmsg = new Message(packetReceived, sizeof(byte)*Message.MaxLength(this.Protocol));
+			var netmsg = new Message(packetReceived, sizeof(byte)*this.NetHandler.MaxMessageLength);
 			NetAddress address = null;
 			while (this.net.GetPacket(ref address, netmsg)) {
 				if ((uint)netmsg.CurSize <= netmsg.MaxSize) {
@@ -49,7 +55,7 @@ namespace JKClient {
 			}
 		}
 		internal void OutOfBandPrint(NetAddress address, string data) {
-			byte []msg = new byte[Message.MaxLength(this.Protocol)];
+			byte []msg = new byte[this.NetHandler.MaxMessageLength];
 			msg[0] = unchecked((byte)-1);
 			msg[1] = unchecked((byte)-1);
 			msg[2] = unchecked((byte)-1);
@@ -59,7 +65,7 @@ namespace JKClient {
 			this.net.SendPacket(dataMsg.Length+4, msg, address);
 		}
 		internal void OutOfBandData(NetAddress address, string data, int length) {
-			byte []msg = new byte[Message.MaxLength(this.Protocol)*2];
+			byte []msg = new byte[this.NetHandler.MaxMessageLength*2];
 			msg[0] = 0xff;
 			msg[1] = 0xff;
 			msg[2] = 0xff;

@@ -11,7 +11,6 @@ namespace JKClient {
 		internal const int GEntitynumBits = 10;
 		internal const int MaxGEntities = (1<<Common.GEntitynumBits);
 		internal const int GibHealth = -40;
-		internal static int MaxClients(ProtocolVersion protocol) => JKClient.IsQ3(protocol) ? 64 : 32;
 		internal static long Milliseconds => (DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond);
 #if NETSTANDARD2_1
 		private static Action<IntPtr, byte, int> memSetDelegate;

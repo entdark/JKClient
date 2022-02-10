@@ -21,8 +21,7 @@ namespace JKClient {
 		private EntityState []entityBaselines = new EntityState[Common.MaxGEntities];
 		private EntityState []parseEntities = new EntityState[JKClient.MaxParseEntities];
 #endregion
-		private GameMod gameMod = GameMod.Undefined;
-		private int MaxConfigstrings => GameState.MaxConfigstrings(this.Protocol);
+		private int MaxConfigstrings => this.ClientHandler.MaxConfigstrings;
 		private void ParseServerMessage(Message msg) {
 			msg.Bitstream();
 			this.reliableAcknowledge = msg.ReadLong();
@@ -36,13 +35,7 @@ namespace JKClient {
 					throw new JKClientException("ParseServerMessage: read past end of server message");
 				}
 				cmd = (ServerCommandOperations)msg.ReadByte();
-				//JO doesn't have setgame command, the rest commands match
-				if (this.IsJO() && cmd >= ServerCommandOperations.SetGame) {
-					cmd++;
-				//Q3 doesn't have setgame and mapchange commands, the rest commands match
-				} else if (this.IsQ3() && cmd == ServerCommandOperations.SetGame) {
-					cmd = ServerCommandOperations.EOF; //OPTIMIZE: just break?
-				}
+				this.ClientHandler.AdjustServerCommandOperations(ref cmd);
 				if (cmd == ServerCommandOperations.EOF) {
 					break;
 				}
@@ -85,13 +78,7 @@ namespace JKClient {
 			ServerCommandOperations cmd;
 			while (true) {
 				cmd = (ServerCommandOperations)msg.ReadByte();
-				//JO doesn't have setgame command, the rest commands match
-				if (this.IsJO() && cmd >= ServerCommandOperations.SetGame) {
-					cmd++;
-				//Q3 doesn't have setgame and mapchange commands, the rest commands match
-				} else if (this.IsQ3() && cmd == ServerCommandOperations.SetGame) {
-					cmd = ServerCommandOperations.EOF; //OPTIMIZE: just break?
-				}
+				this.ClientHandler.AdjustServerCommandOperations(ref cmd);
 				if (cmd == ServerCommandOperations.EOF) {
 					break;
 				} else if (cmd == ServerCommandOperations.Configstring) {
@@ -104,25 +91,8 @@ namespace JKClient {
 					if (len + 1 + this.gameState.DataCount > GameState.MaxGameStateChars) {
 						throw new JKClientException("MaxGameStateChars exceeded");
 					}
-					if (i == GameState.ServerInfo) {
-						string serverInfoCSStr = Common.ToString(s);
-						var infoString = new InfoString(serverInfoCSStr);
-						if (this.Protocol == ProtocolVersion.Protocol15 && infoString["version"].Contains("v1.03")) {
-							this.Version = ClientVersion.JO_v1_03;
-						}
-						string gamename = infoString["gamename"];
-						if (gamename.Contains("Szlakiem Jedi RPE")
-							|| gamename.Contains("Open Jedi Project")
-							|| gamename.Contains("OJP Enhanced")
-							|| gamename.Contains("OJP Basic")
-							|| gamename.Contains("OJRP")) {
-							this.gameMod = GameMod.OJP;
-						} else if (gamename.Contains("Movie Battles II")) {
-							this.gameMod = GameMod.MBII;
-						} else {
-							this.gameMod = GameMod.Base;
-						}
-					}
+					string csStr = Common.ToString(s);
+					this.ClientHandler.AdjustGameStateConfigstring(i, csStr);
 					this.gameState.StringOffsets[i] = this.gameState.DataCount;
 					fixed (sbyte *stringData = this.gameState.StringData) {
 						Marshal.Copy((byte[])(Array)s, 0, (IntPtr)(stringData+this.gameState.DataCount), len+1);
@@ -135,7 +105,7 @@ namespace JKClient {
 					}
 					fixed (EntityState *nes = &EntityState.Null) {
 						fixed (EntityState *bl = &this.entityBaselines[newnum]) {
-							msg.ReadDeltaEntity(nes, bl, newnum, this.Protocol, this.gameMod);
+							msg.ReadDeltaEntity(nes, bl, newnum, this.ClientHandler);
 						}
 					}
 				} else {
@@ -144,7 +114,7 @@ namespace JKClient {
 			}
 			this.clientNum = msg.ReadLong();
 			this.checksumFeed = msg.ReadLong();
-			if (this.IsJA()) {
+			if (this.ClientHandler.CanParseRMG) {
 				this.ParseRMG(msg);
 			}
 			this.SystemInfoChanged();
@@ -208,11 +178,10 @@ namespace JKClient {
 			Common.MemSet(this.snapshots, 0, sizeof(ClientSnapshot)*JKClient.PacketBackup);
 			Common.MemSet(this.entityBaselines, 0, sizeof(EntityState)*Common.MaxGEntities);
 			Common.MemSet(this.parseEntities, 0, sizeof(EntityState)*JKClient.MaxParseEntities);
-			this.gameMod = GameMod.Undefined;
 			this.clientGame = null;
 		}
 		private void ClearConnection() {
-			for (int i = 0; i < JKClient.MaxReliableCommandsJK; i++) {
+			for (int i = 0; i < this.ClientHandler.MaxReliableCommands; i++) {
 				Common.MemSet(this.serverCommands[i], 0, sizeof(sbyte)*Common.MaxStringChars);
 				Common.MemSet(this.reliableCommands[i], 0, sizeof(sbyte)*Common.MaxStringChars);
 			}
@@ -276,10 +245,10 @@ namespace JKClient {
 				throw new JKClientException("ParseSnapshot: Invalid size %d for areamask");
 			}
 			msg.ReadData(null, len);
-			if (this.CanParseSnapshot()) {
-				msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->PlayerState : null, &newSnap.PlayerState, false, this.Protocol, this.gameMod);
-				if (this.IsJA() && newSnap.PlayerState.VehicleNum != 0) {
-					msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->VehiclePlayerState : null, &newSnap.VehiclePlayerState, true, this.Protocol, this.gameMod);
+			if (this.ClientHandler.CanParseSnapshot()) {
+				msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->PlayerState : null, &newSnap.PlayerState, false, this.ClientHandler);
+				if (this.ClientHandler.CanParseVehicle && newSnap.PlayerState.VehicleNum != 0) {
+					msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->VehiclePlayerState : null, &newSnap.VehiclePlayerState, true, this.ClientHandler);
 				}
 				this.ParsePacketEntities(msg, oldSnap, &newSnap);
 			}
@@ -322,11 +291,11 @@ namespace JKClient {
 						oldindex++;
 					} else if (oldnum == newnum) {
 						oldindex++;
-						msg.ReadDeltaEntity(oldstate, newstate, newnum, this.Protocol, this.gameMod);
+						msg.ReadDeltaEntity(oldstate, newstate, newnum, this.ClientHandler);
 						newnum = msg.ReadBits(Common.GEntitynumBits);
 					} else if (oldnum > newnum) {
 						fixed (EntityState *bl = &this.entityBaselines[newnum]) {
-							msg.ReadDeltaEntity(bl, newstate, newnum, this.Protocol, this.gameMod);
+							msg.ReadDeltaEntity(bl, newstate, newnum, this.ClientHandler);
 						}
 						newnum = msg.ReadBits(Common.GEntitynumBits);
 					}
@@ -338,15 +307,6 @@ namespace JKClient {
 				}
 			}
 			oldstateHandle.Free();
-		}
-		private bool CanParseSnapshot() {
-			switch (this.gameMod) {
-			default:
-				return true;
-			case GameMod.Undefined:
-			case GameMod.MBII:
-				return false;
-			}
 		}
 		private void ParseSetGame(Message msg) {
 			int i = 0;
@@ -372,7 +332,7 @@ namespace JKClient {
 				}
 			}
 			int size = msg.ReadShort();
-			if (size < 0 || size > sizeof(byte)*Message.MaxLength(this.Protocol)) {
+			if (size < 0 || size > sizeof(byte)*this.ClientHandler.MaxMessageLength) {
 				throw new JKClientException($"ParseDownload: Invalid size {size} for download chunk");
 			}
 			msg.ReadData(null, size);

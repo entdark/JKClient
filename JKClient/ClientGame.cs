@@ -8,25 +8,25 @@ namespace JKClient {
 		internal bool GetServerCommand(int serverCommandNumber, out Command command);
 		internal string GetConfigstring(int index);
 	}*/
-	internal abstract class ClientGame {
-		protected bool Initialized = false;
+	public abstract class ClientGame {
+		protected readonly bool Initialized = false;
 		protected readonly int ClientNum;
-		protected int LatestSnapshotNum = 0;
-		protected int ProcessedSnapshotNum = 0;
-		protected Snapshot Snap = null, NextSnap = null;
-		protected int ServerCommandSequence = 0;
-		protected readonly ClientEntity []Entities = new ClientEntity[Common.MaxGEntities];
+		private protected int LatestSnapshotNum = 0;
+		private protected int ProcessedSnapshotNum = 0;
+		private protected Snapshot Snap = null, NextSnap = null;
+		private protected int ServerCommandSequence = 0;
+		private protected readonly ClientEntity []Entities = new ClientEntity[Common.MaxGEntities];
 		protected readonly /*IJKClientImport*/JKClient Client;
-		protected int ServerTime;
-		protected readonly Snapshot []ActiveSnapshots = new Snapshot[2] {
+		private protected int ServerTime;
+		private protected readonly Snapshot []ActiveSnapshots = new Snapshot[2] {
 			new Snapshot(),
 			new Snapshot()
 		};
-		public ClientInfo []ClientInfo {
+		internal ClientInfo []ClientInfo {
 			get;
-			protected set;
+			private protected set;
 		}
-		public unsafe ClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum) {
+		internal unsafe ClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			this.Client = client;
 			this.ClientNum = clientNum;
 			this.ProcessedSnapshotNum = serverMessageNum;
@@ -41,11 +41,11 @@ namespace JKClient {
 			}
 			this.Initialized = true;
 		}
-		public virtual void Frame(int serverTime) {
+		internal virtual void Frame(int serverTime) {
 			this.ServerTime = serverTime;
 			this.ProcessSnapshots();
 		}
-		protected virtual void ProcessSnapshots() {
+		private protected virtual void ProcessSnapshots() {
 			this.Client.GetCurrentSnapshotNumber(out int n, out int _);
 			if (n != this.LatestSnapshotNum) {
 				if (n < this.LatestSnapshotNum) {
@@ -82,7 +82,7 @@ namespace JKClient {
 				this.TransitionSnapshot();
 			} while (true);
 		}
-		protected virtual Snapshot ReadNextSnapshot() {
+		private protected virtual Snapshot ReadNextSnapshot() {
 			Snapshot dest;
 			while (this.ProcessedSnapshotNum < this.LatestSnapshotNum) {
 				if (this.Snap == this.ActiveSnapshots[0]) {
@@ -97,7 +97,7 @@ namespace JKClient {
 			}
 			return null;
 		}
-		protected virtual void SetInitialSnapshot(in Snapshot snap) {
+		private protected virtual void SetInitialSnapshot(in Snapshot snap) {
 			this.Snap = snap;
 			this.Snap.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].CurrentState);
 			this.ExecuteNewServerCommands(snap.ServerCommandSequence);
@@ -112,7 +112,7 @@ namespace JKClient {
 				this.CheckEvents(ref cent);
 			}
 		}
-		protected virtual void SetNextSnap(in Snapshot snap) {
+		private protected virtual void SetNextSnap(in Snapshot snap) {
 			this.NextSnap = snap;
 			this.NextSnap.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].NextState);
 			int count = this.NextSnap.NumEntities;
@@ -127,7 +127,7 @@ namespace JKClient {
 				}
 			}
 		}
-		protected virtual void TransitionSnapshot() {
+		private protected virtual void TransitionSnapshot() {
 			this.ExecuteNewServerCommands(this.NextSnap.ServerCommandSequence);
 			int count = this.Snap.NumEntities;
 			for (int i = 0; i < count; i++) {
@@ -155,12 +155,12 @@ namespace JKClient {
 			this.NextSnap = null;
 			this.TransitionPlayerState(ref this.Snap.PlayerState, ref oldFrame.PlayerState);
 		}
-		protected virtual void ResetEntity(ref ClientEntity cent) {
+		private protected virtual void ResetEntity(ref ClientEntity cent) {
 			if (cent.SnapshotTime < this.ServerTime - ClientEntity.EventValidMsec) {
 				cent.PreviousEvent = 0;
 			}
 		}
-		protected virtual unsafe void TransitionPlayerState(ref PlayerState ps, ref PlayerState ops) {
+		private protected virtual unsafe void TransitionPlayerState(ref PlayerState ps, ref PlayerState ops) {
 			if (ps.ClientNum != ops.ClientNum) {
 				ops = ps;
 			}
@@ -169,7 +169,7 @@ namespace JKClient {
 				ref var es = ref cent.CurrentState;
 				es.Event = ps.ExternalEvent;
 				es.EventParm = ps.ExternalEventParm;
-				this.HandleEvent(ref cent);
+				this.HandleEvent(new EntityEventData(in cent));
 			}
 			for (int i = ps.EventSequence - PlayerState.MaxEvents; i < ps.EventSequence; i++) {
 				if (i >= ops.EventSequence
@@ -178,7 +178,7 @@ namespace JKClient {
 					ref var es = ref cent.CurrentState;
 					es.Event = ps.Events[i & (PlayerState.MaxEvents-1)];
 					es.EventParm = ps.EventParms[i & (PlayerState.MaxEvents-1)];
-					this.HandleEvent(ref cent);
+					this.HandleEvent(new EntityEventData(in cent));
 				}
 			}
 			if (ps.ClientNum != ops.ClientNum) {
@@ -223,7 +223,7 @@ namespace JKClient {
 				this.Client.NotifyServerInfoChanged();
 			}
 		}
-		protected virtual void CheckEvents(ref ClientEntity cent) {
+		private protected virtual void CheckEvents(ref ClientEntity cent) {
 			ref var es = ref cent.CurrentState;
 			if (es.EntityType > this.GetEntityType(EntityType.Events)) {
 				if (cent.PreviousEvent != 0) {
@@ -243,10 +243,10 @@ namespace JKClient {
 					return;
 				}
 			}
-			this.HandleEvent(ref cent);
+			this.HandleEvent(new EntityEventData(in cent));
 		}
-		protected virtual EntityEvent HandleEvent(ref ClientEntity cent) {
-			ref var es = ref cent.CurrentState;
+		protected virtual EntityEvent HandleEvent(EntityEventData eventData) {
+			ref var es = ref eventData.Cent.CurrentState;
 			int entityEvent = es.Event & ~(int)EntityEvent.Bits;
 			var ev = this.GetEntityEvent(entityEvent);
 			if (ev == EntityEvent.None) {
@@ -267,20 +267,21 @@ namespace JKClient {
 		protected abstract EntityEvent GetEntityEvent(int entityEvent);
 		protected abstract int GetEntityType(EntityType entityType);
 		protected abstract int GetEntityFlag(EntityFlag entityFlag);
-		internal enum Configstring {
+		public enum Configstring {
+			GameVersion,
 			Sounds,
 			Players
 		}
-		internal enum EntityFlag : int {
+		public enum EntityFlag : int {
 			TeleportBit,
 			PlayerEvent
 		}
-		internal enum EntityEvent : int {
+		public enum EntityEvent : int {
 			None,
 			VoiceCommandSound,
 			Bits = 0x300
 		}
-		internal enum EntityType : int {
+		public enum EntityType : int {
 			General,
 			Player,
 			Item,
@@ -302,9 +303,22 @@ namespace JKClient {
 			Grapple,
 			Events
 		}
+		public sealed class EntityEventData {
+			internal ClientEntity Cent;
+			public int Event => this.Cent.CurrentState.Event;
+			public int EventParm => this.Cent.CurrentState.EventParm;
+			public int EntityNum => this.Cent.CurrentState.Number;
+			public int ClientNum => this.Cent.CurrentState.ClientNum;
+			public int OtherEntityNum => this.Cent.CurrentState.OtherEntityNum;
+			public int GroundEntityNum => this.Cent.CurrentState.GroundEntityNum;
+			private EntityEventData() {}
+			internal EntityEventData(in ClientEntity cent) {
+				this.Cent = cent;
+			}
+		}
 	}
-	internal class ClientGameJA : ClientGame {
-		public ClientGameJA(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
+	public class JAClientGame : ClientGame {
+		public JAClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
 			: base(client, serverMessageNum, serverCommandSequence, clientNum) {}
 		protected override int GetConfigstringIndex(Configstring index) {
 			switch (index) {
@@ -345,12 +359,12 @@ namespace JKClient {
 				throw new JKClientException($"Invalid entity type: {entityType}");
 			}
 		}
-		protected override EntityEvent HandleEvent(ref ClientEntity cent) {
-			ref var es = ref cent.CurrentState;
+		protected override EntityEvent HandleEvent(EntityEventData eventData) {
+			ref var es = ref eventData.Cent.CurrentState;
 			if (es.EntityType == this.GetEntityType(EntityType.NPC)) {
 				return EntityEvent.None;
 			}
-			var ev = base.HandleEvent(ref cent);
+			var ev = base.HandleEvent(eventData);
 			switch (ev) {
 			case EntityEvent.VoiceCommandSound:
 				if (es.GroundEntityNum >= 0 && es.GroundEntityNum < this.Client.MaxClients) {
@@ -364,20 +378,20 @@ namespace JKClient {
 			}
 			return ev;
 		}
-		internal enum ConfigstringJA {
+		public enum ConfigstringJA {
 			Sounds = 811,
 			Players = 1131
 		}
 		[Flags]
-		internal enum EntityFlagJA : int {
+		public enum EntityFlagJA : int {
 			TeleportBit = (1<<3),
 			PlayerEvent = (1<<5)
 		}
-		internal enum EntityEventJA : int {
+		public enum EntityEventJA : int {
 			None,
 			VoiceCommandSound = 75
 		}
-		internal enum EntityTypeJA : int {
+		public enum EntityTypeJA : int {
 			General,
 			Player,
 			Item,
@@ -399,8 +413,8 @@ namespace JKClient {
 			Events
 		}
 	}
-	internal class ClientGameJO : ClientGame {
-		public ClientGameJO(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
+	public class JOClientGame : ClientGame {
+		public JOClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
 			: base(client, serverMessageNum, serverCommandSequence, clientNum) {}
 		protected override int GetConfigstringIndex(Configstring index) {
 			switch (index) {
@@ -445,19 +459,19 @@ namespace JKClient {
 				throw new JKClientException($"Invalid entity type: {entityType}");
 			}
 		}
-		internal enum ConfigstringJO {
+		public enum ConfigstringJO {
 			Sounds = 288,
 			Players = 544
 		}
 		[Flags]
-		internal enum EntityFlagJO : int {
+		public enum EntityFlagJO : int {
 			TeleportBit = (1<<3),
 			PlayerEvent = (1<<5)
 		}
-		internal enum EntityEventJO : int {
+		public enum EntityEventJO : int {
 			None
 		}
-		internal enum EntityTypeJO : int {
+		public enum EntityTypeJO : int {
 			General,
 			Player,
 			Item,
@@ -477,8 +491,8 @@ namespace JKClient {
 			Events
 		}
 	}
-	internal class ClientGameQ3 : ClientGame {
-		public ClientGameQ3(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
+	public class Q3ClientGame : ClientGame {
+		public Q3ClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum)
 			: base(client, serverMessageNum, serverCommandSequence, clientNum) {}
 		protected override int GetConfigstringIndex(Configstring index) {
 			switch (index) {
@@ -528,19 +542,20 @@ namespace JKClient {
 				throw new JKClientException($"Invalid entity type: {entityType}");
 			}
 		}
-		internal enum ConfigstringQ3 {
+		public enum ConfigstringQ3 {
+			GameVersion = 20,
 			Sounds = 288,
 			Players = 544
 		}
 		[Flags]
-		internal enum EntityFlagQ3 : int {
+		public enum EntityFlagQ3 : int {
 			TeleportBit = (1<<2),
 			PlayerEvent = (1<<4)
 		}
-		internal enum EntityEventQ3 : int {
+		public enum EntityEventQ3 : int {
 			None
 		}
-		internal enum EntityTypeQ3 : int {
+		public enum EntityTypeQ3 : int {
 			General,
 			Player,
 			Item,

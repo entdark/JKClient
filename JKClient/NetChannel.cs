@@ -9,7 +9,7 @@ namespace JKClient {
 		private readonly int qport;
 		private readonly byte []fragmentBuffer;
 		private readonly byte []unsentBuffer;
-		private readonly ProtocolVersion protocol;
+		private readonly int maxMessageLength;
 		private int dropped = 0;
 		private int incomingSequence = 0;
 		private int fragmentSequence = 0;
@@ -19,13 +19,13 @@ namespace JKClient {
 		public int OutgoingSequence { get; private set; } = 1;
 		public bool UnsentFragments { get; private set; } = false;
 		public NetAddress Address { get; private set; }
-		public NetChannel(NetSystem net, NetAddress address, int qport, ProtocolVersion protocol) {
+		public NetChannel(NetSystem net, NetAddress address, int qport, int maxMessageLength) {
 			this.net = net;
 			this.Address = address;
 			this.qport = qport;
-			this.protocol = protocol;
-			this.fragmentBuffer = new byte[Message.MaxLength(this.protocol)];
-			this.unsentBuffer = new byte[Message.MaxLength(this.protocol)];
+			this.maxMessageLength = maxMessageLength;
+			this.fragmentBuffer = new byte[this.maxMessageLength];
+			this.unsentBuffer = new byte[this.maxMessageLength];
 		}
 		public unsafe bool Process(Message msg) {
 			msg.BeginReading(true);
@@ -59,7 +59,7 @@ namespace JKClient {
 					return false;
 				}
 				if (fragmentLength < 0 || (msg.ReadCount + fragmentLength) > msg.CurSize ||
-					(this.fragmentLength + fragmentLength) > sizeof(byte)*Message.MaxLength(this.protocol)) {
+					(this.fragmentLength + fragmentLength) > sizeof(byte)*this.maxMessageLength) {
 					return false;
 				}
 				Array.Copy(msg.Data, msg.ReadCount, this.fragmentBuffer, this.fragmentLength, fragmentLength);
@@ -83,7 +83,7 @@ namespace JKClient {
 			return true;
 		}
 		public void Transmit(int length, byte []data) {
-			if (length > Message.MaxLength(this.protocol)) {
+			if (length > this.maxMessageLength) {
 				throw new JKClientException($"Transmit: length = {length}");
 			}
 			this.unsentFragmentStart = 0;

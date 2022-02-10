@@ -5,38 +5,22 @@ using System.Threading.Tasks;
 
 namespace JKClient {
 	public sealed class ServerBrowser : NetClient {
-		private const string MasterJK3RavenSoftware = "masterjk3.ravensoft.com";
-		private const string MasterJKHub = "master.jkhub.org";
-		private const string MasterJK2RavenSoftware = "masterjk2.ravensoft.com";
-		private const string MasterJK2MV = "master.jk2mv.org";
-		private const string MasterQuake3Arena = "master.quake3arena.com";
-		private const string MasterIOQuake3 = "master.ioquake3.org";
-		private const string MasterMaverickServers = "master.maverickservers.com";
-		private const ushort PortMasterQ3 = 27950;
-		private const ushort PortMasterJO = 28060;
-		private const ushort PortMasterJA = 29060;
 		private const int RefreshTimeout = 3000;
 		private readonly List<ServerAddress> masterServers;
 		private readonly Dictionary<NetAddress, ServerInfo> globalServers;
 		private TaskCompletionSource<IEnumerable<ServerInfo>> getListTCS, refreshListTCS;
 		private long serverRefreshTimeout = 0L;
-		public ServerBrowser(IEnumerable<ServerAddress> customMasterServers = null, bool customOnly = false) {
+		private IBrowserHandler BrowserHandler => this.NetHandler as IBrowserHandler;
+		public ServerBrowser(IBrowserHandler browserHandler, IEnumerable<ServerAddress> customMasterServers = null, bool customOnly = false)
+			//TODO: pass IClientHandler and make ServerBrowser be client-dependent
+			: base(browserHandler) {
 			if (customOnly && customMasterServers == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(customMasterServers)));
 			}
 			if (customOnly) {
 				this.masterServers = new List<ServerAddress>(customMasterServers);
 			} else {
-				this.masterServers = new List<ServerAddress>() {
-					new ServerAddress(ServerBrowser.MasterJK3RavenSoftware, ServerBrowser.PortMasterJA),
-					new ServerAddress(ServerBrowser.MasterJKHub, ServerBrowser.PortMasterJA),
-					new ServerAddress(ServerBrowser.MasterJK2RavenSoftware, ServerBrowser.PortMasterJO),
-					new ServerAddress(ServerBrowser.MasterJKHub, ServerBrowser.PortMasterJO),
-					new ServerAddress(ServerBrowser.MasterJK2MV, ServerBrowser.PortMasterJO)/*,
-					new ServerAddress(ServerBrowser.MasterQuake3Arena, ServerBrowser.PortMasterQ3),
-					new ServerAddress(ServerBrowser.MasterIOQuake3, ServerBrowser.PortMasterQ3),
-					new ServerAddress(ServerBrowser.MasterMaverickServers, ServerBrowser.PortMasterQ3)*/
-				};
+				this.masterServers = new List<ServerAddress>(this.BrowserHandler.GetMasterServers());
 				if (customMasterServers != null) {
 					this.masterServers.AddRange(customMasterServers);
 				}
@@ -92,7 +76,7 @@ namespace JKClient {
 			return await this.refreshListTCS.Task;
 		}
 		private protected override unsafe void PacketEvent(NetAddress address, Message msg) {
-			fixed (byte* b = msg.Data) {
+			fixed (byte *b = msg.Data) {
 				if (msg.CurSize >= 4 && *(int*)b == -1) {
 					msg.BeginReading(true);
 					msg.ReadLong();
@@ -164,6 +148,7 @@ namespace JKClient {
 				}
 				serverInfo.Ping = (int)(Common.Milliseconds - serverInfo.Start);
 				serverInfo.SetInfo(infoString);
+				this.BrowserHandler.SetExtraServerInfo(serverInfo, infoString);
 				if (serverInfo.Protocol == ProtocolVersion.Protocol15) {
 					this.OutOfBandPrint(serverInfo.Address, "getstatus");
 				}
@@ -177,6 +162,20 @@ namespace JKClient {
 				this.Name = name;
 				this.Port = port;
 			}
+		}
+		public static IBrowserHandler GetKnownBrowserHandler(ProtocolVersion protocol) {
+			switch (protocol) {
+			case ProtocolVersion.Protocol25:
+			case ProtocolVersion.Protocol26:
+				return new JABrowserHandler(protocol);
+			case ProtocolVersion.Protocol15:
+			case ProtocolVersion.Protocol16:
+				return new JOBrowserHandler(protocol);
+			case ProtocolVersion.Protocol68:
+			case ProtocolVersion.Protocol71:
+				return new Q3BrowserHandler(protocol);
+			}
+			throw new JKClientException($"There isn't any known server browser handler for given protocol: {protocol}");
 		}
 	}
 }

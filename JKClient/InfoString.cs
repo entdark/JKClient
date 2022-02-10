@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace JKClient {
-	internal sealed class InfoString : Dictionary<string, string> {
+	public sealed class InfoString : Dictionary<string, string> {
 		private const char Delimiter = '\\';
 		public new string this[string key] {
 			get => this.ContainsKey(key) ? base[key] : string.Empty;
 			internal set => base[key] = value;
 		}
 		private InfoString() {}
-		public InfoString(string infoString) : base(new InfoStringComparer()) {
+		internal InfoString(string infoString) : base(new InfoStringComparer()) {
 			if (string.IsNullOrEmpty(infoString)) {
 				return;
 			}

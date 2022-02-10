@@ -5,7 +5,7 @@ using System.Text;
 namespace JKClient {
 	public sealed partial class JKClient {
 		private readonly StringBuilder bigInfoString = new StringBuilder(Common.BigInfoString, Common.BigInfoString);
-		internal int MaxClients => Common.MaxClients(this.Protocol);
+		internal int MaxClients => this.ClientHandler.MaxClients;
 		public event Action<CommandEventArgs> ServerCommandExecuted;
 		internal void ExecuteServerCommand(CommandEventArgs eventArgs) {
 			this.ServerCommandExecuted?.Invoke(eventArgs);
@@ -21,7 +21,7 @@ namespace JKClient {
 						return;
 					}
 					this.Status = ConnectionStatus.Active;
-					this.connectTCS.TrySetResult(true);
+					this.connectTCS?.TrySetResult(true);
 				}
 				if (this.Status != ConnectionStatus.Active) {
 					return;
@@ -31,18 +31,11 @@ namespace JKClient {
 		}
 		private ClientGame InitClientGame() {
 			this.Status = ConnectionStatus.Primed;
-			if (this.IsJA()) {
-				switch (this.gameMod) {
-				default:
-					return new ClientGameJA(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
-				}
-			} else if (this.IsJO()) {
-				return new ClientGameJO(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
-			} else if (this.IsQ3()) {
-				return new ClientGameQ3(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
-			} else {
-				throw new JKClientException("Failed to create client game for unknown protocol");
+			var clientGame = this.ClientHandler.CreateClientGame(this, this.serverMessageSequence, this.serverCommandSequence, this.clientNum);
+			if (clientGame == null) {
+				throw new JKClientException("Failed to create client game for unknown client");
 			}
+			return clientGame;
 		}
 		private unsafe void ConfigstringModified(Command command, sbyte []s) {
 			int index = command.Argv(1).Atoi();
