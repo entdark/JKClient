@@ -51,12 +51,7 @@ namespace JKClient {
 				if (address == null) {
 					continue;
 				}
-				foreach (ProtocolVersion protocol in Enum.GetValues(typeof(ProtocolVersion))) {
-					if (protocol == ProtocolVersion.Unknown) {
-						continue;
-					}
-					this.OutOfBandPrint(address, $"getservers {protocol.ToString("d")}");
-				}
+				this.OutOfBandPrint(address, $"getservers {this.BrowserHandler.Protocol.ToString("d")}");
 			}
 			return await this.getListTCS.Task;
 		}
@@ -130,26 +125,24 @@ namespace JKClient {
 			}
 		}
 		private void ServerStatusResponse(NetAddress address, Message msg) {
-			var infoString = new InfoString(msg.ReadStringLineAsString());
+			var info = new InfoString(msg.ReadStringLineAsString());
 			if (this.globalServers.ContainsKey(address)) {
 				var serverInfo = this.globalServers[address];
-				if (infoString["version"].Contains("v1.03")) {
-					serverInfo.Version = ClientVersion.JO_v1_03;
-				}
+				this.BrowserHandler.HandleStatusResponse(serverInfo, info);
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			}
 		}
 		private void ServerInfoPacket(NetAddress address, Message msg) {
-			var infoString = new InfoString(msg.ReadStringAsString());
+			var info = new InfoString(msg.ReadStringAsString());
 			if (this.globalServers.ContainsKey(address)) {
 				var serverInfo = this.globalServers[address];
 				if (serverInfo.InfoSet) {
 					return;
 				}
 				serverInfo.Ping = (int)(Common.Milliseconds - serverInfo.Start);
-				serverInfo.SetInfo(infoString);
-				this.BrowserHandler.SetExtraServerInfo(serverInfo, infoString);
-				if (serverInfo.Protocol == ProtocolVersion.Protocol15) {
+				serverInfo.SetInfo(info);
+				this.BrowserHandler.HandleInfoPacket(serverInfo, info);
+				if (this.BrowserHandler.NeedStatus) {
 					this.OutOfBandPrint(serverInfo.Address, "getstatus");
 				}
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;

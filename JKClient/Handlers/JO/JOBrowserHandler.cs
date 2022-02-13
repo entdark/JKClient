@@ -6,6 +6,7 @@ namespace JKClient {
 		private const string MasterJKHub = "master.jkhub.org";
 		private const string MasterJK2MV = "master.jk2mv.org";
 		private const ushort PortMasterJO = 28060;
+		public virtual bool NeedStatus => true;
 		public JOBrowserHandler(ProtocolVersion protocol) : base(protocol) {}
 		public virtual IEnumerable<ServerBrowser.ServerAddress> GetMasterServers() {
 			return new ServerBrowser.ServerAddress[] {
@@ -14,7 +15,7 @@ namespace JKClient {
 				new ServerBrowser.ServerAddress(JOBrowserHandler.MasterJK2MV, JOBrowserHandler.PortMasterJO)
 			};
 		}
-		public virtual void SetExtraServerInfo(ServerInfo serverInfo, InfoString info) {
+		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
 			if (info.Count <= 0) {
 				return;
 			}
@@ -36,6 +37,11 @@ namespace JKClient {
 			serverInfo.TrueJedi = info["truejedi"].Atoi() != 0;
 			serverInfo.WeaponDisable = info["wdisable"].Atoi() != 0;
 			serverInfo.ForceDisable = info["fdisable"].Atoi() != 0;
+		}
+		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) {
+			if (info["version"].Contains("v1.03")) {
+				serverInfo.Version = ClientVersion.JO_v1_03;
+			}
 		}
 	}
 }

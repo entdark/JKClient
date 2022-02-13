@@ -1,4 +1,7 @@
-﻿namespace JKClient {
+﻿using System;
+using System.Collections.Generic;
+
+namespace JKClient {
 	public interface IClientHandler : INetHandler {
 		ClientVersion Version { get; }
 		int MaxReliableCommands { get; }
@@ -13,8 +16,8 @@
 		void AdjustGameStateConfigstring(int i, string csStr);
 		bool CanParseSnapshot();
 		ClientGame CreateClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum);
-		int GetEntityFieldOverride(int index, int defaultValue);
-		int GetPlayerFieldOverride(int index, int defaultValue);
+		IList<NetField> GetEntityStateFields();
+		IList<NetField> GetPlayerStateFields(bool isVehicle, Func<bool> isPilot);
 		void ClearState();
 		void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info);
 	}

@@ -6,6 +6,7 @@ namespace JKClient {
 		private const string MasterIOQuake3 = "master.ioquake3.org";
 		private const string MasterMaverickServers = "master.maverickservers.com";
 		private const ushort PortMasterQ3 = 27950;
+		public virtual bool NeedStatus => false;
 		public Q3BrowserHandler(ProtocolVersion protocol) : base(protocol) {}
 		public virtual IEnumerable<ServerBrowser.ServerAddress> GetMasterServers() {
 			return new ServerBrowser.ServerAddress[] {
@@ -14,7 +15,7 @@ namespace JKClient {
 				new ServerBrowser.ServerAddress(Q3BrowserHandler.MasterMaverickServers, Q3BrowserHandler.PortMasterQ3)
 			};
 		}
-		public virtual void SetExtraServerInfo(ServerInfo serverInfo, InfoString info) {
+		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
 			if (info.Count <= 0) {
 				return;
 			}
@@ -22,7 +23,8 @@ namespace JKClient {
 			serverInfo.GameType = Q3BrowserHandler.GetGameType(info["gametype"].Atoi());
 			serverInfo.Pure = info["pure"].Atoi() != 0;
 		}
-		internal static GameType GetGameType(int gameType) {
+		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) { }
+		private static GameType GetGameType(int gameType) {
 			switch (gameType) {
 			case 0:
 				return GameType.FFA;

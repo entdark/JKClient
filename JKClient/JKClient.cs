@@ -16,7 +16,7 @@ namespace JKClient {
 		private const string UserInfo = "\\name\\"+JKClient.DefaultName+"\\rate\\25000\\snaps\\40\\model\\kyle/default\\forcepowers\\7-1-032330000000001333\\color1\\4\\color2\\4\\handicap\\100\\teamtask\\0\\sex\\male\\password\\\\cg_predictItems\\1\\saber1\\single_1\\saber2\\none\\char_color_red\\255\\char_color_green\\255\\char_color_blue\\255\\engine\\jkclient\\assets\\0";
 		private readonly Random random = new Random();
 		private readonly int port;
-		private readonly InfoString userInfoString = new InfoString(UserInfo);
+		private readonly InfoString userInfo = new InfoString(UserInfo);
 		private readonly ConcurrentQueue<Action> actionsQueue = new ConcurrentQueue<Action>();
 		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
@@ -49,7 +49,7 @@ namespace JKClient {
 		private int MaxReliableCommands => this.ClientHandler.MaxReliableCommands;
 		private string GuidKey => this.ClientHandler.GuidKey;
 		public string Name {
-			get => this.userInfoString["name"];
+			get => this.userInfo["name"];
 			set {
 				string name = value;
 				if (string.IsNullOrEmpty(name)) {
@@ -57,21 +57,21 @@ namespace JKClient {
 				} else if (name.Length > 31) {
 					name = name.Substring(0, 31);
 				}
-				this.userInfoString["name"] = name;
+				this.userInfo["name"] = name;
 				this.UpdateUserInfo();
 			}
 		}
 		public string Password {
-			get => this.userInfoString["password"];
+			get => this.userInfo["password"];
 			set {
-				this.userInfoString["password"] = value;
+				this.userInfo["password"] = value;
 				this.UpdateUserInfo();
 			}
 		}
 		public Guid Guid {
-			get => Guid.TryParse(this.userInfoString[this.GuidKey], out Guid guid) ? guid : Guid.Empty;
+			get => Guid.TryParse(this.userInfo[this.GuidKey], out Guid guid) ? guid : Guid.Empty;
 			set {
-				this.userInfoString[this.GuidKey] = value.ToString();
+				this.userInfo[this.GuidKey] = value.ToString();
 				this.UpdateUserInfo();
 			}
 		}
@@ -81,11 +81,11 @@ namespace JKClient {
 		public ServerInfo ServerInfo {
 			get {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
-				var infoString = new InfoString(serverInfoCSStr);
+				var info = new InfoString(serverInfoCSStr);
 				this.serverInfo.Address = this.serverAddress;
 				this.serverInfo.Clients = this.ClientInfo?.Count(ci => ci.InfoValid) ?? 0;
-				this.serverInfo.SetConfigstringInfo(infoString);
-				this.ClientHandler.SetExtraConfigstringInfo(this.serverInfo, infoString);
+				this.serverInfo.SetConfigstringInfo(info);
+				this.ClientHandler.SetExtraConfigstringInfo(this.serverInfo, info);
 				return this.serverInfo;
 			}
 		}
@@ -163,7 +163,7 @@ namespace JKClient {
 			} else if (key == this.GuidKey) {
 				this.Guid = Guid.TryParse(value, out Guid guid) ? guid : Guid.Empty;
 			} else {
-				this.userInfoString[key] = value;
+				this.userInfo[key] = value;
 				this.UpdateUserInfo();
 			}
 		}
@@ -171,7 +171,7 @@ namespace JKClient {
 			if (this.Status < ConnectionStatus.Challenging) {
 				return;
 			}
-			this.ExecuteCommand($"userinfo \"{userInfoString}\"");
+			this.ExecuteCommand($"userinfo \"{userInfo}\"");
 		}
 		private void CheckForResend() {
 			if (this.Status != ConnectionStatus.Connecting && this.Status != ConnectionStatus.Challenging) {
@@ -188,7 +188,7 @@ namespace JKClient {
 				this.OutOfBandPrint(this.serverAddress, $"getchallenge {this.challenge}");
 				break;
 			case ConnectionStatus.Challenging:
-				string data = $"connect \"{this.userInfoString}\\protocol\\{this.Protocol.ToString("d")}\\qport\\{this.port}\\challenge\\{this.challenge}\"";
+				string data = $"connect \"{this.userInfo}\\protocol\\{this.Protocol.ToString("d")}\\qport\\{this.port}\\challenge\\{this.challenge}\"";
 				this.OutOfBandData(this.serverAddress, data, data.Length);
 				break;
 			}

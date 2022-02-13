@@ -5,6 +5,7 @@ namespace JKClient {
 		private const string MasterJK3RavenSoftware = "masterjk3.ravensoft.com";
 		private const string MasterJKHub = "master.jkhub.org";
 		private const ushort PortMasterJA = 29060;
+		public virtual bool NeedStatus => false;
 		public JABrowserHandler(ProtocolVersion protocol) : base(protocol) {}
 		public virtual IEnumerable<ServerBrowser.ServerAddress> GetMasterServers() {
 			return new ServerBrowser.ServerAddress[] {
@@ -12,7 +13,7 @@ namespace JKClient {
 				new ServerBrowser.ServerAddress(JABrowserHandler.MasterJKHub, JABrowserHandler.PortMasterJA)
 			};
 		}
-		public virtual void SetExtraServerInfo(ServerInfo serverInfo, InfoString info) {
+		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
 			if (info.Count <= 0) {
 				return;
 			}
@@ -30,5 +31,6 @@ namespace JKClient {
 			serverInfo.WeaponDisable = info["wdisable"].Atoi() != 0;
 			serverInfo.ForceDisable = info["fdisable"].Atoi() != 0;
 		}
+		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) {}
 	}
 }

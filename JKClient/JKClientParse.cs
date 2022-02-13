@@ -148,9 +148,9 @@ namespace JKClient {
 		}
 		private void SystemInfoChanged() {
 			string systemInfo = this.GetConfigstring(GameState.SystemInfo);
-			var infoString = new InfoString(systemInfo);
-			this.serverId = infoString["sv_serverid"].Atoi();
-			if (infoString["sv_pure"].Atoi() != 0) {
+			var info = new InfoString(systemInfo);
+			this.serverId = info["sv_serverid"].Atoi();
+			if (info["sv_pure"].Atoi() != 0) {
 				throw new JKClientException("Cannot connect to a pure server without assets");
 			}
 		}
@@ -179,6 +179,7 @@ namespace JKClient {
 			Common.MemSet(this.entityBaselines, 0, sizeof(EntityState)*Common.MaxGEntities);
 			Common.MemSet(this.parseEntities, 0, sizeof(EntityState)*JKClient.MaxParseEntities);
 			this.clientGame = null;
+			this.ClientHandler.ClearState();
 		}
 		private void ClearConnection() {
 			for (int i = 0; i < this.ClientHandler.MaxReliableCommands; i++) {

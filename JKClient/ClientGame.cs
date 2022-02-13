@@ -213,10 +213,10 @@ namespace JKClient {
 				|| !configstring.Contains("n")) {
 				this.ClientInfo[clientNum].Clear();
 			} else {
-				var clientInfoString = new InfoString(configstring);
+				var info = new InfoString(configstring);
 				this.ClientInfo[clientNum].ClientNum = clientNum;
-//				this.ClientInfo[clientNum].Team = (Team)clientInfoString["t"].Atoi();
-				this.ClientInfo[clientNum].Name = clientInfoString["n"];
+//				this.ClientInfo[clientNum].Team = (Team)info["t"].Atoi();
+				this.ClientInfo[clientNum].Name = info["n"];
 				this.ClientInfo[clientNum].InfoValid = true;
 			}
 			if (this.Initialized) {
