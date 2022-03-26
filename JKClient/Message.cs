@@ -403,8 +403,8 @@ namespace JKClient {
 					for (int i = 0; i < 16; i++) {
 						if ((bits & (1<<i)) != 0) {
 							if (i == 4
-								&& (clientHandler.Protocol == ProtocolVersion.Protocol25
-								|| clientHandler.Protocol == ProtocolVersion.Protocol26)) {
+								&& (clientHandler.Protocol == (int)ProtocolVersion.Protocol25
+								|| clientHandler.Protocol == (int)ProtocolVersion.Protocol26)) {
 								to->Stats[i] = this.ReadBits(19);
 							} else {
 								to->Stats[i] = this.ReadShort();

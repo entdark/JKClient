@@ -428,9 +428,9 @@ namespace JKClient {
 			if (serverInfo == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(serverInfo)));
 			}
-			await this.Connect(serverInfo.Address.ToString(), serverInfo.Protocol);
+			await this.Connect(serverInfo.Address.ToString(), (int)serverInfo.Protocol);
 		}
-		public async Task Connect(string address, ProtocolVersion protocol = ProtocolVersion.Unknown) {
+		public async Task Connect(string address, int protocol = (int)ProtocolVersion.Unknown) {
 			this.connectTCS?.TrySetCanceled();
 			var serverAddress = NetSystem.StringToAddress(address);
 			if (serverAddress == null) {

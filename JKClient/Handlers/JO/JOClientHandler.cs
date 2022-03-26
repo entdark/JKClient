@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace JKClient {
 	public class JOClientHandler : JONetHandler, IClientHandler {
+		public virtual new ProtocolVersion Protocol => (ProtocolVersion)base.Protocol;
 		public virtual ClientVersion Version { get; private set; }
 		public virtual int MaxReliableCommands => 128;
 		public virtual int MaxConfigstrings => 1400;

@@ -23,7 +23,7 @@ namespace JKClient {
 			serverInfo.GameType = Q3BrowserHandler.GetGameType(info["gametype"].Atoi());
 			serverInfo.Pure = info["pure"].Atoi() != 0;
 		}
-		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) { }
+		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) {}
 		private static GameType GetGameType(int gameType) {
 			switch (gameType) {
 			case 0:
