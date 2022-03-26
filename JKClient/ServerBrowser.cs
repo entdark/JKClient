@@ -12,7 +12,6 @@ namespace JKClient {
 		private long serverRefreshTimeout = 0L;
 		private IBrowserHandler BrowserHandler => this.NetHandler as IBrowserHandler;
 		public ServerBrowser(IBrowserHandler browserHandler, IEnumerable<ServerAddress> customMasterServers = null, bool customOnly = false)
-			//TODO: pass IClientHandler and make ServerBrowser be client-dependent
 			: base(browserHandler) {
 			if (customOnly && customMasterServers == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(customMasterServers)));
