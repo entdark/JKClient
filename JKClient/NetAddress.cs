@@ -40,11 +40,7 @@ namespace JKClient {
 			return base.Equals(obj);
 		}
 		public override int GetHashCode() {
-			int hash = this.Port.GetHashCode();
-			foreach (var ip in this.IP) {
-				hash ^= ip;
-			}
-			return hash;
+			return (this.IP[0], this.IP[1], this.IP[2], this.IP[3], this.Port).GetHashCode();
 		}
 		public override string ToString() {
 			string toString = string.Empty;
