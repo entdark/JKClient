@@ -41,7 +41,6 @@ namespace JKClient {
 			}
 		}
 		public async Task<IEnumerable<ServerInfo>> GetNewList() {
-			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			this.getListTCS?.TrySetCanceled();
 			this.getListTCS = new TaskCompletionSource<IEnumerable<ServerInfo>>();
 			this.globalServers.Clear();
@@ -52,13 +51,13 @@ namespace JKClient {
 				}
 				this.OutOfBandPrint(address, $"getservers {this.BrowserHandler.Protocol.ToString("d")}");
 			}
+			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			return await this.getListTCS.Task;
 		}
 		public async Task<IEnumerable<ServerInfo>> RefreshList() {
 			if (this.globalServers.Count <= 0) {
 				return await this.GetNewList();
 			}
-			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			this.refreshListTCS?.TrySetCanceled();
 			this.refreshListTCS = new TaskCompletionSource<IEnumerable<ServerInfo>>();
 			foreach (var server in this.globalServers) {
@@ -67,6 +66,7 @@ namespace JKClient {
 				serverInfo.Start = Common.Milliseconds;
 				this.OutOfBandPrint(serverInfo.Address, "getinfo xxx");
 			}
+			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			return await this.refreshListTCS.Task;
 		}
 		private protected override unsafe void PacketEvent(NetAddress address, Message msg) {
