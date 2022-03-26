@@ -204,7 +204,7 @@ namespace JKClient {
 					return;
 				}
 			}
-			var nums = Regex.Replace(CDKey, "[^a-zA-Z0-9]", string.Empty);
+			string nums = Regex.Replace(CDKey, "[^a-zA-Z0-9]", string.Empty);
 			this.OutOfBandPrint(this.authorizeServer, $"getKeyAuthorize {0} {nums}");
 		}
 		private unsafe void Encode(Message msg) {
