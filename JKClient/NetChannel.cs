@@ -77,6 +77,7 @@ namespace JKClient {
 				msg.CurSize = this.fragmentLength + 4;
 				this.fragmentLength = 0;
 				msg.RestoreState();
+				this.incomingSequence = sequence;
 				return true;
 			}
 			this.incomingSequence = sequence;
