@@ -45,7 +45,7 @@ namespace JKClient {
 		public ConnectionStatus Status { get; private set; }
 		#endregion
 		private IClientHandler ClientHandler => this.NetHandler as IClientHandler;
-		internal ClientVersion Version => this.ClientHandler.Version;
+		public ClientVersion Version => this.ClientHandler.Version;
 		private int MaxReliableCommands => this.ClientHandler.MaxReliableCommands;
 		private string GuidKey => this.ClientHandler.GuidKey;
 		public string Name {

@@ -9,7 +9,7 @@ namespace JKClient {
 		private CancellationTokenSource cts;
 		public bool Started { get; private set; }
 		private readonly protected INetHandler NetHandler;
-		private protected int Protocol => this.NetHandler.Protocol;
+		public int Protocol => this.NetHandler.Protocol;
 		internal NetClient(INetHandler netHandler) {
 			if (netHandler == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(netHandler)));
