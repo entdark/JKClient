@@ -50,6 +50,18 @@ namespace JKClient {
 			this.MaxPing = info["sv_maxping"].Atoi();
 			this.InfoSet = true;
 		}
+		public static bool operator ==(ServerInfo serverInfo1, ServerInfo serverInfo2) {
+			return serverInfo1?.Address == serverInfo2?.Address;
+		}
+		public static bool operator !=(ServerInfo serverInfo1, ServerInfo serverInfo2) {
+			return (serverInfo1 == serverInfo2) != true;
+		}
+		public override bool Equals(object obj) {
+			return base.Equals(obj);
+		}
+		public override int GetHashCode() {
+			return this.Address.GetHashCode();
+		}
 	}
 	public sealed class ServerInfoComparer : EqualityComparer<ServerInfo> {
 		public override bool Equals(ServerInfo x, ServerInfo y) {
