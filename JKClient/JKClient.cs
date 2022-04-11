@@ -188,7 +188,7 @@ namespace JKClient {
 				this.OutOfBandPrint(this.serverAddress, $"getchallenge {this.challenge}");
 				break;
 			case ConnectionStatus.Challenging:
-				string data = $"connect \"{this.userInfo}\\protocol\\{this.Protocol.ToString("d")}\\qport\\{this.port}\\challenge\\{this.challenge}\"";
+				string data = $"connect \"{this.userInfo}\\protocol\\{this.Protocol}\\qport\\{this.port}\\challenge\\{this.challenge}\"";
 				this.OutOfBandData(this.serverAddress, data, data.Length);
 				break;
 			}

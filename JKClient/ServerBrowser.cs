@@ -49,7 +49,7 @@ namespace JKClient {
 				if (address == null) {
 					continue;
 				}
-				this.OutOfBandPrint(address, $"getservers {this.BrowserHandler.Protocol.ToString("d")}");
+				this.OutOfBandPrint(address, $"getservers {this.Protocol}");
 			}
 			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			return await this.getListTCS.Task;
