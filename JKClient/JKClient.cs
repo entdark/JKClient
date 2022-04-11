@@ -429,11 +429,14 @@ namespace JKClient {
 		private void ExecuteCommandDirectly(string cmd, Encoding encoding) {
 			this.OutOfBandPrint(this.serverAddress, cmd);
 		}
-		public async Task Connect(ServerInfo serverInfo) {
+		public Task Connect(ServerInfo serverInfo) {
 			if (serverInfo == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(serverInfo)));
 			}
-			await this.Connect(serverInfo.Address.ToString(), (int)serverInfo.Protocol);
+			return this.Connect(serverInfo.Address.ToString(), serverInfo.Protocol);
+		}
+		public Task Connect(string address, ProtocolVersion protocol = ProtocolVersion.Unknown) {
+			return this.Connect(address, (int)protocol);
 		}
 		public async Task Connect(string address, int protocol = (int)ProtocolVersion.Unknown) {
 			this.connectTCS?.TrySetCanceled();
