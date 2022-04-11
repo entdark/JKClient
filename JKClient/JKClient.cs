@@ -130,7 +130,7 @@ namespace JKClient {
 				this.DequeueActions();
 				lastTime = frameTime;
 				this.realTime += msec;
-				this.SendCmd();
+				this.SendCommand();
 				this.CheckForResend();
 				this.SetTime();
 				if (this.Status >= ConnectionStatus.Primed) {
@@ -347,7 +347,7 @@ namespace JKClient {
 			this.cmdNumber++;
 			this.cmds[this.cmdNumber & UserCommand.CommandMask].ServerTime = this.serverTime;
 		}
-		private void SendCmd() {
+		private void SendCommand() {
 			if (this.Status < ConnectionStatus.Connected) {
 				return;
 			}
