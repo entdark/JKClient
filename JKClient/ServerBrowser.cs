@@ -26,6 +26,12 @@ namespace JKClient {
 			}
 			this.globalServers = new Dictionary<NetAddress, ServerInfo>(new NetAddressComparer());
 		}
+		private protected override void OnStop() {
+			this.getListTCS?.TrySetCanceled();
+			this.refreshListTCS?.TrySetCanceled();
+			this.serverRefreshTimeout = 0;
+			base.OnStop();
+		}
 		private protected override async Task Run() {
 			const int frameTime = 8;
 			while (true) {
