@@ -49,10 +49,10 @@ namespace JKClient {
 			this.gameMod = GameMod.Base;
 		}
 		public virtual void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info) {
+			serverInfo.Version = ClientVersion.Q3_v1_32;
 			if (info.Count <= 0) {
 				return;
 			}
-			serverInfo.Version = ClientVersion.Q3_v1_32;
 			serverInfo.GameType = Q3ClientHandler.GetGameType(info["g_gametype"].Atoi());
 		}
 		private static GameType GetGameType(int gameType) {

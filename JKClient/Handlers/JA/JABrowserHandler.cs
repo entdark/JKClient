@@ -14,9 +14,6 @@ namespace JKClient {
 			};
 		}
 		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
-			if (info.Count <= 0) {
-				return;
-			}
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol25:
 				serverInfo.Version = ClientVersion.JA_v1_00;
@@ -24,6 +21,9 @@ namespace JKClient {
 			case ProtocolVersion.Protocol26:
 				serverInfo.Version = ClientVersion.JA_v1_01;
 				break;
+			}
+			if (info.Count <= 0) {
+				return;
 			}
 			serverInfo.GameType = (GameType)info["gametype"].Atoi();
 			serverInfo.NeedPassword = info["needpass"].Atoi() != 0;

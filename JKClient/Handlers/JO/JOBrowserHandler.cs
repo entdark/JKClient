@@ -6,7 +6,7 @@ namespace JKClient {
 		private const string MasterJKHub = "master.jkhub.org";
 		private const string MasterJK2MV = "master.jk2mv.org";
 		private const ushort PortMasterJO = 28060;
-		public virtual bool NeedStatus => true;
+		public virtual bool NeedStatus { get; private set; }
 		public JOBrowserHandler(ProtocolVersion protocol) : base(protocol) {}
 		public virtual IEnumerable<ServerBrowser.ServerAddress> GetMasterServers() {
 			return new ServerBrowser.ServerAddress[] {
@@ -16,16 +16,17 @@ namespace JKClient {
 			};
 		}
 		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
-			if (info.Count <= 0) {
-				return;
-			}
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol15:
 				serverInfo.Version = ClientVersion.JO_v1_02;
+				NeedStatus = true;
 				break;
 			case ProtocolVersion.Protocol16:
 				serverInfo.Version = ClientVersion.JO_v1_04;
 				break;
+			}
+			if (info.Count <= 0) {
+				return;
 			}
 			int gameType = info["gametype"].Atoi();
 			//JO doesn't have Power Duel, the rest game types match
@@ -42,6 +43,7 @@ namespace JKClient {
 			if (info["version"].Contains("v1.03")) {
 				serverInfo.Version = ClientVersion.JO_v1_03;
 			}
+			NeedStatus = false;
 		}
 	}
 }

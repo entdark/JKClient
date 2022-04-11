@@ -16,10 +16,10 @@ namespace JKClient {
 			};
 		}
 		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
+			serverInfo.Version = ClientVersion.Q3_v1_32;
 			if (info.Count <= 0) {
 				return;
 			}
-			serverInfo.Version = ClientVersion.Q3_v1_32;
 			serverInfo.GameType = Q3BrowserHandler.GetGameType(info["gametype"].Atoi());
 			serverInfo.Pure = info["pure"].Atoi() != 0;
 		}

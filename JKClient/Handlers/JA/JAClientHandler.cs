@@ -78,9 +78,6 @@ namespace JKClient {
 			this.gameMod = GameMod.Undefined;
 		}
 		public virtual void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info) {
-			if (info.Count <= 0) {
-				return;
-			}
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol25:
 				serverInfo.Version = ClientVersion.JA_v1_00;
@@ -88,6 +85,9 @@ namespace JKClient {
 			case ProtocolVersion.Protocol26:
 				serverInfo.Version = ClientVersion.JA_v1_01;
 				break;
+			}
+			if (info.Count <= 0) {
+				return;
 			}
 			serverInfo.GameType = (GameType)info["g_gametype"].Atoi();
 			serverInfo.NeedPassword = info["g_needpass"].Atoi() != 0;
