@@ -4,7 +4,7 @@ namespace JKClient {
 	[StructLayout(LayoutKind.Sequential, Pack = 1)]
 	internal struct ClientSnapshot {
 		public const int NotActive = 2;
-		public bool Valid;
+		public QuakeBoolean Valid;
 		public int Flags;
 		public int ServerTime;
 		public int MessageNum;

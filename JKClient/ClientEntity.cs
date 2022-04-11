@@ -9,8 +9,8 @@ namespace JKClient {
 		public const int EventValidMsec = 300;
 		public EntityState CurrentState;
 		public EntityState NextState;
-		public bool Interpolate;
-		public bool CurrentValid;
+		public QuakeBoolean Interpolate;
+		public QuakeBoolean CurrentValid;
 		public int PreviousEvent;
 		public int SnapshotTime;
 	}
