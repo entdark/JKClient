@@ -3,10 +3,12 @@ using System.Collections.Generic;
 
 namespace JKClient {
 	public class JAClientHandler : JANetHandler, IClientHandler {
+		private const int MaxConfigstringsBase = 1700;
+		private const int MaxConfigstringsOJP = 2200;
 		private GameMod gameMod = GameMod.Undefined;
 		public virtual ClientVersion Version { get; private set; }
 		public virtual int MaxReliableCommands => 128;
-		public virtual int MaxConfigstrings => 1700;
+		public virtual int MaxConfigstrings { get; private set; } = JAClientHandler.MaxConfigstringsBase;
 		public virtual int MaxClients => 32;
 		public virtual bool CanParseRMG => true;
 		public virtual bool CanParseVehicle => true;
@@ -21,12 +23,14 @@ namespace JKClient {
 			if (i == GameState.ServerInfo) {
 				var info = new InfoString(csStr);
 				string gamename = info["gamename"];
+				//TODO: add mod handlers
 				if (gamename.Contains("Szlakiem Jedi RPE")
 					|| gamename.Contains("Open Jedi Project")
 					|| gamename.Contains("OJP Enhanced")
 					|| gamename.Contains("OJP Basic")
 					|| gamename.Contains("OJRP")) {
 					this.gameMod = GameMod.OJP;
+					this.MaxConfigstrings = JAClientHandler.MaxConfigstringsOJP;
 				} else if (gamename.Contains("Movie Battles II")) {
 					this.gameMod = GameMod.MBII;
 				} else {
@@ -76,6 +80,7 @@ namespace JKClient {
 		}
 		public virtual void ClearState() {
 			this.gameMod = GameMod.Undefined;
+			this.MaxConfigstrings = JAClientHandler.MaxConfigstringsBase;
 		}
 		public virtual void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info) {
 			switch (serverInfo.Protocol) {
