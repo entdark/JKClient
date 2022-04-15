@@ -108,11 +108,6 @@ namespace JKClient {
 			this.DequeueActions(false);
 			base.OnStart();
 		}
-		private protected override void OnStop() {
-			this.Disconnect();
-			this.DequeueActions();
-			base.OnStop();
-		}
 		private protected override async Task Run() {
 			long frameTime, lastTime = Common.Milliseconds;
 			int msec;
