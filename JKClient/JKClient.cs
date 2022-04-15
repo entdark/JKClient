@@ -365,48 +365,53 @@ namespace JKClient {
 			this.WritePacket();
 		}
 		private void WritePacket() {
-			var oldcmd = new UserCommand();
-			byte []data = new byte[this.ClientHandler.MaxMessageLength];
-			var msg = new Message(data, sizeof(byte)*this.ClientHandler.MaxMessageLength);
-			msg.Bitstream();
-			msg.WriteLong(this.serverId);
-			msg.WriteLong(this.serverMessageSequence);
-			msg.WriteLong(this.serverCommandSequence);
-			for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
-				msg.WriteByte((int)ClientCommandOperations.ClientCommand);
-				msg.WriteLong(i);
-				msg.WriteString(this.reliableCommands[i & (this.MaxReliableCommands-1)]);
+			if (this.netChannel == null) {
+				return;
 			}
-			int oldPacketNum = (this.netChannel.OutgoingSequence - 1 - 1) & JKClient.PacketMask;
-			int count = this.cmdNumber - this.outPackets[oldPacketNum].CommandNumber;
-			if (count > JKClient.MaxPacketUserCmds) {
-				count = JKClient.MaxPacketUserCmds;
-			}
-			if (count >= 1) {
-				if (!this.snap.Valid || this.serverMessageSequence != this.snap.MessageNum) {
-					msg.WriteByte((int)ClientCommandOperations.MoveNoDelta);
-				} else {
-					msg.WriteByte((int)ClientCommandOperations.Move);
+			lock (this.netChannel) {
+				var oldcmd = new UserCommand();
+				byte[] data = new byte[this.ClientHandler.MaxMessageLength];
+				var msg = new Message(data, sizeof(byte)*this.ClientHandler.MaxMessageLength);
+				msg.Bitstream();
+				msg.WriteLong(this.serverId);
+				msg.WriteLong(this.serverMessageSequence);
+				msg.WriteLong(this.serverCommandSequence);
+				for (int i = this.reliableAcknowledge + 1; i <= this.reliableSequence; i++) {
+					msg.WriteByte((int)ClientCommandOperations.ClientCommand);
+					msg.WriteLong(i);
+					msg.WriteString(this.reliableCommands[i & (this.MaxReliableCommands-1)]);
 				}
-				msg.WriteByte(count);
-				int key = this.checksumFeed;
-				key ^= this.serverMessageSequence;
-				key ^= Common.HashKey(this.serverCommands[this.serverCommandSequence & (this.MaxReliableCommands-1)], 32);
-				for (int i = 0; i < count; i++) {
-					int j = (this.cmdNumber - count + i + 1) & UserCommand.CommandMask;
-					msg.WriteDeltaUsercmdKey(key, ref oldcmd, ref this.cmds[j]);
-					oldcmd = this.cmds[j];
+				int oldPacketNum = (this.netChannel.OutgoingSequence - 1 - 1) & JKClient.PacketMask;
+				int count = this.cmdNumber - this.outPackets[oldPacketNum].CommandNumber;
+				if (count > JKClient.MaxPacketUserCmds) {
+					count = JKClient.MaxPacketUserCmds;
 				}
-			}
-			int packetNum = this.netChannel.OutgoingSequence & JKClient.PacketMask;
-			this.outPackets[packetNum].RealTime = this.realTime;
-			this.outPackets[packetNum].ServerTime = oldcmd.ServerTime;
-			this.outPackets[packetNum].CommandNumber = this.cmdNumber;
-			msg.WriteByte((int)ClientCommandOperations.EOF);
-			this.Encode(msg);
-			this.netChannel.Transmit(msg.CurSize, msg.Data);
-			while (this.netChannel.UnsentFragments) {
-				this.netChannel.TransmitNextFragment();
+				if (count >= 1) {
+					if (!this.snap.Valid || this.serverMessageSequence != this.snap.MessageNum) {
+						msg.WriteByte((int)ClientCommandOperations.MoveNoDelta);
+					} else {
+						msg.WriteByte((int)ClientCommandOperations.Move);
+					}
+					msg.WriteByte(count);
+					int key = this.checksumFeed;
+					key ^= this.serverMessageSequence;
+					key ^= Common.HashKey(this.serverCommands[this.serverCommandSequence & (this.MaxReliableCommands-1)], 32);
+					for (int i = 0; i < count; i++) {
+						int j = (this.cmdNumber - count + i + 1) & UserCommand.CommandMask;
+						msg.WriteDeltaUsercmdKey(key, ref oldcmd, ref this.cmds[j]);
+						oldcmd = this.cmds[j];
+					}
+				}
+				int packetNum = this.netChannel.OutgoingSequence & JKClient.PacketMask;
+				this.outPackets[packetNum].RealTime = this.realTime;
+				this.outPackets[packetNum].ServerTime = oldcmd.ServerTime;
+				this.outPackets[packetNum].CommandNumber = this.cmdNumber;
+				msg.WriteByte((int)ClientCommandOperations.EOF);
+				this.Encode(msg);
+				this.netChannel.Transmit(msg.CurSize, msg.Data);
+				while (this.netChannel.UnsentFragments) {
+					this.netChannel.TransmitNextFragment();
+				}
 			}
 		}
 		private unsafe void AddReliableCommand(string cmd, bool disconnect = false, Encoding encoding = null) {
@@ -460,15 +465,16 @@ namespace JKClient {
 			await this.connectTCS.Task;
 		}
 		public void Disconnect() {
+			var status = this.Status;
+			this.Status = ConnectionStatus.Disconnected;
 			void disconnect() {
 				this.connectTCS?.TrySetCanceled();
-				if (this.Status >= ConnectionStatus.Connected) {
+				if (status >= ConnectionStatus.Connected) {
 					this.AddReliableCommand("disconnect", true);
 					this.WritePacket();
 					this.WritePacket();
 					this.WritePacket();
 				}
-				this.Status = ConnectionStatus.Disconnected;
 				this.ClearState();
 				this.ClearConnection();
 			}
