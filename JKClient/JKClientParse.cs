@@ -242,10 +242,6 @@ namespace JKClient {
 				}
 			}
 			int len = msg.ReadByte();
-			if (len > sizeof(byte)*32) {
-				oldSnapHandle.Free();
-				throw new JKClientException("ParseSnapshot: Invalid size %d for areamask");
-			}
 			msg.ReadData(null, len);
 			if (this.ClientHandler.CanParseSnapshot()) {
 				msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->PlayerState : null, &newSnap.PlayerState, false, this.ClientHandler);
