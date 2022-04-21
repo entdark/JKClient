@@ -4,25 +4,25 @@ using System.Runtime.InteropServices;
 namespace JKClient {
 	internal unsafe sealed class Huffman : IDisposable {
 		private const int HuffMax = 256;
+		private const int NodesMax = Huffman.HuffMax*3;
 		private const int NotYetTransmitted = Huffman.HuffMax;
-		private const int InternalNode = Huffman.HuffMax + 1;
+		private const int InternalNode = Huffman.HuffMax+1;
 		private int bloc = 0;
 		private int blocNode = 0,
 					blocPtrs = 0;
 		private Node* tree, lhead, ltail;
-//		private Node*[] loc = new Node*[HuffMax + 1];
 		private Node** freelist;
-//		private Node[] nodeList = new Node[768];
-//		private Node*[] nodePtrs = new Node*[768];
-		private readonly IntPtr locP, nodeListP, nodePtrsP;
+		private Node** loc;
+		private Node* nodeList;
+		private Node** nodePtrs;
 		public Huffman(bool decompressor = false) {
-			this.locP = Marshal.AllocHGlobal(sizeof(Node*)*(Huffman.HuffMax+1));
-			this.nodeListP = Marshal.AllocHGlobal(sizeof(Node)*768);
-			this.nodePtrsP = Marshal.AllocHGlobal(sizeof(Node*)*768);
-			Common.MemSet(this.locP, 0, sizeof(Node*)*(Huffman.HuffMax+1));
-			Common.MemSet(this.nodeListP, 0, sizeof(Node)*768);
-			Common.MemSet(this.nodePtrsP, 0, sizeof(Node*)*768);
-			this.tree = this.lhead = ((Node**)this.locP)[Huffman.NotYetTransmitted] = ((Node*)this.nodeListP)+this.blocNode++;
+			this.loc = (Node**)Marshal.AllocHGlobal(sizeof(Node*)*(Huffman.HuffMax+1));
+			this.nodeList = (Node*)Marshal.AllocHGlobal(sizeof(Node)*Huffman.NodesMax);
+			this.nodePtrs = (Node**)Marshal.AllocHGlobal(sizeof(Node*)*Huffman.NodesMax);
+			Common.MemSet(this.loc, 0, sizeof(Node*)*(Huffman.HuffMax+1));
+			Common.MemSet(this.nodeList, 0, sizeof(Node)*Huffman.NodesMax);
+			Common.MemSet(this.nodePtrs, 0, sizeof(Node*)*Huffman.NodesMax);
+			this.tree = this.lhead = this.loc[Huffman.NotYetTransmitted] = &(this.nodeList[this.blocNode++]);
 			if (decompressor) {
 				this.ltail = this.tree;
 			}
@@ -31,23 +31,23 @@ namespace JKClient {
 			this.lhead->next = this.lhead->prev = null;
 			this.tree->parent = this.tree->left = this.tree->right = null;
 			if (!decompressor) {
-				((Node**)this.locP)[Huffman.NotYetTransmitted] = this.tree;
+				this.loc[Huffman.NotYetTransmitted] = this.tree;
 			}
 		}
 		private void Transmit(int ch, byte []fout) {
-			if (((Node**)this.locP)[ch] == null) {
+			if (this.loc[ch] == null) {
 				this.Transmit(Huffman.NotYetTransmitted, fout);
 				for (int i = 7; i >= 0; i--) {
 					this.AddBit((sbyte)((ch >> i) & 0x1), fout);
 				}
 			} else {
-				this.Send(((Node**)this.locP)[ch], null, fout);
+				this.Send(this.loc[ch], null, fout);
 			}
 		}
 		public void AddReference(byte ch) {
-			if (((Node**)this.locP)[ch] == null) {
-				Node *tnode = ((Node*)this.nodeListP)+this.blocNode++;
-				Node *tnode2 = ((Node*)this.nodeListP)+this.blocNode++;
+			if (this.loc[ch] == null) {
+				Node *tnode = &(this.nodeList[this.blocNode++]);
+				Node *tnode2 = &(this.nodeList[this.blocNode++]);
 				tnode2->symbol = Huffman.InternalNode;
 				tnode2->weight = 1;
 				tnode2->next = this.lhead->next;
@@ -96,10 +96,10 @@ namespace JKClient {
 				tnode2->left = this.lhead;
 				tnode2->parent = this.lhead->parent;
 				this.lhead->parent = tnode->parent = tnode2;
-				((Node**)this.locP)[ch] = tnode;
+				this.loc[ch] = tnode;
 				this.Increment(tnode2->parent);
 			} else {
-				this.Increment(((Node**)this.locP)[ch]);
+				this.Increment(this.loc[ch]);
 			}
 		}
 		private void Increment(Node *node) {
@@ -191,7 +191,7 @@ namespace JKClient {
 		}
 		private Node **GetPPNode() {
 			if (this.freelist == null) {
-				var n = (Node**)this.nodePtrsP+this.blocPtrs++;
+				var n = &(this.nodePtrs[this.blocPtrs++]);
 				return n;
 			} else {
 				Node **tppnode = this.freelist;
@@ -246,7 +246,7 @@ namespace JKClient {
 		}
 		public void OffsetTransmit(int ch, byte []fout, ref int offset) {
 			this.bloc = offset;
-			this.Send(((Node**)this.locP)[ch], null, fout);
+			this.Send(this.loc[ch], null, fout);
 			offset = this.bloc;
 		}
 		public int GetBit(byte []fin, ref int offset) {
@@ -290,9 +290,9 @@ namespace JKClient {
 			}
 		}
 		public void Dispose() {
-			Marshal.FreeHGlobal(this.locP);
-			Marshal.FreeHGlobal(this.nodeListP);
-			Marshal.FreeHGlobal(this.nodePtrsP);
+			Marshal.FreeHGlobal((IntPtr)this.loc);
+			Marshal.FreeHGlobal((IntPtr)this.nodeList);
+			Marshal.FreeHGlobal((IntPtr)this.nodePtrs);
 		}
 		private unsafe struct Node {
 			public Node* left, right, parent;
