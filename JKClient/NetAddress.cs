@@ -4,16 +4,22 @@ using System.Text;
 
 namespace JKClient {
 	public sealed class NetAddress {
-		public byte []IP { get; private set; }
-		public ushort Port { get; private set; }
+		private readonly int hashCode;
+		public byte []IP { get; init; }
+		public ushort Port { get; init; }
 		public NetAddress(NetAddress address) {
 			this.IP = new byte[address.IP.Length];
 			Array.Copy(address.IP, this.IP, address.IP.Length);
 			this.Port = address.Port;
+			this.hashCode = this.GenerateHashCode();
 		}
 		public NetAddress(byte []ip, ushort port) {
 			this.IP = ip;
 			this.Port = port;
+			this.hashCode = this.GenerateHashCode();
+		}
+		private int GenerateHashCode() {
+			return (this.IP[0], this.IP[1], this.IP[2], this.IP[3], this.Port).GetHashCode();
 		}
 		public static bool operator ==(NetAddress address1, NetAddress address2) {
 			if (address1 is null && address2 is null)
@@ -41,7 +47,7 @@ namespace JKClient {
 			return base.Equals(obj);
 		}
 		public override int GetHashCode() {
-			return (this.IP[0], this.IP[1], this.IP[2], this.IP[3], this.Port).GetHashCode();
+			return this.hashCode;
 		}
 		public override string ToString() {
 			var builder = new StringBuilder();
