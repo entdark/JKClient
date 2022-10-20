@@ -1,13 +1,15 @@
 ﻿using System;
 
 namespace JKClient {
-	//TODO: migrate to C# 8.0 with access modifier for interface elements
-/*	internal interface IJKClientImport {
+	public interface IJKClientImport {
+		internal int MaxClients { get; }
 		internal void GetCurrentSnapshotNumber(out int snapshotNumber, out int serverTime);
-		internal bool GetSnapshot(int snapshotNumber, ref Snapshot snapshot);
-		internal bool GetServerCommand(int serverCommandNumber, out Command command);
-		internal string GetConfigstring(int index);
-	}*/
+		internal bool GetSnapshot(in int snapshotNumber, ref Snapshot snapshot);
+		internal bool GetServerCommand(in int serverCommandNumber, out Command command);
+		internal string GetConfigstring(in int index);
+		internal void ExecuteServerCommand(CommandEventArgs eventArgs);
+		internal void NotifyClientInfoChanged();
+	}
 	public abstract class ClientGame {
 		protected readonly bool Initialized = false;
 		protected readonly int ClientNum;
@@ -16,7 +18,7 @@ namespace JKClient {
 		private protected Snapshot Snap = null, NextSnap = null;
 		private protected int ServerCommandSequence = 0;
 		private protected readonly ClientEntity []Entities = new ClientEntity[Common.MaxGEntities];
-		protected readonly /*IJKClientImport*/JKClient Client;
+		private protected readonly IJKClientImport Client;
 		private protected int ServerTime;
 		private protected readonly Snapshot []ActiveSnapshots = new Snapshot[2] {
 			new Snapshot(),
@@ -26,7 +28,7 @@ namespace JKClient {
 			get;
 			private protected set;
 		}
-		internal unsafe ClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum) {
+		internal unsafe ClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			this.Client = client;
 			this.ClientNum = clientNum;
 			this.ProcessedSnapshotNum = serverMessageNum;
@@ -220,7 +222,7 @@ namespace JKClient {
 				this.ClientInfo[clientNum].InfoValid = true;
 			}
 			if (this.Initialized) {
-				this.Client.NotifyServerInfoChanged();
+				this.Client.NotifyClientInfoChanged();
 			}
 		}
 		private protected virtual void CheckEvents(ref ClientEntity cent) {

@@ -30,7 +30,7 @@ namespace JKClient {
 				}
 			}
 		}
-		public virtual ClientGame CreateClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum) {
+		public virtual ClientGame CreateClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			return new JOClientGame(client, serverMessageNum, serverCommandSequence, clientNum);
 		}
 		public virtual bool CanParseSnapshot() {

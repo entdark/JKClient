@@ -33,7 +33,7 @@ namespace JKClient {
 				this.gameMod = GameMod.OSP;
 			}
 		}
-		public virtual ClientGame CreateClientGame(/*IJKClientImport*/JKClient client, int serverMessageNum, int serverCommandSequence, int clientNum) {
+		public virtual ClientGame CreateClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			return new Q3ClientGame(client, serverMessageNum, serverCommandSequence, clientNum);
 		}
 		public virtual bool CanParseSnapshot() {

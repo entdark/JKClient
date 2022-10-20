@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace JKClient {
-	public sealed partial class JKClient : NetClient/*, IJKClientImport*/ {
+	public sealed partial class JKClient : NetClient {
 		private const int LastPacketTimeOut = 5 * 60000;
 		private const int RetransmitTimeOut = 3000;
 		private const int MaxPacketUserCmds = 32;
@@ -90,9 +90,6 @@ namespace JKClient {
 			}
 		}
 		public event Action<ServerInfo> ServerInfoChanged;
-		internal void NotifyServerInfoChanged() {
-			this.ServerInfoChanged?.Invoke(this.ServerInfo);
-		}
 		public JKClient(IClientHandler clientHandler) : base(clientHandler) {
 			this.Status = ConnectionStatus.Disconnected;
 			this.port = random.Next(1, 0xffff) & 0xffff;
