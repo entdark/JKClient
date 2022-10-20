@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace JKClient {
 	internal sealed class NetSystem : IDisposable {
@@ -119,7 +120,7 @@ namespace JKClient {
 				return false;
 			}
 		}
-		public static NetAddress StringToAddress(string address, ushort port = 0) {
+		public static async Task<NetAddress> StringToAddressAsync(string address, ushort port = 0) {
 			byte []ip;
 			int index = address.IndexOf(':');
 			if (port <= 0) {
@@ -131,7 +132,7 @@ namespace JKClient {
 			ip = IPAddress.TryParse(address.Substring(0, index), out IPAddress ipAddress) ? ipAddress.GetAddressBytes() : null;
 			if (ip == null) {
 				try {
-					var hostEntry = Dns.GetHostEntry(address);
+					var hostEntry = await Dns.GetHostEntryAsync(address);
 					ip = hostEntry.AddressList.FirstOrDefault(adr => adr.AddressFamily == AddressFamily.InterNetwork)?.GetAddressBytes();
 				} catch (SocketException exception) {
 					if (exception.SocketErrorCode == SocketError.HostNotFound) {
@@ -142,6 +143,9 @@ namespace JKClient {
 				}
 			}
 			return new NetAddress(ip, port);
+		}
+		public static NetAddress StringToAddress(string address, ushort port = 0) {
+			return NetSystem.StringToAddressAsync(address, port).Result;
 		}
 		public void Dispose() {
 			this.disposed = true;
