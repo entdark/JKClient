@@ -104,6 +104,17 @@ namespace JKClient {
 			this.DequeueActions(false);
 			base.OnStart();
 		}
+		private protected override void OnStop(bool afterFailure) {
+			this.connectTCS?.TrySetCanceled();
+			this.connectTCS = null;
+			this.Status = ConnectionStatus.Disconnected;
+			if (afterFailure) {
+				this.DequeueActions();
+				this.ClearState();
+				this.ClearConnection();
+			}
+			base.OnStop(afterFailure);
+		}
 		private protected override async Task Run() {
 			long frameTime, lastTime = Common.Milliseconds;
 			int msec;
@@ -417,19 +428,14 @@ namespace JKClient {
 			if (serverInfo == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(serverInfo)));
 			}
-			return this.Connect(serverInfo.Address.ToString(), serverInfo.Protocol);
+			return this.Connect(serverInfo.Address.ToString());
 		}
-		public Task Connect(string address, ProtocolVersion protocol = ProtocolVersion.Unknown) {
-			return this.Connect(address, (int)protocol);
-		}
-		public async Task Connect(string address, int protocol = (int)ProtocolVersion.Unknown) {
+		public async Task Connect(string address) {
 			this.connectTCS?.TrySetCanceled();
-			var serverAddress = NetSystem.StringToAddress(address);
+			this.connectTCS = null;
+			var serverAddress = await NetSystem.StringToAddressAsync(address);
 			if (serverAddress == null) {
 				throw new JKClientException("Bad server address");
-			}
-			if (this.Protocol != protocol) {
-				throw new JKClientException("Protocol mismatch on connect");
 			}
 			this.connectTCS = new TaskCompletionSource<bool>();
 			void connect() {
@@ -448,6 +454,7 @@ namespace JKClient {
 			this.Status = ConnectionStatus.Disconnected;
 			void disconnect() {
 				this.connectTCS?.TrySetCanceled();
+				this.connectTCS = null;
 				if (status >= ConnectionStatus.Connected) {
 					this.AddReliableCommand("disconnect", true);
 					this.WritePacket();

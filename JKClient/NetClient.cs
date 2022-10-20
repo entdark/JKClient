@@ -28,24 +28,24 @@ namespace JKClient {
 			this.cts = new CancellationTokenSource();
 			Task.Run(this.Run, this.cts.Token)
 				.ContinueWith((t) => {
-					this.Stop();
+					this.Stop(true);
 					exceptionCallback?.Invoke(new JKClientException(t.Exception));
 				}, TaskContinuationOptions.OnlyOnFaulted);
 		}
-		public void Stop() {
+		public void Stop(bool afterFailure = false) {
 			if (!this.Started) {
 				return;
 //				throw new JKClientException("Cannot stop NetClient when it's not started");
 			}
 			this.Started = false;
-			this.OnStop();
+			this.OnStop(afterFailure);
 			if (this.cts != null) {
 				this.cts.Cancel();
 				this.cts = null;
 			}
 		}
 		private protected void GetPacket() {
-			var netmsg = new Message(packetReceived, sizeof(byte)*this.NetHandler.MaxMessageLength);
+			var netmsg = new Message(this.packetReceived, sizeof(byte)*this.NetHandler.MaxMessageLength);
 			NetAddress address = null;
 			while (this.net.GetPacket(ref address, netmsg)) {
 				if ((uint)netmsg.CurSize <= netmsg.MaxSize) {
@@ -81,7 +81,7 @@ namespace JKClient {
 		private protected abstract void PacketEvent(NetAddress address, Message msg);
 		private protected abstract Task Run();
 		private protected virtual void OnStart() {}
-		private protected virtual void OnStop() {}
+		private protected virtual void OnStop(bool afterFailure) {}
 		public void Dispose() {
 			this.net?.Dispose();
 		}
