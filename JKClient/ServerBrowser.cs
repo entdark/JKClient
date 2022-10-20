@@ -133,6 +133,15 @@ namespace JKClient {
 			var info = new InfoString(msg.ReadStringLineAsString());
 			if (this.globalServers.ContainsKey(address)) {
 				var serverInfo = this.globalServers[address];
+				int playersCount = 0;
+				for (string s = msg.ReadStringLineAsString(); !string.IsNullOrEmpty(s); s = msg.ReadStringLineAsString()) {
+					var command = new Command(s);
+					int ping = command.Argv(1).Atoi();
+					if (ping > 0) {
+						playersCount++;
+					}
+				}
+				serverInfo.Clients = playersCount;
 				this.BrowserHandler.HandleStatusResponse(serverInfo, info);
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			}

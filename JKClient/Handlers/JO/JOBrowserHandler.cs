@@ -15,11 +15,11 @@ namespace JKClient {
 				new ServerBrowser.ServerAddress(JOBrowserHandler.MasterJK2MV, JOBrowserHandler.PortMasterJO)
 			};
 		}
-		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
+		public virtual void HandleInfoPacket(in ServerInfo serverInfo, in InfoString info) {
+			this.NeedStatus = true;
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol15:
 				serverInfo.Version = ClientVersion.JO_v1_02;
-				NeedStatus = true;
 				break;
 			case ProtocolVersion.Protocol16:
 				serverInfo.Version = ClientVersion.JO_v1_04;
@@ -39,11 +39,11 @@ namespace JKClient {
 			serverInfo.WeaponDisable = info["wdisable"].Atoi() != 0;
 			serverInfo.ForceDisable = info["fdisable"].Atoi() != 0;
 		}
-		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) {
+		public virtual void HandleStatusResponse(in ServerInfo serverInfo, in InfoString info) {
 			if (info["version"].Contains("v1.03")) {
 				serverInfo.Version = ClientVersion.JO_v1_03;
 			}
-			NeedStatus = false;
+			this.NeedStatus = false;
 		}
 	}
 }

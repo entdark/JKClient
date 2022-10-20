@@ -5,7 +5,7 @@ namespace JKClient {
 		private const string MasterJK3RavenSoftware = "masterjk3.ravensoft.com";
 		private const string MasterJKHub = "master.jkhub.org";
 		private const ushort PortMasterJA = 29060;
-		public virtual bool NeedStatus => false;
+		public virtual bool NeedStatus { get; private set; }
 		public JABrowserHandler(ProtocolVersion protocol) : base(protocol) {}
 		public virtual IEnumerable<ServerBrowser.ServerAddress> GetMasterServers() {
 			return new ServerBrowser.ServerAddress[] {
@@ -13,7 +13,8 @@ namespace JKClient {
 				new ServerBrowser.ServerAddress(JABrowserHandler.MasterJKHub, JABrowserHandler.PortMasterJA)
 			};
 		}
-		public virtual void HandleInfoPacket(ServerInfo serverInfo, InfoString info) {
+		public virtual void HandleInfoPacket(in ServerInfo serverInfo, in InfoString info) {
+			this.NeedStatus = true;
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol25:
 				serverInfo.Version = ClientVersion.JA_v1_00;
@@ -30,7 +31,13 @@ namespace JKClient {
 			serverInfo.TrueJedi = info["truejedi"].Atoi() != 0;
 			serverInfo.WeaponDisable = info["wdisable"].Atoi() != 0;
 			serverInfo.ForceDisable = info["fdisable"].Atoi() != 0;
+			if (info.ContainsKey("g_humanplayers")) {
+				this.NeedStatus = false;
+				serverInfo.Clients = info["g_humanplayers"].Atoi();
+			}
 		}
-		public virtual void HandleStatusResponse(ServerInfo serverInfo, InfoString info) {}
+		public virtual void HandleStatusResponse(in ServerInfo serverInfo, in InfoString info) {
+			this.NeedStatus = false;
+		}
 	}
 }
