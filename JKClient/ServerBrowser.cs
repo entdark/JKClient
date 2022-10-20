@@ -109,7 +109,7 @@ namespace JKClient {
 			}
 			return await this.GetServerInfo(netAddress);
 		}
-		private protected override unsafe void PacketEvent(NetAddress address, Message msg) {
+		private protected override unsafe void PacketEvent(in NetAddress address, in Message msg) {
 			fixed (byte *b = msg.Data) {
 				if (msg.CurSize >= 4 && *(int*)b == -1) {
 					msg.BeginReading(true);
@@ -127,7 +127,7 @@ namespace JKClient {
 				}
 			}
 		}
-		private unsafe void ServersResponsePacket(NetAddress address, Message msg) {
+		private unsafe void ServersResponsePacket(in NetAddress address, in Message msg) {
 			fixed (byte *b = msg.Data) {
 				byte *buffptr = b;
 				byte *buffend = buffptr + msg.CurSize;
@@ -163,7 +163,7 @@ namespace JKClient {
 				}
 			}
 		}
-		private void ServerStatusResponse(NetAddress address, Message msg) {
+		private void ServerStatusResponse(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringLineAsString());
 			if (this.serverInfoTasks.ContainsKey(address)) {
 				this.serverInfoTasks[address].TrySetResult(info);
@@ -184,7 +184,7 @@ namespace JKClient {
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			}
 		}
-		private void ServerInfoPacket(NetAddress address, Message msg) {
+		private void ServerInfoPacket(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringAsString());
 			if (this.globalServers.ContainsKey(address)) {
 				var serverInfo = this.globalServers[address];

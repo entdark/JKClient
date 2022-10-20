@@ -54,7 +54,7 @@ namespace JKClient {
 				Common.MemSet(netmsg.Data, 0, sizeof(byte)*netmsg.MaxSize);
 			}
 		}
-		internal void OutOfBandPrint(NetAddress address, string data) {
+		internal void OutOfBandPrint(in NetAddress address, in string data) {
 			byte []msg = new byte[this.NetHandler.MaxMessageLength];
 			msg[0] = unchecked((byte)-1);
 			msg[1] = unchecked((byte)-1);
@@ -64,7 +64,7 @@ namespace JKClient {
 			dataMsg.CopyTo(msg, 4);
 			this.net.SendPacket(dataMsg.Length+4, msg, address);
 		}
-		internal void OutOfBandData(NetAddress address, string data, int length) {
+		internal void OutOfBandData(in NetAddress address, in string data, in int length) {
 			byte []msg = new byte[this.NetHandler.MaxMessageLength*2];
 			msg[0] = 0xff;
 			msg[1] = 0xff;
@@ -78,7 +78,7 @@ namespace JKClient {
 			Huffman.Compress(mbuf, 12);
 			this.net.SendPacket(mbuf.CurSize, mbuf.Data, address);
 		}
-		private protected abstract void PacketEvent(NetAddress address, Message msg);
+		private protected abstract void PacketEvent(in NetAddress address, in Message msg);
 		private protected abstract Task Run();
 		private protected virtual void OnStart() {}
 		private protected virtual void OnStop(bool afterFailure) {}

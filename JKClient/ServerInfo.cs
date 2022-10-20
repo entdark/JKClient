@@ -24,7 +24,7 @@ namespace JKClient {
 		public bool Pure;
 		internal bool InfoSet;
 		internal long Start;
-		internal void SetInfo(InfoString info) {
+		internal void SetInfo(in InfoString info) {
 			if (info.Count <= 0) {
 				return;
 			}
@@ -38,7 +38,7 @@ namespace JKClient {
 			this.MaxPing = info["maxPing"].Atoi();
 			this.InfoSet = true;
 		}
-		internal void SetConfigstringInfo(InfoString info) {
+		internal void SetConfigstringInfo(in InfoString info) {
 			if (info.Count <= 0) {
 				return;
 			}
@@ -50,10 +50,10 @@ namespace JKClient {
 			this.MaxPing = info["sv_maxping"].Atoi();
 			this.InfoSet = true;
 		}
-		public static bool operator ==(ServerInfo serverInfo1, ServerInfo serverInfo2) {
+		public static bool operator ==(in ServerInfo serverInfo1, in ServerInfo serverInfo2) {
 			return serverInfo1?.Address == serverInfo2?.Address;
 		}
-		public static bool operator !=(ServerInfo serverInfo1, ServerInfo serverInfo2) {
+		public static bool operator !=(in ServerInfo serverInfo1, in ServerInfo serverInfo2) {
 			return (serverInfo1 == serverInfo2) != true;
 		}
 		public override bool Equals(object obj) {

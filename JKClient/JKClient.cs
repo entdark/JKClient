@@ -202,7 +202,7 @@ namespace JKClient {
 				break;
 			}
 		}
-		private unsafe void Encode(Message msg) {
+		private unsafe void Encode(in Message msg) {
 			if (msg.CurSize <= 12) {
 				return;
 			}
@@ -231,7 +231,7 @@ namespace JKClient {
 				}
 			}
 		}
-		private unsafe void Decode(Message msg) {
+		private unsafe void Decode(in Message msg) {
 			msg.SaveState();
 			msg.Bitstream();
 			int reliableAcknowledge = msg.ReadLong();
@@ -255,7 +255,7 @@ namespace JKClient {
 				}
 			}
 		}
-		private protected override unsafe void PacketEvent(NetAddress address, Message msg) {
+		private protected override unsafe void PacketEvent(in NetAddress address, in Message msg) {
 //			this.lastPacketTime = this.realTime;
 			fixed (byte *b = msg.Data) {
 				if (msg.CurSize >= 4 && *(int*)b == -1) {
@@ -424,7 +424,7 @@ namespace JKClient {
 		private void ExecuteCommandDirectly(string cmd, Encoding encoding) {
 			this.OutOfBandPrint(this.serverAddress, cmd);
 		}
-		public Task Connect(ServerInfo serverInfo) {
+		public Task Connect(in ServerInfo serverInfo) {
 			if (serverInfo == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(serverInfo)));
 			}
@@ -466,7 +466,7 @@ namespace JKClient {
 			}
 			this.actionsQueue.Enqueue(disconnect);
 		}
-		public static IClientHandler GetKnownClientHandler(ServerInfo serverInfo) {
+		public static IClientHandler GetKnownClientHandler(in ServerInfo serverInfo) {
 			if (serverInfo == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(serverInfo)));
 			}

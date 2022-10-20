@@ -82,7 +82,7 @@ namespace JKClient {
 			this.gameMod = GameMod.Undefined;
 			this.MaxConfigstrings = JAClientHandler.MaxConfigstringsBase;
 		}
-		public virtual void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info) {
+		public virtual void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info) {
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol25:
 				serverInfo.Version = ClientVersion.JA_v1_00;

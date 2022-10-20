@@ -59,7 +59,7 @@ namespace JKClient {
 			}
 		}
 		public virtual void ClearState() {}
-		public virtual void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info) {
+		public virtual void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info) {
 			switch (serverInfo.Protocol) {
 			case ProtocolVersion.Protocol15 when info["version"].Contains("v1.03"):
 				serverInfo.Version = ClientVersion.JO_v1_03;

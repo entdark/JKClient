@@ -22,7 +22,7 @@ namespace JKClient {
 		private EntityState []parseEntities = new EntityState[JKClient.MaxParseEntities];
 #endregion
 		private int MaxConfigstrings => this.ClientHandler.MaxConfigstrings;
-		private void ParseServerMessage(Message msg) {
+		private void ParseServerMessage(in Message msg) {
 			msg.Bitstream();
 			this.reliableAcknowledge = msg.ReadLong();
 			if (this.reliableAcknowledge < this.reliableSequence - this.MaxReliableCommands) {
@@ -45,21 +45,21 @@ namespace JKClient {
 				case ServerCommandOperations.Nop:
 					break;
 				case ServerCommandOperations.ServerCommand:
-					this.ParseCommandString(msg);
+					this.ParseCommandString(in msg);
 					break;
 				case ServerCommandOperations.Gamestate:
-					this.ParseGamestate(msg);
+					this.ParseGamestate(in msg);
 					break;
 				case ServerCommandOperations.Snapshot:
-					this.ParseSnapshot(msg);
+					this.ParseSnapshot(in msg);
 					eof = true;
 					break;
 				case ServerCommandOperations.SetGame:
-//					this.ParseSetGame(msg);
+//					this.ParseSetGame(in msg);
 					eof = true;
 					break;
 				case ServerCommandOperations.Download:
-//					this.ParseDownload(msg);
+//					this.ParseDownload(in msg);
 					eof = true;
 					break;
 				case ServerCommandOperations.MapChange:
@@ -70,7 +70,7 @@ namespace JKClient {
 				}
 			}
 		}
-		private unsafe void ParseGamestate(Message msg) {
+		private unsafe void ParseGamestate(in Message msg) {
 			this.connectPacketCount = 0;
 			this.ClearState();
 			this.serverCommandSequence = msg.ReadLong();
@@ -121,7 +121,7 @@ namespace JKClient {
 			this.clientGame = this.InitClientGame();
 			this.ServerInfoChanged?.Invoke(this.ServerInfo);
 		}
-		private void ParseRMG(Message msg) {
+		private void ParseRMG(in Message msg) {
 			ushort rmgHeightMapSize = (ushort)msg.ReadShort();
 			if (rmgHeightMapSize == 0) {
 				return;
@@ -154,7 +154,7 @@ namespace JKClient {
 				throw new JKClientException("Cannot connect to a pure server without assets");
 			}
 		}
-		internal unsafe string GetConfigstring(int index) {
+		internal unsafe string GetConfigstring(in int index) {
 			if (index < 0 || index >= this.MaxConfigstrings) {
 				throw new JKClientException($"Configstring: bad index: {index}");
 			}
@@ -201,7 +201,7 @@ namespace JKClient {
 			this.lastExecutedServerCommand = 0;
 			this.netChannel = null;
 		}
-		private void ParseCommandString(Message msg) {
+		private void ParseCommandString(in Message msg) {
 			int seq = msg.ReadLong();
 			sbyte []s = msg.ReadString();
 			if (this.serverCommandSequence >= seq) {
@@ -211,7 +211,7 @@ namespace JKClient {
 			int index = seq & (this.MaxReliableCommands-1);
 			Array.Copy(s, 0, this.serverCommands[index], 0, Common.MaxStringChars);
 		}
-		private unsafe void ParseSnapshot(Message msg) {
+		private unsafe void ParseSnapshot(in Message msg) {
 			ClientSnapshot *oldSnap;
 			var oldSnapHandle = GCHandle.Alloc(this.snapshots, GCHandleType.Pinned);
 			var newSnap = new ClientSnapshot() {
@@ -248,7 +248,7 @@ namespace JKClient {
 				if (this.ClientHandler.CanParseVehicle && newSnap.PlayerState.VehicleNum != 0) {
 					msg.ReadDeltaPlayerstate(oldSnap != null ? &oldSnap->VehiclePlayerState : null, &newSnap.VehiclePlayerState, true, this.ClientHandler);
 				}
-				this.ParsePacketEntities(msg, oldSnap, &newSnap);
+				this.ParsePacketEntities(in msg, in oldSnap, &newSnap);
 			}
 			oldSnapHandle.Free();
 			if (!newSnap.Valid) {
@@ -265,7 +265,7 @@ namespace JKClient {
 			this.snapshots[this.snap.MessageNum & JKClient.PacketMask] = this.snap;
 			this.newSnapshots = true;
 		}
-		private unsafe void ParsePacketEntities(Message msg, ClientSnapshot *oldSnap, ClientSnapshot *newSnap) {
+		private unsafe void ParsePacketEntities(in Message msg, in ClientSnapshot *oldSnap, in ClientSnapshot *newSnap) {
 			newSnap->ParseEntitiesNum = this.parseEntitiesNum;
 			newSnap->NumEntities = 0;
 			EntityState *oldstate;
@@ -306,7 +306,7 @@ namespace JKClient {
 			}
 			oldstateHandle.Free();
 		}
-		private void ParseSetGame(Message msg) {
+		private void ParseSetGame(in Message msg) {
 			int i = 0;
 			while (i < 64) {
 				int next = msg.ReadByte();
@@ -318,7 +318,7 @@ namespace JKClient {
 				i++;
 			}
 		}
-		private unsafe void ParseDownload(Message msg) {
+		private unsafe void ParseDownload(in Message msg) {
 			ushort block = (ushort)msg.ReadShort();
 			if (block == 0) {
 				int downloadSize = msg.ReadLong();

@@ -19,6 +19,6 @@ namespace JKClient {
 		IList<NetField> GetEntityStateFields();
 		IList<NetField> GetPlayerStateFields(bool isVehicle, Func<bool> isPilot);
 		void ClearState();
-		void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info);
+		void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info);
 	}
 }

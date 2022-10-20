@@ -61,7 +61,7 @@ namespace JKClient {
 		public virtual void ClearState() {
 			this.gameMod = GameMod.Base;
 		}
-		public virtual void SetExtraConfigstringInfo(ServerInfo serverInfo, InfoString info) {
+		public virtual void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info) {
 			serverInfo.Version = ClientVersion.Q3_v1_32;
 			if (info.Count <= 0) {
 				return;
