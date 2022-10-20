@@ -37,28 +37,29 @@ namespace JKClient {
 			const int frameTime = 8;
 			while (true) {
 				this.GetPacket();
-				if (this.serverRefreshTimeout != 0 && this.serverRefreshTimeout < Common.Milliseconds) {
-					this.getListTCS?.TrySetResult(this.globalServers.Values);
-					this.getListTCS = null;
-					this.refreshListTCS?.TrySetResult(this.globalServers.Values);
-					this.refreshListTCS = null;
-					this.serverRefreshTimeout = 0;
-				}
+				this.HandleServersList();
 				await Task.Delay(frameTime);
+			}
+		}
+		private void HandleServersList() {
+			if (this.serverRefreshTimeout != 0L && this.serverRefreshTimeout < Common.Milliseconds) {
+				this.getListTCS?.TrySetResult(this.globalServers.Values);
+				this.refreshListTCS?.TrySetResult(this.globalServers.Values);
+				this.serverRefreshTimeout = 0L;
 			}
 		}
 		public async Task<IEnumerable<ServerInfo>> GetNewList() {
 			this.getListTCS?.TrySetCanceled();
 			this.getListTCS = new TaskCompletionSource<IEnumerable<ServerInfo>>();
 			this.globalServers.Clear();
+			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			foreach (var masterServer in this.masterServers) {
-				var address = NetSystem.StringToAddress(masterServer.Name, masterServer.Port);
+				var address = await NetSystem.StringToAddressAsync(masterServer.Name, masterServer.Port);
 				if (address == null) {
 					continue;
 				}
 				this.OutOfBandPrint(address, $"getservers {this.Protocol}");
 			}
-			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			return await this.getListTCS.Task;
 		}
 		public async Task<IEnumerable<ServerInfo>> RefreshList() {
@@ -67,13 +68,13 @@ namespace JKClient {
 			}
 			this.refreshListTCS?.TrySetCanceled();
 			this.refreshListTCS = new TaskCompletionSource<IEnumerable<ServerInfo>>();
+			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			foreach (var server in this.globalServers) {
 				var serverInfo = server.Value;
 				serverInfo.InfoSet = false;
 				serverInfo.Start = Common.Milliseconds;
 				this.OutOfBandPrint(serverInfo.Address, "getinfo xxx");
 			}
-			this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			return await this.refreshListTCS.Task;
 		}
 		private protected override unsafe void PacketEvent(NetAddress address, Message msg) {
