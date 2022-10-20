@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ namespace JKClient {
 	public sealed class ServerBrowser : NetClient {
 		private const int RefreshTimeout = 3000;
 		private readonly List<ServerAddress> masterServers;
-		private readonly Dictionary<NetAddress, ServerInfo> globalServers;
+		private readonly ConcurrentDictionary<NetAddress, ServerInfo> globalServers;
 		private TaskCompletionSource<IEnumerable<ServerInfo>> getListTCS, refreshListTCS;
 		private long serverRefreshTimeout = 0L;
 		private IBrowserHandler BrowserHandler => this.NetHandler as IBrowserHandler;
@@ -24,7 +25,7 @@ namespace JKClient {
 					this.masterServers.AddRange(customMasterServers);
 				}
 			}
-			this.globalServers = new Dictionary<NetAddress, ServerInfo>(new NetAddressComparer());
+			this.globalServers = new ConcurrentDictionary<NetAddress, ServerInfo>(new NetAddressComparer());
 		}
 		private protected override void OnStop(bool afterFailure) {
 			this.getListTCS?.TrySetCanceled();
