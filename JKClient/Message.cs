@@ -12,8 +12,8 @@ namespace JKClient {
 		private int readCountSaved = 0;
 		public bool Overflowed { get; private set; }
 		public bool OOB { get; private set; }
-		public byte []Data { get; private set; }
-		public int MaxSize { get; private set; }
+		public byte []Data { get; init; }
+		public int MaxSize { get; init; }
 		public int CurSize { get; set; } = 0;
 		public int ReadCount { get; private set; } = 0;
 		public int Bit {

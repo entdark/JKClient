@@ -18,7 +18,7 @@ namespace JKClient {
 		private int unsentLength = 0;
 		public int OutgoingSequence { get; private set; } = 1;
 		public bool UnsentFragments { get; private set; } = false;
-		public NetAddress Address { get; private set; }
+		public NetAddress Address { get; init; }
 		public NetChannel(NetSystem net, NetAddress address, int qport, int maxMessageLength) {
 			this.net = net;
 			this.Address = address;

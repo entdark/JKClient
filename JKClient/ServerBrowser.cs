@@ -205,8 +205,8 @@ namespace JKClient {
 			public long Timeout { get; init; } = Common.Milliseconds + ServerInfoTask.CancelTimeout;
 		}
 		public sealed class ServerAddress {
-			public string Name { get; private set; }
-			public ushort Port { get; private set; }
+			public string Name { get; init; }
+			public ushort Port { get; init; }
 			public ServerAddress(string name, ushort port) {
 				this.Name = name;
 				this.Port = port;
