@@ -55,9 +55,9 @@ namespace JKClient {
 				if (i != 0) {
 					builder.Append('.');
 				}
-				builder.Append(this.IP[i].ToString());
+				builder.Append(this.IP[i]);
 			}
-			builder.Append(':').Append(this.Port.ToString());
+			builder.Append(':').Append(this.Port);
 			return builder.ToString();
 		}
 		public static NetAddress FromString(string address) {
