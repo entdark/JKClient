@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace JKClient {
 	public class Q3ClientHandler : Q3NetHandler, IClientHandler {
+		private NetAddress authorizeServer;
 		private GameMod gameMod = GameMod.Base;
 		public virtual ClientVersion Version => ClientVersion.Q3_v1_32;
 		public virtual int MaxReliableCommands => 64;
@@ -11,9 +14,19 @@ namespace JKClient {
 		public virtual bool CanParseRMG => false;
 		public virtual bool CanParseVehicle => false;
 		public virtual string GuidKey => "cl_guid";
-		public virtual bool RequiresAuthorization => true;
 		public virtual bool FullByteEncoding => false;
 		public Q3ClientHandler(ProtocolVersion protocol) : base(protocol) {}
+		public void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize) {
+			if (this.authorizeServer == null) {
+				this.authorizeServer = NetSystem.StringToAddress("authorize.quake3arena.com", 27952);
+				if (this.authorizeServer == null) {
+					Debug.WriteLine("Couldn't resolve authorize address");
+					return;
+				}
+			}
+			string nums = Regex.Replace(CDKey, "[^a-zA-Z0-9]", string.Empty);
+			authorize(this.authorizeServer, $"getKeyAuthorize {0} {nums}");
+		}
 		public virtual void AdjustServerCommandOperations(ref ServerCommandOperations cmd) {
 			//Q3 doesn't have setgame and mapchange commands, the rest commands match
 			if (cmd == ServerCommandOperations.SetGame) {

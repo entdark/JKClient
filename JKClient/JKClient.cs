@@ -41,9 +41,8 @@ namespace JKClient {
 #region ClientStatic
 		private int realTime = 0;
 		private string servername;
-		private NetAddress authorizeServer;
 		public ConnectionStatus Status { get; private set; }
-		#endregion
+#endregion
 		private IClientHandler ClientHandler => this.NetHandler as IClientHandler;
 		public ClientVersion Version => this.ClientHandler.Version;
 		private int MaxReliableCommands => this.ClientHandler.MaxReliableCommands;
@@ -181,7 +180,9 @@ namespace JKClient {
 			this.connectPacketCount++;
 			switch (this.Status) {
 			case ConnectionStatus.Connecting:
-				this.RequestAuthorization();
+				this.ClientHandler.RequestAuthorization(this.CDKey, (address, data2) => {
+					this.OutOfBandPrint(address, data2);
+				});
 				this.OutOfBandPrint(this.serverAddress, $"getchallenge {this.challenge}");
 				break;
 			case ConnectionStatus.Challenging:
@@ -189,20 +190,6 @@ namespace JKClient {
 				this.OutOfBandData(this.serverAddress, data, data.Length);
 				break;
 			}
-		}
-		private void RequestAuthorization() {
-			if (!this.ClientHandler.RequiresAuthorization) {
-				return;
-			}
-			if (this.authorizeServer == null) {
-				this.authorizeServer = NetSystem.StringToAddress("authorize.quake3arena.com", 27952);
-				if (this.authorizeServer == null) {
-					Debug.WriteLine("Couldn't resolve authorize address");
-					return;
-				}
-			}
-			string nums = Regex.Replace(CDKey, "[^a-zA-Z0-9]", string.Empty);
-			this.OutOfBandPrint(this.authorizeServer, $"getKeyAuthorize {0} {nums}");
 		}
 		private unsafe void Encode(Message msg) {
 			if (msg.CurSize <= 12) {

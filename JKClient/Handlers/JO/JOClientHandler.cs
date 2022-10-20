@@ -11,11 +11,11 @@ namespace JKClient {
 		public virtual bool CanParseRMG => false;
 		public virtual bool CanParseVehicle => false;
 		public virtual string GuidKey => throw new NotImplementedException();
-		public virtual bool RequiresAuthorization => false;
 		public virtual bool FullByteEncoding => false;
 		public JOClientHandler(ProtocolVersion protocol, ClientVersion version) : base(protocol) {
 			this.Version = version;
 		}
+		public void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize) {}
 		public virtual void AdjustServerCommandOperations(ref ServerCommandOperations cmd) {
 			//JO doesn't have setgame command, the rest commands match
 			if (cmd >= ServerCommandOperations.SetGame) {

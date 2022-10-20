@@ -13,11 +13,11 @@ namespace JKClient {
 		public virtual bool CanParseRMG => true;
 		public virtual bool CanParseVehicle => true;
 		public virtual string GuidKey => "ja_guid";
-		public virtual bool RequiresAuthorization => false;
 		public virtual bool FullByteEncoding => true;
 		public JAClientHandler(ProtocolVersion protocol, ClientVersion version) : base(protocol) {
 			this.Version = version;
 		}
+		public void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize) {}
 		public virtual void AdjustServerCommandOperations(ref ServerCommandOperations cmd) {}
 		public virtual void AdjustGameStateConfigstring(int i, string csStr) {
 			if (i == GameState.ServerInfo) {
