@@ -13,7 +13,7 @@ namespace JKClient {
 		private bool newSnapshots = false;
 		private GameState gameState = new GameState();
 		private int parseEntitiesNum = 0;
-		private UserCommand []cmds = new UserCommand[UserCommand.CommandBackup];
+		private UserCommand []cmds = new UserCommand[UserCommand.Backup];
 		private int cmdNumber = 0;
 		private OutPacket []outPackets = new OutPacket[JKClient.PacketBackup];
 		private int serverId = 0;
@@ -171,7 +171,7 @@ namespace JKClient {
 				Common.MemSet(gs, 0, sizeof(GameState));
 			}
 			this.parseEntitiesNum = 0;
-			Common.MemSet(this.cmds, 0, sizeof(UserCommand)*UserCommand.CommandBackup);
+			Common.MemSet(this.cmds, 0, sizeof(UserCommand)*UserCommand.Backup);
 			this.cmdNumber = 0;
 			Common.MemSet(this.outPackets, 0, sizeof(OutPacket)*JKClient.PacketBackup);
 			this.serverId = 0;

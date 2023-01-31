@@ -340,7 +340,7 @@ namespace JKClient {
 				return;
 			}
 			this.cmdNumber++;
-			this.cmds[this.cmdNumber & UserCommand.CommandMask].ServerTime = this.serverTime;
+			this.cmds[this.cmdNumber & UserCommand.Mask].ServerTime = this.serverTime;
 		}
 		private void SendCommand() {
 			if (this.Status < ConnectionStatus.Connected) {
@@ -387,7 +387,7 @@ namespace JKClient {
 					key ^= this.serverMessageSequence;
 					key ^= Common.HashKey(this.serverCommands[this.serverCommandSequence & (this.MaxReliableCommands-1)], 32);
 					for (int i = 0; i < count; i++) {
-						int j = (this.cmdNumber - count + i + 1) & UserCommand.CommandMask;
+						int j = (this.cmdNumber - count + i + 1) & UserCommand.Mask;
 						msg.WriteDeltaUsercmdKey(key, ref oldcmd, ref this.cmds[j]);
 						oldcmd = this.cmds[j];
 					}

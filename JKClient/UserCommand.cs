@@ -3,8 +3,8 @@
 namespace JKClient {
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct UserCommand {
-		public const int CommandBackup = 64;
-		public const int CommandMask = (UserCommand.CommandBackup - 1);
+		public const int Backup = 64;
+		public const int Mask = (UserCommand.Backup - 1);
 		public int ServerTime;
 	}
 }
