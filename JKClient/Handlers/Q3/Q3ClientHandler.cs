@@ -15,8 +15,9 @@ namespace JKClient {
 		public virtual bool CanParseVehicle => false;
 		public virtual string GuidKey => "cl_guid";
 		public virtual bool FullByteEncoding => false;
+		public virtual string CDKey { get; set; } = string.Empty;
 		public Q3ClientHandler(ProtocolVersion protocol) : base(protocol) {}
-		public void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize) {
+		public void RequestAuthorization(Action<NetAddress, string> authorize) {
 			if (this.authorizeServer == null) {
 				this.authorizeServer = NetSystem.StringToAddress("authorize.quake3arena.com", 27952);
 				if (this.authorizeServer == null) {
@@ -24,7 +25,7 @@ namespace JKClient {
 					return;
 				}
 			}
-			string nums = Regex.Replace(CDKey, "[^a-zA-Z0-9]", string.Empty);
+			string nums = Regex.Replace(this.CDKey, "[^a-zA-Z0-9]", string.Empty);
 			authorize(this.authorizeServer, $"getKeyAuthorize {0} {nums}");
 		}
 		public virtual void AdjustServerCommandOperations(ref ServerCommandOperations cmd) {

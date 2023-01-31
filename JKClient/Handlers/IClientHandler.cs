@@ -11,7 +11,7 @@ namespace JKClient {
 		bool CanParseVehicle { get; }
 		string GuidKey { get; }
 		bool FullByteEncoding { get; }
-		void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize);
+		void RequestAuthorization(Action<NetAddress, string> authorize);
 		void AdjustServerCommandOperations(ref ServerCommandOperations cmd);
 		void AdjustGameStateConfigstring(int i, string csStr);
 		bool CanParseSnapshot();

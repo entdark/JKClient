@@ -15,7 +15,7 @@ namespace JKClient {
 		public JOClientHandler(ProtocolVersion protocol, ClientVersion version) : base(protocol) {
 			this.Version = version;
 		}
-		public void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize) {}
+		public void RequestAuthorization(Action<NetAddress, string> authorize) {}
 		public virtual void AdjustServerCommandOperations(ref ServerCommandOperations cmd) {
 			//JO doesn't have setgame command, the rest commands match
 			if (cmd >= ServerCommandOperations.SetGame) {

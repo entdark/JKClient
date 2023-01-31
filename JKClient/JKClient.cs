@@ -74,7 +74,6 @@ namespace JKClient {
 				this.UpdateUserInfo();
 			}
 		}
-		public string CDKey { get; set; } = string.Empty;
 		public ClientInfo []ClientInfo => this.clientGame?.ClientInfo;
 		private readonly ServerInfo serverInfo = new ServerInfo();
 		public ServerInfo ServerInfo {
@@ -191,7 +190,7 @@ namespace JKClient {
 			this.connectPacketCount++;
 			switch (this.Status) {
 			case ConnectionStatus.Connecting:
-				this.ClientHandler.RequestAuthorization(this.CDKey, (address, data2) => {
+				this.ClientHandler.RequestAuthorization((address, data2) => {
 					this.OutOfBandPrint(address, data2);
 				});
 				this.OutOfBandPrint(this.serverAddress, $"getchallenge {this.challenge}");

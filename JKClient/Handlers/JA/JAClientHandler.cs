@@ -17,7 +17,7 @@ namespace JKClient {
 		public JAClientHandler(ProtocolVersion protocol, ClientVersion version) : base(protocol) {
 			this.Version = version;
 		}
-		public void RequestAuthorization(string CDKey, Action<NetAddress, string> authorize) {}
+		public void RequestAuthorization(Action<NetAddress, string> authorize) {}
 		public virtual void AdjustServerCommandOperations(ref ServerCommandOperations cmd) {}
 		public virtual void AdjustGameStateConfigstring(int i, string csStr) {
 			if (i == GameState.ServerInfo) {
