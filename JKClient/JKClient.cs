@@ -90,7 +90,7 @@ namespace JKClient {
 		public event Action<ServerInfo> ServerInfoChanged;
 		public JKClient(IClientHandler clientHandler) : base(clientHandler) {
 			this.Status = ConnectionStatus.Disconnected;
-			this.port = random.Next(1, 0xffff) & 0xffff;
+			this.port = this.random.Next(1, 0xffff) & 0xffff;
 			this.reliableCommands = new sbyte[this.MaxReliableCommands][];
 			this.serverCommands = new sbyte[this.MaxReliableCommands][];
 			for (int i = 0; i < this.MaxReliableCommands; i++) {

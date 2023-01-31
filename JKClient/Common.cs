@@ -62,7 +62,7 @@ namespace JKClient {
 #endif
 		}
 		internal static unsafe int StrLen(sbyte *str) {
-			sbyte* s;
+			sbyte *s;
 			for (s = str; *s != 0; s++);
 			return (int)(s - str);
 		}
@@ -142,7 +142,7 @@ namespace JKClient {
 			encoding = encoding ?? Common.Encoding;
 			return encoding.GetString(s).TrimEnd('\0');
 		}
-		internal static unsafe string ToString(sbyte* b, int len, Encoding encoding = null) {
+		internal static unsafe string ToString(sbyte *b, int len, Encoding encoding = null) {
 			return Common.ToString((byte*)b, len, encoding);
 		}
 		internal static unsafe string ToString(byte []b, Encoding encoding = null) {
