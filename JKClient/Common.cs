@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
@@ -125,7 +126,7 @@ namespace JKClient {
 			return 0;
 		}
 		internal static int Atoi(this string str) {
-			return int.TryParse(str, out int integer) ? integer : 0;
+			return int.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out int integer) ? integer : 0;
 		}
 		internal static int HashKey(sbyte []str, int maxlen) {
 			int hash = 0;

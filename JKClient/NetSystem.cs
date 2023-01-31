@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -124,7 +125,7 @@ namespace JKClient {
 			byte []ip;
 			int index = address.IndexOf(':');
 			if (port <= 0) {
-				port = index >= 0 && ushort.TryParse(address.Substring(index+1), out ushort p) ? p : NetSystem.PortServer;
+				port = index >= 0 && ushort.TryParse(address.Substring(index+1), NumberStyles.Integer, CultureInfo.InvariantCulture, out ushort p) ? p : NetSystem.PortServer;
 			}
 			if (index < 0) {
 				index = address.Length;
