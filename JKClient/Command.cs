@@ -4,15 +4,15 @@ using System.Text;
 
 namespace JKClient {
 	public sealed class Command {
-		private readonly string []argv = null;
-		public int Argc => this.argv != null ? this.argv.Length : 0;
-		public string Argv(int arg) => arg >= this.Argc || arg < 0 ? string.Empty : this.argv[arg];
+		private readonly string []arguments = null;
+		public int Length => this.arguments != null ? this.arguments.Length : 0;
+		public string this[int arg] => arg >= this.Length || arg < 0 ? string.Empty : this.arguments[arg];
 		private Command() {}
 		internal Command(string text) {
-			this.argv = Command.TokenizeString(text).ToArray();
+			this.arguments = Command.TokenizeString(text).ToArray();
 		}
-		internal Command(string []argv) {
-			this.argv = argv;
+		internal Command(string []arguments) {
+			this.arguments = arguments;
 		}
 		private static IEnumerable<string> TokenizeString(string line) {
 			const char delimiter = ' ', textQualifier = '"';

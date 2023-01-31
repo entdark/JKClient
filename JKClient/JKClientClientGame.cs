@@ -5,6 +5,7 @@ using System.Text;
 namespace JKClient {
 	public sealed partial class JKClient : IJKClientImport {
 		private readonly StringBuilder bigInfoString = new StringBuilder(Common.BigInfoString, Common.BigInfoString);
+		public event Action<CommandEventArgs> ServerCommandExecuted;
 		private void SetTime() {
 			if (this.Status != ConnectionStatus.Active) {
 				if (this.Status != ConnectionStatus.Primed) {
@@ -33,15 +34,15 @@ namespace JKClient {
 			return clientGame;
 		}
 		private unsafe void ConfigstringModified(in Command command, in sbyte []s) {
-			int index = command.Argv(1).Atoi();
+			int index = command[1].Atoi();
 			if (index < 0 || index >= this.MaxConfigstrings) {
 				throw new JKClientException($"ConfigstringModified: bad index {index}");
 			}
-			int start = 4 + command.Argv(1).Length;
+			int start = 4 + command[1].Length;
 			if (s[start] == 34) { //'\"'
 				start++;
 			}
-			int blen = command.Argv(2).Length;
+			int blen = command[2].Length;
 			if (blen == 0) {
 				blen = 1;
 			}
@@ -88,7 +89,6 @@ namespace JKClient {
 			}
 		}
 		int IJKClientImport.MaxClients => this.ClientHandler.MaxClients;
-		public event Action<CommandEventArgs> ServerCommandExecuted;
 		void IJKClientImport.ExecuteServerCommand(CommandEventArgs eventArgs) {
 			this.ServerCommandExecuted?.Invoke(eventArgs);
 		}
@@ -139,7 +139,7 @@ rescan:
 			command = new Command(s);
 			s = Common.ToString(sc, Encoding.UTF8);
 			var utf8Command = new Command(s);
-			string cmd = command.Argv(0);
+			string cmd = command[0];
 			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command, utf8Command));
 			if (string.Compare(cmd, "disconnect", StringComparison.Ordinal) == 0) {
 				this.Disconnect();
@@ -148,21 +148,21 @@ rescan:
 				this.bigInfoString
 					.Clear()
 					.Append("cs ")
-					.Append(command.Argv(1))
+					.Append(command[1])
 					.Append(" \"")
-					.Append(command.Argv(2));
+					.Append(command[2]);
 				return false;
 			} else if (string.Compare(cmd, "bcs1", StringComparison.Ordinal) == 0) {
 				this.bigInfoString
-					.Append(command.Argv(2));
+					.Append(command[2]);
 				return false;
 			} else if (string.Compare(cmd, "bcs2", StringComparison.Ordinal) == 0) {
 				this.bigInfoString
-					.Append(command.Argv(2))
-					.Append("\"");
+					.Append(command[2])
+					.Append('"');
 				s = this.bigInfoString.ToString();
 				sc = new sbyte[Common.BigInfoString];
-				var bsc = Common.Encoding.GetBytes(s);
+				byte []bsc = Common.Encoding.GetBytes(s);
 				fixed (sbyte *psc = sc) {
 					Marshal.Copy(bsc, 0, (IntPtr)psc, bsc.Length);
 				}

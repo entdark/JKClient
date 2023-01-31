@@ -284,17 +284,17 @@ namespace JKClient {
 			msg.ReadLong();
 			string s = msg.ReadStringLineAsString();
 			var command = new Command(s);
-			string c = command.Argv(0);
+			string c = command[0];
 			if (string.Compare(c, "challengeResponse", StringComparison.OrdinalIgnoreCase) == 0) {
 				if (this.Status != ConnectionStatus.Connecting) {
 					return;
 				}
-				c = command.Argv(2);
+				c = command[2];
 				if (address != this.serverAddress) {
 					if (string.IsNullOrEmpty(c) || c.Atoi() != this.challenge)
 						return;
 				}
-				this.challenge = command.Argv(1).Atoi();
+				this.challenge = command[1].Atoi();
 				this.Status = ConnectionStatus.Challenging;
 				this.connectPacketCount = 0;
 				this.connectTime = -99999;
@@ -322,7 +322,7 @@ namespace JKClient {
 				this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
 				this.Disconnect();
 			} else if (string.Compare(c, "echo", StringComparison.OrdinalIgnoreCase) == 0) {
-				this.OutOfBandPrint(address, command.Argv(1));
+				this.OutOfBandPrint(address, command[1]);
 			} else if (string.Compare(c, "print", StringComparison.OrdinalIgnoreCase) == 0) {
 				if (address == this.serverAddress) {
 					s = msg.ReadStringAsString();

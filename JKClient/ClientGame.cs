@@ -197,13 +197,13 @@ namespace JKClient {
 			}
 		}
 		protected virtual void ServerCommand(Command command) {
-			string cmd = command.Argv(0);
+			string cmd = command[0];
 			if (string.Compare(cmd, "cs", StringComparison.OrdinalIgnoreCase) == 0) {
 				this.ConfigstringModified(command);
 			}
 		}
 		protected virtual void ConfigstringModified(Command command) {
-			int num = command.Argv(1).Atoi();
+			int num = command[1].Atoi();
 			int configstringPlayers = this.GetConfigstringIndex(Configstring.Players);
 			if (num >= configstringPlayers && num < configstringPlayers+this.Client.MaxClients) {
 				this.NewClientInfo(num - configstringPlayers);

@@ -116,7 +116,7 @@ namespace JKClient {
 					msg.ReadLong();
 					string s = msg.ReadStringLineAsString();
 					var command = new Command(s);
-					string c = command.Argv(0);
+					string c = command[0];
 					if (string.Compare(c, "infoResponse", StringComparison.OrdinalIgnoreCase) == 0) {
 						this.ServerInfoPacket(address, msg);
 					} else if (string.Compare(c, "statusResponse", StringComparison.OrdinalIgnoreCase) == 0) {
@@ -174,7 +174,7 @@ namespace JKClient {
 				int playersCount = 0;
 				for (string s = msg.ReadStringLineAsString(); !string.IsNullOrEmpty(s); s = msg.ReadStringLineAsString()) {
 					var command = new Command(s);
-					int ping = command.Argv(1).Atoi();
+					int ping = command[1].Atoi();
 					if (ping > 0) {
 						playersCount++;
 					}
