@@ -102,7 +102,7 @@ namespace JKClient {
 			this.OutOfBandPrint(address, "getstatus");
 			return await serverInfoTCS.Task;
 		}
-		public async Task<InfoString> GetServerInfo(string address, ushort port) {
+		public async Task<InfoString> GetServerInfo(string address, ushort port = 0) {
 			var netAddress = await NetSystem.StringToAddressAsync(address, port);
 			if (netAddress == null) {
 				return null;
