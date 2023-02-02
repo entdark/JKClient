@@ -25,7 +25,7 @@ namespace JKClient {
 		internal bool InfoSet;
 		internal long Start;
 		public ServerInfo() {}
-        public ServerInfo(in InfoString info) {
+		public ServerInfo(in InfoString info) {
 			SetInfo(info);
 		}
 		internal void SetInfo(in InfoString info) {
