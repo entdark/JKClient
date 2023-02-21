@@ -161,12 +161,11 @@ namespace JKClient {
 			}
 		}
 		public void SetUserInfoKeyValue(string key, string value) {
-			key = key.ToLower();
-			if (key == "name") {
+			if (string.Compare(key, "name", StringComparison.OrdinalIgnoreCase) == 0) {
 				this.Name = value;
-			} else if (key == "password") {
+			} else if (string.Compare(key, "password", StringComparison.OrdinalIgnoreCase) == 0) {
 				this.Password = value;
-			} else if (key == this.GuidKey) {
+			} else if (string.Compare(key, this.GuidKey, StringComparison.OrdinalIgnoreCase) == 0) {
 				this.Guid = Guid.TryParse(value, out Guid guid) ? guid : Guid.Empty;
 			} else {
 				this.userInfo[key] = value;
