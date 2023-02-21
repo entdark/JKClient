@@ -7,7 +7,7 @@ namespace JKClient {
 		private const char Delimiter = '\\';
 		public new string this[string key] {
 			get => this.ContainsKey(key) ? base[key] : string.Empty;
-			internal set => base[key] = value;
+			internal set => base[key] = value != null ? value : string.Empty;
 		}
 		private InfoString() {}
 		internal InfoString(string infoString) : base(new InfoStringComparer()) {
