@@ -70,7 +70,7 @@ namespace JKClient {
 				if (this.fragmentLength+4 > msg.MaxSize) {
 					return false;
 				}
-				fixed (byte* b = msg.Data) {
+				fixed (byte *b = msg.Data) {
 					*(int*)b = sequence;
 				}
 				Array.Copy(this.fragmentBuffer, 0, msg.Data, 4, this.fragmentLength);

@@ -176,7 +176,7 @@ namespace JKClient {
 			if (this.Status < ConnectionStatus.Challenging) {
 				return;
 			}
-			this.ExecuteCommand($"userinfo \"{userInfo}\"");
+			this.ExecuteCommand($"userinfo \"{this.userInfo}\"");
 		}
 		private void CheckForResend() {
 			if (this.Status != ConnectionStatus.Connecting && this.Status != ConnectionStatus.Challenging) {
