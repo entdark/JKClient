@@ -5,11 +5,9 @@ using System.Text;
 namespace JKClient {
 	public sealed class CommandEventArgs {
 		public Command Command { get; init; }
-		public Command UTF8Command { get; init; }
 		private CommandEventArgs() {}
-		internal CommandEventArgs(Command command, Command utf8Command = null) {
+		internal CommandEventArgs(Command command) {
 			this.Command = command;
-			this.UTF8Command = utf8Command;
 		}
 	}
 }

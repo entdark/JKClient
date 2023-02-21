@@ -403,24 +403,24 @@ namespace JKClient {
 				}
 			}
 		}
-		private unsafe void AddReliableCommand(string cmd, bool disconnect = false, Encoding encoding = null) {
+		private unsafe void AddReliableCommand(string cmd, bool disconnect = false) {
 			int unacknowledged = this.reliableSequence - this.reliableAcknowledge;
 			fixed (sbyte *reliableCommand = this.reliableCommands[++this.reliableSequence & (this.MaxReliableCommands-1)]) {
-				encoding = encoding ?? Common.Encoding;
+				var encoding = Common.Encoding;
 				Marshal.Copy(encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), encoding.GetByteCount(cmd)+1);
 			}
 		}
-		public void ExecuteCommand(string cmd, Encoding encoding = null) {
+		public void ExecuteCommand(string cmd) {
 			void executeCommand() {
 				if (cmd.StartsWith("rcon ", StringComparison.OrdinalIgnoreCase)) {
-					this.ExecuteCommandDirectly(cmd, encoding);
+					this.ExecuteCommandDirectly(cmd);
 				} else {
-					this.AddReliableCommand(cmd, encoding: encoding);
+					this.AddReliableCommand(cmd);
 				}
 			}
 			this.actionsQueue.Enqueue(executeCommand);
 		}
-		private void ExecuteCommandDirectly(string cmd, Encoding encoding) {
+		private void ExecuteCommandDirectly(string cmd) {
 			this.OutOfBandPrint(this.serverAddress, cmd);
 		}
 		public Task Connect(in ServerInfo serverInfo) {

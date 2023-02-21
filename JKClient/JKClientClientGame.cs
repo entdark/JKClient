@@ -137,10 +137,8 @@ namespace JKClient {
 rescan:
 			string s = Common.ToString(sc);
 			command = new Command(s);
-			s = Common.ToString(sc, Encoding.UTF8);
-			var utf8Command = new Command(s);
 			string cmd = command[0];
-			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command, utf8Command));
+			this.ServerCommandExecuted?.Invoke(new CommandEventArgs(command));
 			if (string.Compare(cmd, "disconnect", StringComparison.Ordinal) == 0) {
 				this.Disconnect();
 				return true;

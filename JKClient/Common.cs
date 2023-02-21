@@ -20,7 +20,7 @@ namespace JKClient {
 		public static Encoding Encoding { get; set; }
 		public static bool AllowAllEncodingCharacters { get; set; } = false;
 		static Common() {
-			Common.Encoding = Encoding.GetEncoding("windows-1252");
+			Common.Encoding = Encoding.GetEncoding(1252);
 #if NETSTANDARD2_1
 			var memSetILMethod = new DynamicMethod(
 				"MemSetIL",
