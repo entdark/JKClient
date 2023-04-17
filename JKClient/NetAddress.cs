@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace JKClient {
-	public sealed class NetAddress {
+	public sealed class NetAddress : IEquatable<NetAddress> {
 		private readonly int hashCode;
 		public byte []IP { get; init; }
 		public ushort Port { get; init; }
@@ -62,6 +62,9 @@ namespace JKClient {
 		}
 		public static NetAddress FromString(string address, ushort port = 0) {
 			return NetSystem.StringToAddress(address, port);
+		}
+		public bool Equals(NetAddress other) {
+			return this == other;
 		}
 	}
 	public sealed class NetAddressComparer : EqualityComparer<NetAddress> {
