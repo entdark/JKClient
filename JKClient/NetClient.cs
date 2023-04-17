@@ -45,13 +45,13 @@ namespace JKClient {
 			}
 		}
 		private protected void GetPacket() {
-			var netmsg = new Message(this.packetReceived, sizeof(byte)*this.NetHandler.MaxMessageLength);
+			var message = new Message(this.packetReceived, sizeof(byte)*this.NetHandler.MaxMessageLength);
 			NetAddress address = null;
-			while (this.net.GetPacket(ref address, netmsg)) {
-				if ((uint)netmsg.CurSize <= netmsg.MaxSize) {
-					this.PacketEvent(address, netmsg);
+			while (this.net.GetPacket(ref address, message)) {
+				if ((uint)message.CurSize <= message.MaxSize) {
+					this.PacketEvent(address, message);
 				}
-				Common.MemSet(netmsg.Data, 0, sizeof(byte)*netmsg.MaxSize);
+				Common.MemSet(message.Data, 0, sizeof(byte)*message.MaxSize);
 			}
 		}
 		internal void OutOfBandPrint(in NetAddress address, in string data) {
