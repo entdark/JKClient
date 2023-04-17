@@ -281,28 +281,27 @@ namespace JKClient {
 					oldstate = null;
 					oldnum = 99999;
 				}
-				fixed (EntityState *newstate = &this.parseEntities[this.parseEntitiesNum]) {
-					if (oldstate == null && (newnum == (Common.MaxGEntities-1))) {
-						break;
-					} else if (oldnum < newnum) {
-						*newstate = *oldstate;
-						oldindex++;
-					} else if (oldnum == newnum) {
-						oldindex++;
-						msg.ReadDeltaEntity(oldstate, newstate, newnum, this.ClientHandler);
-						newnum = msg.ReadBits(Common.GEntitynumBits);
-					} else if (oldnum > newnum) {
-						fixed (EntityState *bl = &this.entityBaselines[newnum]) {
-							msg.ReadDeltaEntity(bl, newstate, newnum, this.ClientHandler);
-						}
-						newnum = msg.ReadBits(Common.GEntitynumBits);
+				EntityState* newstate = ((EntityState *)parseEntitiesHandle.AddrOfPinnedObject()) + this.parseEntitiesNum;
+				if (oldstate == null && (newnum == (Common.MaxGEntities-1))) {
+					break;
+				} else if (oldnum < newnum) {
+					*newstate = *oldstate;
+					oldindex++;
+				} else if (oldnum == newnum) {
+					oldindex++;
+					msg.ReadDeltaEntity(oldstate, newstate, newnum, this.ClientHandler);
+					newnum = msg.ReadBits(Common.GEntitynumBits);
+				} else if (oldnum > newnum) {
+					fixed (EntityState *bl = &this.entityBaselines[newnum]) {
+						msg.ReadDeltaEntity(bl, newstate, newnum, this.ClientHandler);
 					}
-					if (newstate->Number == Common.MaxGEntities-1)
-						continue;
-					this.parseEntitiesNum++;
-					this.parseEntitiesNum &= (JKClient.MaxParseEntities-1);
-					newSnap->NumEntities++;
+					newnum = msg.ReadBits(Common.GEntitynumBits);
 				}
+				if (newstate->Number == Common.MaxGEntities-1)
+					continue;
+				this.parseEntitiesNum++;
+				this.parseEntitiesNum &= (JKClient.MaxParseEntities-1);
+				newSnap->NumEntities++;
 			}
 			parseEntitiesHandle.Free();
 		}
