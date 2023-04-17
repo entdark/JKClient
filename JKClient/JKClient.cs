@@ -470,7 +470,7 @@ namespace JKClient {
 			}
 			return JKClient.GetKnownClientHandler(serverInfo.Protocol, serverInfo.Version);
 		}
-		public static IClientHandler GetKnownClientHandler(ProtocolVersion protocol, ClientVersion version) {
+		public static IClientHandler GetKnownClientHandler(in ProtocolVersion protocol, in ClientVersion version) {
 			switch (protocol) {
 			case ProtocolVersion.Protocol25:
 			case ProtocolVersion.Protocol26:
