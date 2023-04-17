@@ -7,9 +7,9 @@ namespace JKClient {
 		private protected readonly NetSystem net;
 		private readonly byte []packetReceived;
 		private CancellationTokenSource cts;
-		public bool Started { get; private set; }
 		private protected readonly INetHandler NetHandler;
-		public int Protocol => this.NetHandler.Protocol;
+        public bool Started { get; private set; }
+        public int Protocol => this.NetHandler.Protocol;
 		internal NetClient(INetHandler netHandler) {
 			if (netHandler == null) {
 				throw new JKClientException(new ArgumentNullException(nameof(netHandler)));
