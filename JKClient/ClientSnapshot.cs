@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 namespace JKClient {
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct ClientSnapshot {
 		public const int NotActive = 2;
 		public QuakeBoolean Valid;

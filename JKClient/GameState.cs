@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 namespace JKClient {
-	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	internal struct GameState {
 		private const int MaxConfigstrings = 2200;
 		public const int MaxGameStateChars = 16000;
