@@ -355,12 +355,12 @@ namespace JKClient {
 			}
 		}
 		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, bool isVehicle, IClientHandler clientHandler) {
-			GCHandle fromHandle;
+			GCHandle nullHandle;
 			if (from == null) {
-				fromHandle = GCHandle.Alloc(PlayerState.Null, GCHandleType.Pinned);
-				from = (PlayerState *)fromHandle.AddrOfPinnedObject();
+				nullHandle = GCHandle.Alloc(PlayerState.Null, GCHandleType.Pinned);
+				from = (PlayerState *)nullHandle.AddrOfPinnedObject();
 			} else {
-				fromHandle = new GCHandle();
+				nullHandle = new GCHandle();
 			}
 			*to = *from;
 			bool isPilot() {
@@ -437,8 +437,8 @@ namespace JKClient {
 					}
 				}
 			}
-			if (fromHandle.IsAllocated) {
-				fromHandle.Free();
+			if (nullHandle.IsAllocated) {
+				nullHandle.Free();
 			}
 		}
 		private static readonly int []hData = new int[256]{

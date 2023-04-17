@@ -213,7 +213,7 @@ namespace JKClient {
 		}
 		private unsafe void ParseSnapshot(in Message msg) {
 			ClientSnapshot *oldSnap;
-			var oldSnapHandle = GCHandle.Alloc(this.snapshots, GCHandleType.Pinned);
+			var snapshotsHandle = GCHandle.Alloc(this.snapshots, GCHandleType.Pinned);
 			var newSnap = new ClientSnapshot() {
 				ServerCommandNum = this.serverCommandSequence,
 				ServerTime = msg.ReadLong(),
@@ -230,7 +230,7 @@ namespace JKClient {
 				newSnap.Valid = true;
 				oldSnap = null;
 			} else {
-				oldSnap = ((ClientSnapshot *)oldSnapHandle.AddrOfPinnedObject()) + (newSnap.DeltaNum & JKClient.PacketMask);
+				oldSnap = ((ClientSnapshot *)snapshotsHandle.AddrOfPinnedObject()) + (newSnap.DeltaNum & JKClient.PacketMask);
 				if (!oldSnap->Valid) {
 
 				} else if (oldSnap->MessageNum != newSnap.DeltaNum) {
@@ -250,7 +250,7 @@ namespace JKClient {
 				}
 				this.ParsePacketEntities(in msg, in oldSnap, &newSnap);
 			}
-			oldSnapHandle.Free();
+			snapshotsHandle.Free();
 			if (!newSnap.Valid) {
 				return;
 			}
@@ -269,13 +269,13 @@ namespace JKClient {
 			newSnap->ParseEntitiesNum = this.parseEntitiesNum;
 			newSnap->NumEntities = 0;
 			EntityState *oldstate;
-			var oldstateHandle = GCHandle.Alloc(this.parseEntities, GCHandleType.Pinned);
+			var parseEntitiesHandle = GCHandle.Alloc(this.parseEntities, GCHandleType.Pinned);
 			int oldindex = 0;
 			int oldnum;
 			int newnum = msg.ReadBits(Common.GEntitynumBits);
 			while (true) {
 				if (oldSnap != null && oldindex < oldSnap->NumEntities) {
-					oldstate = ((EntityState *)oldstateHandle.AddrOfPinnedObject()) + ((oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1));
+					oldstate = ((EntityState *)parseEntitiesHandle.AddrOfPinnedObject()) + ((oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1));
 					oldnum = oldstate->Number;
 				} else {
 					oldstate = null;
@@ -304,7 +304,7 @@ namespace JKClient {
 					newSnap->NumEntities++;
 				}
 			}
-			oldstateHandle.Free();
+			parseEntitiesHandle.Free();
 		}
 		private void ParseSetGame(in Message msg) {
 			int i = 0;
