@@ -257,13 +257,8 @@ namespace JKClient {
 			return t;
 		}
 		public void PutBit(int bit, byte []fout, ref int offset) {
+			Huffman.Fast.PutBit(bit, fout, ref offset);
 			this.bloc = offset;
-			if ((this.bloc&7) == 0) {
-				fout[(this.bloc>>3)] = 0;
-			}
-			fout[(this.bloc>>3)] |= (byte)(bit << (this.bloc&7));
-			this.bloc++;
-			offset = this.bloc;
 		}
 		public static unsafe void Compress(Message msg, int offset) {
 			int ch;
@@ -300,6 +295,38 @@ namespace JKClient {
 			public Node** head;
 			public int weight;
 			public int symbol;
+		}
+		//source: https://github.com/mightycow/uberdemotools/blob/55c81c12e1134b3469c167d88e030aaac90d1bb8/UDT_DLL/src/message.cpp#L5-L187
+		public static class Fast {
+			public static void PutBit(int bit, byte []fout, ref int offset) {
+				if ((offset&7) == 0) {
+					fout[(offset>>3)] = (byte)bit;
+				} else {
+					fout[(offset>>3)] |= (byte)(bit << (offset&7));
+				}
+				offset++;
+			}
+			public static void OffsetTransmit(int ch, byte []fout, ref int offset, ushort []encoderTable) {
+				ushort code = encoderTable[ch];
+				ushort count = (ushort)(code&15);
+				int bits = (code>>4)&0x7ff;
+				for (int i = 0; i < count; i++) {
+					Huffman.Fast.PutBit(bits&1, fout, ref offset);
+					bits >>= 1;
+				}
+			}
+			public static unsafe short GetAllBits(byte []fin, int offset) {
+				fixed (byte *f = &fin[offset>>3]) {
+					return (short)((*(uint*)f) >> (offset&7));
+				}
+			}
+			public static unsafe void OffsetReceive(ref int ch, byte[]fin, ref int offset, ushort []decoderTable) {
+				fixed (byte *f = &fin[offset>>3]) {
+					ushort code = (ushort)(((*(uint*)f) >> (offset&7))&0x7ff);
+					ch = decoderTable[code];
+					offset += (ch>>8);
+				}
+			}
 		}
 	}
 }
