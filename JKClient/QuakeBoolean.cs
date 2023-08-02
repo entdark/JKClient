@@ -2,7 +2,7 @@
 
 namespace JKClient {
 	[StructLayout(LayoutKind.Explicit, Size = 4)]
-	internal struct QuakeBoolean {
+	internal readonly struct QuakeBoolean {
 		[FieldOffset(0)]
 		private readonly int value;
 		private QuakeBoolean(bool value) {
