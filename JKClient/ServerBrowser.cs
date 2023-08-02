@@ -132,13 +132,13 @@ namespace JKClient {
 				byte *buffptr = b;
 				byte *buffend = buffptr + msg.CurSize;
 				do {
-					if (*buffptr == 92) { //'\\'
+					if (*buffptr == '\\') {
 						break;
 					}
 					buffptr++;
 				} while (buffptr < buffend);
 				while (buffptr + 1 < buffend) {
-					if (*buffptr != 92) { //'\\'
+					if (*buffptr != '\\') {
 						break;
 					}
 					buffptr++;
@@ -157,7 +157,7 @@ namespace JKClient {
 					};
 					this.globalServers[serverInfo.Address] = serverInfo;
 					this.OutOfBandPrint(serverInfo.Address, "getinfo xxx");
-					if (*buffptr != 92 && *buffptr != 47) { //'\\' '/'
+					if (*buffptr != '\\' && *buffptr != '/') {
 						break;
 					}
 				}

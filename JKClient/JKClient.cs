@@ -218,8 +218,8 @@ namespace JKClient {
 					for (int i = 12; i < msg.CurSize; i++) {
 						if (str[index] == 0)
 							index = 0;
-						if ((!this.ClientHandler.FullByteEncoding && str[index] > 127) || str[index] == 37) { //'%'
-							key ^= (byte)(46 << (i & 1)); //'.'
+						if ((!this.ClientHandler.FullByteEncoding && str[index] > 127) || str[index] == '%') {
+							key ^= (byte)('.' << (i & 1));
 						} else {
 							key ^= (byte)(str[index] << (i & 1));
 						}
@@ -242,8 +242,8 @@ namespace JKClient {
 					for (int i = msg.ReadCount + 4; i < msg.CurSize; i++) {
 						if (str[index] == 0)
 							index = 0;
-						if ((!this.ClientHandler.FullByteEncoding && str[index] > 127) || str[index] == 37) { //'%'
-							key ^= (byte)(46 << (i & 1)); //'.'
+						if ((!this.ClientHandler.FullByteEncoding && str[index] > 127) || str[index] == '%') {
+							key ^= (byte)('.' << (i & 1));
 						} else {
 							key ^= (byte)(str[index] << (i & 1));
 						}

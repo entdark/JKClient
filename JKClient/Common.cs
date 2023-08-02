@@ -125,11 +125,11 @@ namespace JKClient {
 					return 0;
 				}
 				if (c1 != c2) {
-					if (c1 >= 97 && c1 <= 122) { //'a' 'z'
-						c1 -= (97 - 65); //'a' 'A'
+					if (c1 >= 'a' && c1 <= 'z') {
+						c1 -= ('a' - 'A');
 					}
-					if (c2 >= 97 && c2 <= 122) { //'a' 'z'
-						c2 -= (97 - 65); //'a' 'A'
+					if (c2 >= 'a' && c2 <= 'z') {
+						c2 -= ('a' - 'A');
 					}
 					if (c1 != c2) {
 						return c1 < c2 ? -1 : 1;
@@ -172,8 +172,8 @@ namespace JKClient {
 			//fonts in JK don't support fancy characters, so we won't
 			if (!allowAll) {
 				for (int i = 0; i < len; i++) {
-					if (s[i] > 126 && s[i] < 160) { //'~' ' '
-						s[i] = 46; //'.'
+					if (s[i] > '~' && s[i] < ' ') {
+						s[i] = (byte)'.';
 					}
 				}
 			}

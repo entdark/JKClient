@@ -218,8 +218,8 @@ namespace JKClient {
 				if (c == -1 || c == 0) {
 					break;
 				}
-				if (c == 37) { //'%'
-					c = 46; //'.'
+				if (c == '%') {
+					c = '.';
 				}
 				str[l] = (sbyte)c;
 				l++;
@@ -244,8 +244,8 @@ namespace JKClient {
 				if (c == -1 || c == 0) {
 					break;
 				}
-				if (c == 37) { //'%'
-					c = 46; //'.'
+				if (c == '%') {
+					c = '.';
 				}
 				str[l] = (sbyte)c;
 				l++;
@@ -263,11 +263,11 @@ namespace JKClient {
 			l = 0;
 			do {
 				c = this.ReadByte();
-				if (c == -1 || c == 0 || c == 10) { //'\n'
+				if (c == -1 || c == 0 || c == '\n') {
 					break;
 				}
-				if (c == 37) { //'%'
-					c = 46; //'.'
+				if (c == '%') {
+					c = '.';
 				}
 				str[l] = (sbyte)c;
 				l++;

@@ -39,7 +39,7 @@ namespace JKClient {
 				throw new JKClientException($"ConfigstringModified: bad index {index}");
 			}
 			int start = 4 + command[1].Length;
-			if (s[start] == 34) { //'\"'
+			if (s[start] == '\"') {
 				start++;
 			}
 			int blen = command[2].Length;
