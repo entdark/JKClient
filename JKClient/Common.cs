@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Globalization;
+#if NETSTANDARD2_1
 using System.Reflection;
 using System.Reflection.Emit;
+#endif
 using System.Runtime.InteropServices;
 using System.Text;
 

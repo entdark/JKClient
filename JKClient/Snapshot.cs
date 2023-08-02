@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace JKClient {
+﻿namespace JKClient {
 	internal class Snapshot {
 		public const int MaxEntities = 256;
 		public int Flags;

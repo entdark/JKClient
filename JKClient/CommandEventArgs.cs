@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JKClient {
+﻿namespace JKClient {
 	public sealed class CommandEventArgs {
 		public Command Command { get; init; }
 		private CommandEventArgs() {}
