@@ -320,7 +320,7 @@ namespace JKClient {
 					return (short)((*(uint*)f) >> (offset&7));
 				}
 			}
-			public static unsafe void OffsetReceive(ref int ch, byte[]fin, ref int offset, ushort []decoderTable) {
+			public static unsafe void OffsetReceive(ref int ch, byte []fin, ref int offset, ushort []decoderTable) {
 				fixed (byte *f = &fin[offset>>3]) {
 					ushort code = (ushort)(((*(uint*)f) >> (offset&7))&0x7ff);
 					ch = decoderTable[code];

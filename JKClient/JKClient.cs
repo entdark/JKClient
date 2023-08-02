@@ -358,7 +358,7 @@ namespace JKClient {
 			}
 			lock (this.netChannel) {
 				var oldcmd = new UserCommand();
-				byte[] data = new byte[this.ClientHandler.MaxMessageLength];
+				byte []data = new byte[this.ClientHandler.MaxMessageLength];
 				var msg = new Message(data, sizeof(byte)*this.ClientHandler.MaxMessageLength);
 				msg.Bitstream();
 				msg.WriteLong(this.serverId);
@@ -439,7 +439,7 @@ namespace JKClient {
 			void connect() {
 				this.servername = address;
 				this.serverAddress = serverAddress;
-				this.challenge = ((random.Next() << 16) ^ random.Next()) ^ (int)Common.Milliseconds;
+				this.challenge = ((this.random.Next() << 16) ^ this.random.Next()) ^ (int)Common.Milliseconds;
 				this.connectTime = -9999;
 				this.connectPacketCount = 0;
 				this.Status = ConnectionStatus.Connecting;

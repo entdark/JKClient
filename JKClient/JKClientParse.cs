@@ -158,8 +158,8 @@ namespace JKClient {
 			if (index < 0 || index >= this.MaxConfigstrings) {
 				throw new JKClientException($"Configstring: bad index: {index}");
 			}
-			fixed (sbyte* s = this.gameState.StringData) {
-				sbyte* cs = s + this.gameState.StringOffsets[index];
+			fixed (sbyte *s = this.gameState.StringData) {
+				sbyte *cs = s + this.gameState.StringOffsets[index];
 				return Common.ToString(cs, Common.StrLen(cs));
 			}
 		}
