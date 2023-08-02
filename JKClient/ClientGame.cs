@@ -36,7 +36,7 @@ namespace JKClient {
 			this.LatestSnapshotNum = 0;
 			this.Snap = null;
 			this.NextSnap = null;
-			Common.MemSet(this.Entities, 0, sizeof(ClientEntity)*Common.MaxGEntities);
+			Common.MemSet(this.Entities, 0);
 			this.ClientInfo = new ClientInfo[this.Client.MaxClients];
 			for (int i = 0; i < this.Client.MaxClients; i++) {
 				this.NewClientInfo(i);

@@ -53,6 +53,17 @@ namespace JKClient {
 		internal static unsafe void MemSet(void *dst, byte val, int size) {
 			Common.MemSet((IntPtr)dst, val, size);
 		}
+		internal static unsafe void MemSet<T>(T []dst, byte val) where T : unmanaged {
+			using var dstPinned = new PinnedObject<T>(dst);
+			Common.MemSet((IntPtr)dstPinned, val, sizeof(T)*dst.Length);
+		}
+		internal static unsafe void MemSet<T>(ref T dst, byte val) where T : unmanaged {
+			using var dstPinned = new PinnedObject<T>(ref dst);
+			Common.MemSet((IntPtr)dstPinned, val, sizeof(T));
+		}
+		internal static unsafe void MemSet<T>(T *dst, byte val) where T : unmanaged {
+			Common.MemSet((IntPtr)dst, val, sizeof(T));
+		}
 		internal static unsafe void MemSet(IntPtr dst, byte val, int size) {
 #if NETSTANDARD2_1
 			memSetDelegate(dst, val, size);

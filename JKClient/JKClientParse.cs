@@ -167,24 +167,22 @@ namespace JKClient {
 			this.snap = new ClientSnapshot();
 			this.serverTime = 0;
 			this.newSnapshots = false;
-			fixed (GameState *gs = &this.gameState) {
-				Common.MemSet(gs, 0, sizeof(GameState));
-			}
+			Common.MemSet(ref this.gameState, 0);
 			this.parseEntitiesNum = 0;
-			Common.MemSet(this.cmds, 0, sizeof(UserCommand)*UserCommand.Backup);
+			Common.MemSet(this.cmds, 0);
 			this.cmdNumber = 0;
-			Common.MemSet(this.outPackets, 0, sizeof(OutPacket)*JKClient.PacketBackup);
+			Common.MemSet(this.outPackets, 0);
 			this.serverId = 0;
-			Common.MemSet(this.snapshots, 0, sizeof(ClientSnapshot)*JKClient.PacketBackup);
-			Common.MemSet(this.entityBaselines, 0, sizeof(EntityState)*Common.MaxGEntities);
-			Common.MemSet(this.parseEntities, 0, sizeof(EntityState)*JKClient.MaxParseEntities);
+			Common.MemSet(this.snapshots, 0);
+			Common.MemSet(this.entityBaselines, 0);
+			Common.MemSet(this.parseEntities, 0);
 			this.clientGame = null;
 			this.ClientHandler.ClearState();
 		}
 		private void ClearConnection() {
 			for (int i = 0; i < this.ClientHandler.MaxReliableCommands; i++) {
-				Common.MemSet(this.serverCommands[i], 0, sizeof(sbyte)*Common.MaxStringChars);
-				Common.MemSet(this.reliableCommands[i], 0, sizeof(sbyte)*Common.MaxStringChars);
+				Common.MemSet(this.serverCommands[i], 0);
+				Common.MemSet(this.reliableCommands[i], 0);
 			}
 			this.clientNum = 0;
 			this.lastPacketSentTime = 0;
@@ -213,7 +211,7 @@ namespace JKClient {
 		}
 		private unsafe void ParseSnapshot(in Message msg) {
 			ClientSnapshot *oldSnap;
-			var snapshotsHandle = GCHandle.Alloc(this.snapshots, GCHandleType.Pinned);
+			using var snapshotsPinned = new PinnedObject<ClientSnapshot>(this.snapshots);
 			var newSnap = new ClientSnapshot() {
 				ServerCommandNum = this.serverCommandSequence,
 				ServerTime = msg.ReadLong(),
@@ -230,7 +228,7 @@ namespace JKClient {
 				newSnap.Valid = true;
 				oldSnap = null;
 			} else {
-				oldSnap = ((ClientSnapshot *)snapshotsHandle.AddrOfPinnedObject()) + (newSnap.DeltaNum & JKClient.PacketMask);
+				oldSnap = snapshotsPinned[newSnap.DeltaNum & JKClient.PacketMask];
 				if (!oldSnap->Valid) {
 
 				} else if (oldSnap->MessageNum != newSnap.DeltaNum) {
@@ -250,7 +248,6 @@ namespace JKClient {
 				}
 				this.ParsePacketEntities(in msg, in oldSnap, &newSnap);
 			}
-			snapshotsHandle.Free();
 			if (!newSnap.Valid) {
 				return;
 			}
@@ -269,19 +266,19 @@ namespace JKClient {
 			newSnap->ParseEntitiesNum = this.parseEntitiesNum;
 			newSnap->NumEntities = 0;
 			EntityState *oldstate;
-			var parseEntitiesHandle = GCHandle.Alloc(this.parseEntities, GCHandleType.Pinned);
+			using var parseEntitiesPinned = new PinnedObject<EntityState>(this.parseEntities);
 			int oldindex = 0;
 			int oldnum;
 			int newnum = msg.ReadBits(Common.GEntitynumBits);
 			while (true) {
 				if (oldSnap != null && oldindex < oldSnap->NumEntities) {
-					oldstate = ((EntityState *)parseEntitiesHandle.AddrOfPinnedObject()) + ((oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1));
+					oldstate = parseEntitiesPinned[(oldSnap->ParseEntitiesNum + oldindex) & (JKClient.MaxParseEntities-1)];
 					oldnum = oldstate->Number;
 				} else {
 					oldstate = null;
 					oldnum = 99999;
 				}
-				EntityState* newstate = ((EntityState *)parseEntitiesHandle.AddrOfPinnedObject()) + this.parseEntitiesNum;
+				EntityState *newstate = parseEntitiesPinned[this.parseEntitiesNum];
 				if (oldstate == null && (newnum == (Common.MaxGEntities-1))) {
 					break;
 				} else if (oldnum < newnum) {
@@ -303,7 +300,6 @@ namespace JKClient {
 				this.parseEntitiesNum &= (JKClient.MaxParseEntities-1);
 				newSnap->NumEntities++;
 			}
-			parseEntitiesHandle.Free();
 		}
 		private void ParseSetGame(in Message msg) {
 			int i = 0;

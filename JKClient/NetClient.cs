@@ -51,7 +51,7 @@ namespace JKClient {
 				if ((uint)message.CurSize <= message.MaxSize) {
 					this.PacketEvent(address, message);
 				}
-				Common.MemSet(message.Data, 0, sizeof(byte)*message.MaxSize);
+				message.Reset();
 			}
 		}
 		internal void OutOfBandPrint(in NetAddress address, in string data) {

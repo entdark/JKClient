@@ -54,9 +54,7 @@ namespace JKClient {
 					return;
 				}
 				var oldGs = this.gameState;
-				fixed (GameState *gs = &this.gameState) {
-					Common.MemSet(gs, 0, sizeof(GameState));
-				}
+				Common.MemSet(ref this.gameState, 0);
 				this.gameState.DataCount = 1;
 				int len;
 				for (int i = 0; i < this.MaxConfigstrings; i++) {

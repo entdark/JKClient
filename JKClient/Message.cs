@@ -39,6 +39,9 @@ namespace JKClient {
 			this.OOB = this.oobSaved;
 			this.ReadCount = this.readCountSaved;
 		}
+		public void Reset() {
+			Common.MemSet(this.Data, 0);
+		}
 		public unsafe void WriteBits(int value, int bits) {
 			if (this.MaxSize - this.CurSize < 4) {
 				this.Overflowed = true;
@@ -287,7 +290,7 @@ namespace JKClient {
 				throw new JKClientException($"Bad delta entity number: {number}");
 			}
 			if (this.ReadBits(1) == 1) {
-				Common.MemSet(to, 0, sizeof(EntityState));
+				Common.MemSet(to, 0);
 				to->Number = Common.MaxGEntities - 1;
 				return;
 			}
@@ -338,12 +341,9 @@ namespace JKClient {
 			}
 		}
 		public unsafe void ReadDeltaPlayerstate(PlayerState *from, PlayerState *to, bool isVehicle, IClientHandler clientHandler) {
-			GCHandle nullHandle;
+			var nullPlayerState = PlayerState.Null;
 			if (from == null) {
-				nullHandle = GCHandle.Alloc(PlayerState.Null, GCHandleType.Pinned);
-				from = (PlayerState *)nullHandle.AddrOfPinnedObject();
-			} else {
-				nullHandle = new GCHandle();
+				from = &nullPlayerState;
 			}
 			*to = *from;
 			bool isPilot() {
@@ -419,9 +419,6 @@ namespace JKClient {
 						}
 					}
 				}
-			}
-			if (nullHandle.IsAllocated) {
-				nullHandle.Free();
 			}
 		}
 		private static readonly ushort []hDataDecoderTable = new ushort[2048] {
