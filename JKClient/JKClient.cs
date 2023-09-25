@@ -94,6 +94,7 @@ namespace JKClient {
 			}
 		}
 		public event Action<ServerInfo> ServerInfoChanged;
+		public event Action<long> FrameExecuted;
 		public JKClient(IClientHandler clientHandler) : base(clientHandler) {
 			this.Status = ConnectionStatus.Disconnected;
 			this.port = this.random.Next(1, 0xffff) & 0xffff;
@@ -147,6 +148,7 @@ namespace JKClient {
 				this.SetTime();
 				if (this.Status >= ConnectionStatus.Primed) {
 					this.clientGame.Frame(this.serverTime);
+					this.FrameExecuted?.Invoke(frameTime);
 				}
 				await Task.Delay(8);
 			}
