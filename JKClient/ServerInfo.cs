@@ -6,7 +6,8 @@ namespace JKClient {
 		public NetAddress Address { get; internal set; }
 		public string HostName;
 		public string MapName;
-		public string Game;
+		public string GameFolder;
+		public string GameName;
 		public GameType GameType;
 		public int Clients;
 		public int MaxClients;
@@ -41,7 +42,8 @@ namespace JKClient {
 			this.HostName = info["hostname"];
 			this.MapName = info["mapname"];
 			this.MaxClients = info["sv_maxclients"].Atoi();
-			this.Game = info["game"];
+			this.GameFolder = info["game"];
+			this.GameName = info["gamename"];
 			this.MinPing = info["minPing"].Atoi();
 			this.MaxPing = info["maxPing"].Atoi();
 			this.InfoSet = true;
@@ -55,6 +57,7 @@ namespace JKClient {
 			this.HostName = info["sv_hostname"];
 			this.MapName = info["mapname"];
 			this.MaxClients = info["sv_maxclients"].Atoi();
+			this.GameName = info["gamename"];
 			this.MinPing = info["sv_minping"].Atoi();
 			this.MaxPing = info["sv_maxping"].Atoi();
 			this.InfoSet = true;
