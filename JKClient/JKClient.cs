@@ -81,7 +81,13 @@ namespace JKClient {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
 				var info = new InfoString(serverInfoCSStr);
 				this.serverInfo.Address = this.serverAddress;
-				this.serverInfo.Clients = this.ClientInfo?.Count(ci => ci.InfoValid) ?? 0;
+				if (this.ClientInfo != null) {
+					var clientInfoRange = Enumerable.Range(0, this.ClientInfo.Length);
+					this.serverInfo.Players = clientInfoRange.Where(i => this.ClientInfo[i].InfoValid).Select(i => new ServerInfo.PlayerInfo(ref this.ClientInfo[i])).ToArray();
+					this.serverInfo.Clients = this.serverInfo.Players.Length;
+				} else {
+					this.serverInfo.Clients = 0;
+				}
 				this.serverInfo.SetConfigstringInfo(info);
 				this.ClientHandler.SetExtraConfigstringInfo(this.serverInfo, info);
 				return this.serverInfo;

@@ -11,8 +11,10 @@ namespace JKClient {
 		internal void NotifyClientInfoChanged();
 	}
 	public abstract class ClientGame {
+		private const int MaxClientScoreSend = 32;
 		protected readonly bool Initialized = false;
 		protected readonly int ClientNum;
+		private protected bool NeedNotifyClientInfoChanged = false;
 		private protected int LatestSnapshotNum = 0;
 		private protected int ProcessedSnapshotNum = 0;
 		private protected Snapshot Snap = null, NextSnap = null;
@@ -46,6 +48,10 @@ namespace JKClient {
 		internal virtual void Frame(int serverTime) {
 			this.ServerTime = serverTime;
 			this.ProcessSnapshots();
+			if (this.NeedNotifyClientInfoChanged) {
+				this.Client.NotifyClientInfoChanged();
+				this.NeedNotifyClientInfoChanged = false;
+			}
 		}
 		private protected virtual void ProcessSnapshots() {
 			this.Client.GetCurrentSnapshotNumber(out int n, out int _);
@@ -200,6 +206,8 @@ namespace JKClient {
 			string cmd = command[0];
 			if (string.Compare(cmd, "cs", StringComparison.OrdinalIgnoreCase) == 0) {
 				this.ConfigstringModified(command);
+			} else if (string.Compare(cmd, "scores", StringComparison.OrdinalIgnoreCase) == 0) {
+				this.ParseScores(command);
 			}
 		}
 		protected virtual void ConfigstringModified(Command command) {
@@ -222,8 +230,25 @@ namespace JKClient {
 				this.ClientInfo[clientNum].InfoValid = true;
 			}
 			if (this.Initialized) {
-				this.Client.NotifyClientInfoChanged();
+				this.NeedNotifyClientInfoChanged = true;
 			}
+		}
+		protected virtual void ParseScores(Command command) {
+			int numScores = command[1].Atoi();
+			if (numScores > MaxClientScoreSend)
+				numScores = MaxClientScoreSend;
+			if (numScores > this.Client.MaxClients)
+				numScores = this.Client.MaxClients;
+			for (int i = 0; i < numScores; i++) {
+				int clientNum = command[i*14+4].Atoi();
+				if (clientNum < 0 || clientNum > this.Client.MaxClients)
+					continue;
+				int score = command[i*14+5].Atoi();
+				int ping = command[i*14+6].Atoi();
+				this.ClientInfo[clientNum].Score = score;
+				this.ClientInfo[clientNum].Ping = ping;
+			}
+			this.NeedNotifyClientInfoChanged = true;
 		}
 		private protected virtual void CheckEvents(ref ClientEntity cent) {
 			ref var es = ref cent.CurrentState;

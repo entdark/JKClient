@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace JKClient {
@@ -94,15 +94,15 @@ namespace JKClient {
 			}
 			return await this.refreshListTCS.Task;
 		}
-		public async Task<InfoString> GetServerInfo(NetAddress address) {
+		public async Task<ServerInfo> GetServerInfo(NetAddress address) {
 			if (this.serverInfoTasks.ContainsKey(address)) {
 				this.serverInfoTasks[address].TrySetCanceled();
 			}
-			var serverInfoTCS = this.serverInfoTasks[address] = new ServerInfoTask();
-			this.OutOfBandPrint(address, "getstatus");
+			var serverInfoTCS = this.serverInfoTasks[address] = new ServerInfoTask(address);
+			this.OutOfBandPrint(address, "getinfo xxx");
 			return await serverInfoTCS.Task;
 		}
-		public async Task<InfoString> GetServerInfo(string address, ushort port = 0) {
+		public async Task<ServerInfo> GetServerInfo(string address, ushort port = 0) {
 			var netAddress = await NetSystem.StringToAddressAsync(address, port);
 			if (netAddress == null) {
 				return null;
@@ -165,44 +165,46 @@ namespace JKClient {
 		}
 		private void ServerStatusResponse(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringLineAsString());
-			if (this.serverInfoTasks.ContainsKey(address)) {
-				this.serverInfoTasks[address].TrySetResult(info);
-				this.serverInfoTasks.TryRemove(address, out _);
-			}
-			if (this.globalServers.ContainsKey(address)) {
-				var serverInfo = this.globalServers[address];
-				int playersCount = 0;
+			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is {} serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
+				var players = new List<ServerInfo.PlayerInfo>(serverInfo.MaxClients);
 				for (string s = msg.ReadStringLineAsString(); !string.IsNullOrEmpty(s); s = msg.ReadStringLineAsString()) {
 					var command = new Command(s);
-					int ping = command[1].Atoi();
-					if (ping > 0) {
-						playersCount++;
-					}
+					var playerInfo = new ServerInfo.PlayerInfo(command);
+					players.Add(playerInfo);
 				}
-				serverInfo.Clients = playersCount;
+				serverInfo.Players = players.ToArray();
+				serverInfo.Clients = players.Count(playerInfo => playerInfo.Ping > 0);
+				serverInfo.SetConfigstringInfo(info);
 				this.BrowserHandler.HandleStatusResponse(serverInfo, info);
+				serverInfoTask?.SetCompleted();
+				this.serverInfoTasks?.TryRemove(address, out _);
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			}
 		}
 		private void ServerInfoPacket(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringAsString());
-			if (this.globalServers.ContainsKey(address)) {
-				var serverInfo = this.globalServers[address];
+			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is {} serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
 				if (serverInfo.InfoSet) {
 					return;
 				}
 				serverInfo.Ping = (int)(Common.Milliseconds - serverInfo.Start);
 				serverInfo.SetInfo(info);
 				this.BrowserHandler.HandleInfoPacket(serverInfo, info);
-				if (this.BrowserHandler.NeedStatus) {
-					this.OutOfBandPrint(serverInfo.Address, "getstatus");
-				}
+				this.OutOfBandPrint(serverInfo.Address, "getstatus");
+				serverInfoTask?.ResetTimeout();
 				this.serverRefreshTimeout = Common.Milliseconds + ServerBrowser.RefreshTimeout;
 			}
 		}
-		private class ServerInfoTask : TaskCompletionSource<InfoString> {
+		private class ServerInfoTask : TaskCompletionSource<ServerInfo> {
 			private const long CancelTimeout = 3000L;
-			public long Timeout { get; init; } = Common.Milliseconds + ServerInfoTask.CancelTimeout;
+			public long Timeout { get; private set; }
+			public ServerInfo ServerInfo { get; private init; }
+			public ServerInfoTask(NetAddress address) {
+				this.ServerInfo = new ServerInfo(address);
+				this.ResetTimeout();
+			}
+			public void ResetTimeout() => this.Timeout = Common.Milliseconds + ServerInfoTask.CancelTimeout;
+			public void SetCompleted() => this.TrySetResult(this.ServerInfo);
 		}
 		public sealed class ServerAddress {
 			public string Name { get; init; }
