@@ -19,7 +19,11 @@ namespace JKClient {
 			this.hashCode = this.GenerateHashCode();
 		}
 		private int GenerateHashCode() {
+#if NETSTANDARD2_1
+			return HashCode.Combine(this.IP[0], this.IP[1], this.IP[2], this.IP[3], this.Port);
+#else
 			return (this.IP[0], this.IP[1], this.IP[2], this.IP[3], this.Port).GetHashCode();
+#endif
 		}
 		public static bool operator ==(NetAddress address1, NetAddress address2) {
 			if (address1 is null && address2 is null)
