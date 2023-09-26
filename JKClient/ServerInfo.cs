@@ -31,7 +31,7 @@ namespace JKClient {
 			this.Address = address;
 		}
 		public ServerInfo(in InfoString info) {
-			SetInfo(info);
+			this.SetInfo(info);
 		}
 		internal void SetInfo(in InfoString info) {
 			if (info.Count <= 0) {
@@ -47,7 +47,7 @@ namespace JKClient {
 			this.MinPing = info["minPing"].Atoi();
 			this.MaxPing = info["maxPing"].Atoi();
 			this.InfoSet = true;
-			RawInfo = info;
+			this.RawInfo = info;
 		}
 		internal void SetConfigstringInfo(in InfoString info) {
 			if (info.Count <= 0) {
@@ -61,7 +61,7 @@ namespace JKClient {
 			this.MinPing = info["sv_minping"].Atoi();
 			this.MaxPing = info["sv_maxping"].Atoi();
 			this.InfoSet = true;
-			RawInfo = info;
+			this.RawInfo = info;
 		}
 		public static bool operator ==(in ServerInfo serverInfo1, in ServerInfo serverInfo2) {
 			return serverInfo1?.Address == serverInfo2?.Address;
