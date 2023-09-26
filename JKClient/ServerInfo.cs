@@ -96,10 +96,10 @@ namespace JKClient {
 	}
 	public sealed class ServerInfoComparer : EqualityComparer<ServerInfo> {
 		public override bool Equals(ServerInfo x, ServerInfo y) {
-			return x.Address == y.Address;
+			return x?.Address == y?.Address;
 		}
 		public override int GetHashCode(ServerInfo obj) {
-			return obj.Address.GetHashCode();
+			return obj?.Address.GetHashCode() ?? 0;
 		}
 	}
 }
