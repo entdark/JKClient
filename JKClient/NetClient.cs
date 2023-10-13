@@ -6,7 +6,7 @@ namespace JKClient {
 	public abstract class NetClient : IDisposable {
 		private protected readonly NetSystem net;
 		private readonly byte []packetReceived;
-		private CancellationTokenSource cts;
+		private protected CancellationTokenSource cts;
 		private protected readonly INetHandler NetHandler;
 		public bool Started { get; private set; }
 		public int Protocol => this.NetHandler.Protocol;
@@ -39,10 +39,7 @@ namespace JKClient {
 			}
 			this.Started = false;
 			this.OnStop(afterFailure);
-			if (this.cts != null) {
-				this.cts.Cancel();
-				this.cts = null;
-			}
+			this.cts.Cancel();
 		}
 		private protected void GetPacket() {
 			var message = new Message(this.packetReceived, sizeof(byte)*this.NetHandler.MaxMessageLength);
@@ -83,6 +80,7 @@ namespace JKClient {
 		private protected virtual void OnStart() {}
 		private protected virtual void OnStop(bool afterFailure) {}
 		public void Dispose() {
+			this.Stop();
 			this.net?.Dispose();
 		}
 	}

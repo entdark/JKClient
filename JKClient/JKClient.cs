@@ -126,7 +126,7 @@ namespace JKClient {
 			int msec;
 			this.realTime = 0;
 			while (true) {
-				if (!this.Started) {
+				if (this.cts.IsCancellationRequested) {
 					break;
 				}
 				if (this.realTime - this.lastPacketTime > JKClient.LastPacketTimeOut && this.Status == ConnectionStatus.Active) {

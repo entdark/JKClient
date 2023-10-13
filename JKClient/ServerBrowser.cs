@@ -40,6 +40,9 @@ namespace JKClient {
 		private protected override async Task Run() {
 			const int frameTime = 8;
 			while (true) {
+				if (this.cts.IsCancellationRequested) {
+					break;
+				}
 				this.GetPacket();
 				this.HandleServersList();
 				this.HandleServerInfoTasks();
