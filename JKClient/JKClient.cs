@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JKClient {
@@ -121,12 +122,12 @@ namespace JKClient {
 			}
 			base.OnStop(afterFailure);
 		}
-		private protected override async Task Run() {
+		private protected override async Task Run(CancellationToken cancellationToken) {
 			long frameTime, lastTime = Common.Milliseconds;
 			int msec;
 			this.realTime = 0;
 			while (true) {
-				if (this.cts.IsCancellationRequested) {
+				if (cancellationToken.IsCancellationRequested) {
 					break;
 				}
 				if (this.realTime - this.lastPacketTime > JKClient.LastPacketTimeOut && this.Status == ConnectionStatus.Active) {

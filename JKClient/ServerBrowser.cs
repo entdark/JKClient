@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JKClient {
@@ -37,10 +38,10 @@ namespace JKClient {
 			this.serverRefreshTimeout = 0L;
 			base.OnStop(afterFailure);
 		}
-		private protected override async Task Run() {
+		private protected override async Task Run(CancellationToken cancellationToken) {
 			const int frameTime = 8;
 			while (true) {
-				if (this.cts.IsCancellationRequested) {
+				if (cancellationToken.IsCancellationRequested) {
 					break;
 				}
 				this.GetPacket();

@@ -6,7 +6,7 @@ namespace JKClient {
 	public abstract class NetClient : IDisposable {
 		private protected readonly NetSystem net;
 		private readonly byte []packetReceived;
-		private protected CancellationTokenSource cts;
+		private CancellationTokenSource cts;
 		private protected readonly INetHandler NetHandler;
 		public bool Started { get; private set; }
 		public int Protocol => this.NetHandler.Protocol;
@@ -26,7 +26,7 @@ namespace JKClient {
 			this.Started = true;
 			this.OnStart();
 			this.cts = new CancellationTokenSource();
-			Task.Run(this.Run, this.cts.Token)
+			Task.Run(async () => await this.Run(this.cts.Token), this.cts.Token)
 				.ContinueWith((t) => {
 					this.Stop(true);
 					exceptionCallback?.Invoke(new JKClientException(t.Exception));
@@ -76,7 +76,7 @@ namespace JKClient {
 			this.net.SendPacket(mbuf.CurSize, mbuf.Data, address);
 		}
 		private protected abstract void PacketEvent(in NetAddress address, in Message msg);
-		private protected abstract Task Run();
+		private protected abstract Task Run(CancellationToken cancellationToken);
 		private protected virtual void OnStart() {}
 		private protected virtual void OnStop(bool afterFailure) {}
 		public void Dispose() {
