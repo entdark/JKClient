@@ -5,15 +5,15 @@ namespace JKClient {
 	public class JAClientHandler : JANetHandler, IClientHandler {
 		private const int MaxConfigstringsBase = 1700;
 		private const int MaxConfigstringsOJP = 2200;
-		private GameMod gameMod = GameMod.Undefined;
-		public virtual ClientVersion Version { get; private set; }
+		public virtual ClientVersion Version { get; protected set; }
 		public virtual int MaxReliableCommands => 128;
-		public virtual int MaxConfigstrings { get; private set; } = JAClientHandler.MaxConfigstringsBase;
+		public virtual int MaxConfigstrings { get; protected set; } = JAClientHandler.MaxConfigstringsBase;
 		public virtual int MaxClients => 32;
 		public virtual bool CanParseRMG => true;
 		public virtual bool CanParseVehicle => true;
 		public virtual string GuidKey => "ja_guid";
 		public virtual bool FullByteEncoding => true;
+		public virtual GameModification Modification { get; protected set; } = GameModification.Unknown;
 		public JAClientHandler(ProtocolVersion protocol, ClientVersion version) : base(protocol) {
 			this.Version = version;
 		}
@@ -23,40 +23,52 @@ namespace JKClient {
 			if (i == GameState.ServerInfo) {
 				var info = new InfoString(csStr);
 				string gamename = info["gamename"];
-				//TODO: add mod handlers
-				if (gamename.Contains("Szlakiem Jedi RPE")
+				if (gamename.Contains("base_enhanced")) {
+					this.Modification = GameModification.BaseEnhanced;
+				} else if (gamename.Contains("base_entranced")) {
+					this.Modification = GameModification.BaseEntranced;
+				} else if (gamename.Contains("JA+ Mod")
+					|| gamename.Contains("^4U^3A^5Galaxy")
+					|| gamename.Contains("^5X^2Jedi ^5Academy")) {
+					this.Modification = GameModification.JAPlus;
+				} else if (gamename.Contains("Szlakiem Jedi RPE")
 					|| gamename.Contains("Open Jedi Project")
 					|| gamename.Contains("OJP Enhanced")
 					|| gamename.Contains("OJP Basic")
 					|| gamename.Contains("OJRP")) {
-					this.gameMod = GameMod.OJP;
+					this.Modification = GameModification.OJP;
 					this.MaxConfigstrings = JAClientHandler.MaxConfigstringsOJP;
 				} else if (gamename.Contains("Movie Battles II")) {
-					this.gameMod = GameMod.MBII;
+					this.Modification = GameModification.MovieBattlesII;
 				} else {
-					this.gameMod = GameMod.Base;
+					this.Modification = GameModification.Base;
 				}
 			}
 		}
 		public virtual ClientGame CreateClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
-			return new JAClientGame(client, serverMessageNum, serverCommandSequence, clientNum);
+			switch (this.Modification) {
+			case GameModification.JAPlus:
+				return new JAPlusClientGame(client, serverMessageNum, serverCommandSequence, clientNum);
+			default:
+				return new JAClientGame(client, serverMessageNum, serverCommandSequence, clientNum);
+			}
 		}
 		public virtual bool CanParseSnapshot() {
-			switch (this.gameMod) {
+			switch (this.Modification) {
 			default:
 				return true;
-			case GameMod.Undefined:
-			case GameMod.MBII:
+			case GameModification.Unknown:
+			case GameModification.MovieBattlesII:
 				return false;
 			}
 		}
 		public virtual IList<NetField> GetEntityStateFields() {
-			switch (this.gameMod) {
+			switch (this.Modification) {
 			default:
 				return JAClientHandler.entityStateFields26;
-			case GameMod.MBII:
+			case GameModification.MovieBattlesII:
 				return JAClientHandler.entityStateFieldsMBII;
-			case GameMod.OJP:
+			case GameModification.OJP:
 				return JAClientHandler.entityStateFieldsOJP;
 			}
 		}
@@ -67,19 +79,19 @@ namespace JKClient {
 				if (isPilot()) {
 					return JAClientHandler.pilotPlayerStateFields26;
 				} else {
-					switch (this.gameMod) {
+					switch (this.Modification) {
 					default:
 						return JAClientHandler.playerStateFields26;
-					case GameMod.MBII:
+					case GameModification.MovieBattlesII:
 						return JAClientHandler.playerStateFieldsMBII;
-					case GameMod.OJP:
+					case GameModification.OJP:
 						return JAClientHandler.playerStateFieldsOJP;
 					}
 				}
 			}
 		}
 		public virtual void ClearState() {
-			this.gameMod = GameMod.Undefined;
+			this.Modification = GameModification.Unknown;
 			this.MaxConfigstrings = JAClientHandler.MaxConfigstringsBase;
 		}
 		public virtual void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info) {
@@ -103,12 +115,6 @@ namespace JKClient {
 				serverInfo.WeaponDisable = info["g_weaponDisable"].Atoi() != 0;
 			}
 			serverInfo.ForceDisable = info["g_forcePowerDisable"].Atoi() != 0;
-		}
-		private enum GameMod {
-			Undefined,
-			Base,
-			MBII,
-			OJP
 		}
 		private static readonly NetFieldsArray entityStateFields26 = new NetFieldsArray(typeof(EntityState)) {
 			{	0	,	32	},

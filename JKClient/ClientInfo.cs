@@ -5,6 +5,7 @@
 		public string Name;
 		public int Score;
 		public int Ping;
+		public object ModData;
 		internal Team Team;
 		internal void Clear() {
 			this.ClientNum = 0;

@@ -80,6 +80,7 @@ namespace JKClient {
 			public string Name { get; init; }
 			public int Score { get; init; }
 			public int Ping { get; init; }
+			public object ModData { get; init; }
 			public PlayerInfo() {}
 			internal PlayerInfo(Command command) {
 				this.Name = command[2];
@@ -91,6 +92,7 @@ namespace JKClient {
 				this.Name = clientInfo.Name;
 				this.Score = clientInfo.Score;
 				this.Ping = clientInfo.Ping;
+				this.ModData = clientInfo.ModData;
 			}
 		}
 	}

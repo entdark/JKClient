@@ -12,6 +12,7 @@ namespace JKClient {
 		public virtual bool CanParseVehicle => false;
 		public virtual string GuidKey => throw new NotImplementedException();
 		public virtual bool FullByteEncoding => false;
+		public virtual GameModification Modification => GameModification.Base;
 		public JOClientHandler(ProtocolVersion protocol, ClientVersion version) : base(protocol) {
 			this.Version = version;
 		}

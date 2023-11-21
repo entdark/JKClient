@@ -94,6 +94,7 @@ namespace JKClient {
 				return this.serverInfo;
 			}
 		}
+		public GameModification Modification => this.ClientHandler.Modification;
 		public event Action<ServerInfo> ServerInfoChanged;
 		public event Action<long> FrameExecuted;
 		public JKClient(IClientHandler clientHandler) : base(clientHandler) {

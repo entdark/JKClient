@@ -9,9 +9,10 @@ namespace JKClient {
 		internal string GetConfigstring(in int index);
 		internal void ExecuteServerCommand(CommandEventArgs eventArgs);
 		internal void NotifyClientInfoChanged();
+		void SetUserInfoKeyValue(string key, string value);
 	}
 	public abstract class ClientGame {
-		private const int MaxClientScoreSend = 32;
+		protected const int MaxClientScoreSend = 32;
 		protected readonly bool Initialized = false;
 		protected readonly int ClientNum;
 		private protected bool NeedNotifyClientInfoChanged = false;
@@ -241,8 +242,9 @@ namespace JKClient {
 				numScores = this.Client.MaxClients;
 			for (int i = 0; i < numScores; i++) {
 				int clientNum = command[i*14+4].Atoi();
-				if (clientNum < 0 || clientNum > this.Client.MaxClients)
+				if (clientNum < 0 || clientNum > this.Client.MaxClients) {
 					continue;
+				}
 				int score = command[i*14+5].Atoi();
 				int ping = command[i*14+6].Atoi();
 				this.ClientInfo[clientNum].Score = score;

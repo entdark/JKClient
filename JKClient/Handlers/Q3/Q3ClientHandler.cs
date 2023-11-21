@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 namespace JKClient {
 	public class Q3ClientHandler : Q3NetHandler, IClientHandler {
 		private NetAddress authorizeServer;
-		private GameMod gameMod = GameMod.Base;
 		public virtual ClientVersion Version => ClientVersion.Q3_v1_32;
 		public virtual int MaxReliableCommands => 64;
 		public virtual int MaxConfigstrings => 1024;
@@ -15,6 +14,7 @@ namespace JKClient {
 		public virtual bool CanParseVehicle => false;
 		public virtual string GuidKey => "cl_guid";
 		public virtual bool FullByteEncoding => false;
+		public virtual GameModification Modification { get; protected set; } = GameModification.Base;
 		public virtual string CDKey { get; set; } = string.Empty;
 		public Q3ClientHandler(ProtocolVersion protocol) : base(protocol) {}
 		public void RequestAuthorization(Action<NetAddress, string> authorize) {
@@ -37,14 +37,14 @@ namespace JKClient {
 		public virtual void AdjustGameStateConfigstring(int i, string csStr) {
 			if (i == (int)Q3ClientGame.ConfigstringQ3.GameVersion) {
 				if (csStr.Contains("cpma")) {
-					this.gameMod = GameMod.CPMA;
+					this.Modification = GameModification.CPMA;
 				} else if (csStr.Contains("defrag")) {
-					this.gameMod = GameMod.DeFRaG;
+					this.Modification = GameModification.DeFRaG;
 				}
 			} else if (i == 12 && csStr.Contains("RA3")) {
-				this.gameMod = GameMod.RocketArena3;
+				this.Modification = GameModification.RocketArena3;
 			} else if (i == 872 && csStr.Length > 0 && csStr[0] != '\0') {
-				this.gameMod = GameMod.OSP;
+				this.Modification = GameModification.OSP;
 			}
 		}
 		public virtual ClientGame CreateClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
@@ -60,7 +60,7 @@ namespace JKClient {
 			return Q3ClientHandler.playerStateFields68;
 		}
 		public virtual void ClearState() {
-			this.gameMod = GameMod.Base;
+			this.Modification = GameModification.Base;
 		}
 		public virtual void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info) {
 			serverInfo.Version = ClientVersion.Q3_v1_32;
@@ -84,13 +84,6 @@ namespace JKClient {
 			default:
 				return (GameType)(gameType+5);
 			}
-		}
-		private enum GameMod {
-			Base,
-			DeFRaG,
-			CPMA,
-			OSP,
-			RocketArena3
 		}
 		private static readonly NetFieldsArray entityStateFields68 = new NetFieldsArray(typeof(EntityState)) {
 			{	0	,	32	},
