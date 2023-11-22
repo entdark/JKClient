@@ -18,7 +18,7 @@ namespace JKClient {
 			this.NetHandler = netHandler;
 			this.packetReceived = new byte[this.NetHandler.MaxMessageLength];
 		}
-		public void Start(Func<JKClientException, Task> exceptionCallback) {
+		public void Start(Func<JKClientException, Task> exceptionCallback, bool restartOnFailure = false) {
 			if (this.Started) {
 				return;
 //				throw new JKClientException("NetClient is already started");
@@ -29,6 +29,9 @@ namespace JKClient {
 			Task.Run(async () => await this.Run(this.cts.Token), this.cts.Token)
 				.ContinueWith((t) => {
 					this.Stop(true);
+					if (restartOnFailure) {
+						this.Start(exceptionCallback);
+					}
 					exceptionCallback?.Invoke(new JKClientException(t.Exception));
 				}, TaskContinuationOptions.OnlyOnFaulted);
 		}
