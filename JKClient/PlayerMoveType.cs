@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JKClient {
+﻿namespace JKClient {
 	internal enum PlayerMoveType : int {
 		Normal,
 		Jetpack,
