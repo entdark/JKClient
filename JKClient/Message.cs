@@ -15,10 +15,6 @@ namespace JKClient {
 		public int MaxSize { get; init; }
 		public int CurSize { get; set; } = 0;
 		public int ReadCount { get; private set; } = 0;
-		public int Bit {
-			get => this.bit;
-			private set => this.bit = value;
-		}
 		public Message() {}
 		public Message(byte []data, int length, bool oob = false) {
 			this.Data = data;
