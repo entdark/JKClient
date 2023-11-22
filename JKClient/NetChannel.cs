@@ -101,7 +101,7 @@ namespace JKClient {
 			this.OutgoingSequence++;
 			msg.WriteShort(this.qport);
 			msg.WriteData(data, length);
-			this.net.SendPacket(msg.CurSize, msg.Data, this.Address);
+			this.net.SendPacket(msg, this.Address);
 		}
 		public unsafe void TransmitNextFragment() {
 			byte []buf = new byte[NetChannel.MaxPacketLen];
@@ -117,7 +117,7 @@ namespace JKClient {
 			fixed (byte *b = this.unsentBuffer) {
 				msg.WriteData(b + this.unsentFragmentStart, fragmentLength);
 			}
-			this.net.SendPacket(msg.CurSize, msg.Data, this.Address);
+			this.net.SendPacket(msg, this.Address);
 			this.unsentFragmentStart += fragmentLength;
 			if (this.unsentFragmentStart == this.unsentLength && fragmentLength != NetChannel.FragmentSize) {
 				this.OutgoingSequence++;

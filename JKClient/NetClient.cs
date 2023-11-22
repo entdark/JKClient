@@ -73,7 +73,7 @@ namespace JKClient {
 				CurSize = length+4
 			};
 			Huffman.Compress(mbuf, 12);
-			this.net.SendPacket(mbuf.CurSize, mbuf.Data, address);
+			this.net.SendPacket(mbuf, address);
 		}
 		private protected abstract void PacketEvent(in NetAddress address, in Message msg);
 		private protected abstract Task Run(CancellationToken cancellationToken);

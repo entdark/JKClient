@@ -90,6 +90,9 @@ namespace JKClient {
 				}
 			}}
 		}
+		public void SendPacket(Message msg, NetAddress address) {
+			SendPacket(msg.CurSize, msg.Data, address);
+		}
 		public bool GetPacket(ref NetAddress address, Message msg) {
 			if (this.disposed) {
 				return false;
