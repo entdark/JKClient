@@ -48,7 +48,7 @@ namespace JKClient {
 			return (address1 == address2) != true;
 		}
 		public override bool Equals(object obj) {
-			return base.Equals(obj);
+			return base.Equals(obj as NetAddress);
 		}
 		public override int GetHashCode() {
 			return this.hashCode;
