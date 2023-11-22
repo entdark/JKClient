@@ -6,8 +6,8 @@ namespace JKClient {
 	public sealed class InfoString : Dictionary<string, string> {
 		private const char Delimiter = '\\';
 		public new string this[string key] {
-			get => this.ContainsKey(key) ? base[key] : string.Empty;
-			internal set => base[key] = value != null ? value : string.Empty;
+			get => this.TryGetValue(key, out string value) ? value : string.Empty;
+			internal set => base[key] = value ?? string.Empty;
 		}
 		private InfoString() {}
 		internal InfoString(string infoString) : base(new InfoStringComparer()) {
