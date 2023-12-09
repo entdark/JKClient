@@ -156,8 +156,7 @@ namespace JKClient {
 					int port = (*buffptr++) << 8;
 					port += *buffptr++;
 					var serverInfo = new ServerInfo() {
-						Address = new NetAddress(ip, (ushort)port),
-						Start = Common.Milliseconds
+						Address = new NetAddress(ip, (ushort)port)
 					};
 					this.globalServers[serverInfo.Address] = serverInfo;
 					this.OutOfBandPrint(serverInfo.Address, "getinfo xxx");
