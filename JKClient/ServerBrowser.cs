@@ -100,7 +100,7 @@ namespace JKClient {
 		}
 		public async Task<ServerInfo> GetServerInfo(NetAddress address) {
 			if (this.serverInfoTasks.TryGetValue(address, out var serverInfoTask)) {
-                serverInfoTask.TrySetCanceled();
+				serverInfoTask.TrySetCanceled();
 			}
 			var serverInfoTCS = this.serverInfoTasks[address] = new ServerInfoTask(address);
 			this.OutOfBandPrint(address, "getinfo xxx");
