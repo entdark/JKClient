@@ -99,8 +99,8 @@ namespace JKClient {
 			return await this.refreshListTCS.Task;
 		}
 		public async Task<ServerInfo> GetServerInfo(NetAddress address) {
-			if (this.serverInfoTasks.ContainsKey(address)) {
-				this.serverInfoTasks[address].TrySetCanceled();
+			if (this.serverInfoTasks.TryGetValue(address, out var serverInfoTask)) {
+                serverInfoTask.TrySetCanceled();
 			}
 			var serverInfoTCS = this.serverInfoTasks[address] = new ServerInfoTask(address);
 			this.OutOfBandPrint(address, "getinfo xxx");

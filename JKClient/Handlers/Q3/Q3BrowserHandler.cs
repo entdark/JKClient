@@ -23,9 +23,9 @@ namespace JKClient {
 			}
 			serverInfo.GameType = Q3BrowserHandler.GetGameType(info["gametype"].Atoi());
 			serverInfo.Pure = info["pure"].Atoi() != 0;
-			if (info.ContainsKey("g_humanplayers")) {
+			if (info.TryGetValue("g_humanplayers", out string humanPlayers)) {
 				this.NeedStatus = false;
-				serverInfo.Clients = info["g_humanplayers"].Atoi();
+				serverInfo.Clients = humanPlayers.Atoi();
 			}
 		}
 		public virtual void HandleStatusResponse(in ServerInfo serverInfo, in InfoString info) {
