@@ -26,6 +26,9 @@ namespace JKClient {
 		public PlayerInfo []Players { get; internal set;}
 		internal bool InfoSet;
 		internal long Start = Common.Milliseconds;
+		public string this[string key] {
+			get => this.RawInfo[key];
+		}
 		public ServerInfo() {}
 		public ServerInfo(in NetAddress address) {
 			this.Address = address;
