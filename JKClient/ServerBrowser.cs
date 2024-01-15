@@ -79,7 +79,7 @@ namespace JKClient {
 				if (address == null) {
 					continue;
 				}
-				this.OutOfBandPrint(address, $"getservers {this.Protocol}");
+				this.OutOfBandPrint(address, $"getservers {this.Protocol} full empty");
 			}
 			return await this.getListTCS.Task;
 		}
@@ -168,7 +168,7 @@ namespace JKClient {
 		}
 		private void ServerStatusResponse(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringLineAsString());
-			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is {} serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
+			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is var serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
 				var players = new List<ServerInfo.PlayerInfo>(serverInfo.MaxClients);
 				for (string s = msg.ReadStringLineAsString(); !string.IsNullOrEmpty(s); s = msg.ReadStringLineAsString()) {
 					var command = new Command(s);
@@ -186,7 +186,7 @@ namespace JKClient {
 		}
 		private void ServerInfoPacket(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringAsString());
-			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is {} serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
+			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is var serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
 				if (serverInfo.InfoSet) {
 					return;
 				}
