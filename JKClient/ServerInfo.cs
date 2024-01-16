@@ -27,7 +27,7 @@ namespace JKClient {
 		internal bool InfoSet;
 		internal long Start = Common.Milliseconds;
 		public string this[string key] {
-			get => this.RawInfo[key];
+			get => this.RawInfo?[key] ?? string.Empty;
 		}
 		public ServerInfo() {}
 		public ServerInfo(in NetAddress address) {
