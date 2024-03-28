@@ -82,8 +82,8 @@ namespace JKClient {
 				this.serverInfo.Address = this.serverAddress;
 				if (this.ClientInfo != null) {
 					var clientInfoRange = Enumerable.Range(0, this.ClientInfo.Length);
-					this.serverInfo.Players = clientInfoRange.Where(i => this.ClientInfo[i].InfoValid).Select(i => new ServerInfo.PlayerInfo(ref this.ClientInfo[i])).ToArray();
-					this.serverInfo.Clients = this.serverInfo.Players.Length;
+					this.serverInfo.PlayersInfo = clientInfoRange.Where(i => this.ClientInfo[i].InfoValid).Select(i => new ServerInfo.PlayerInfo(ref this.ClientInfo[i])).ToArray();
+					this.serverInfo.Clients = this.serverInfo.PlayersInfo.Length;
 				} else {
 					this.serverInfo.Clients = 0;
 				}

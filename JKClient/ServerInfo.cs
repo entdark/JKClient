@@ -23,7 +23,7 @@ namespace JKClient {
 		public ClientVersion Version;
 		public bool Pure;
 		public InfoString RawInfo { get; private set; }
-		public PlayerInfo []Players { get; internal set;}
+		public PlayerInfo []PlayersInfo { get; internal set;}
 		internal bool InfoSet;
 		internal long Start = Common.Milliseconds;
 		public string this[string key] {
