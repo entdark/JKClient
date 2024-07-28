@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace JKClient {
 	public sealed partial class JKClient : NetClient {
+		private const int FrameTime = 8;
 		private const int LastPacketTimeOut = 5 * 60000;
 		private const int RetransmitTimeOut = 3000;
 		private const int MaxPacketUserCmds = 32;
@@ -150,7 +151,7 @@ namespace JKClient {
 					this.clientGame.Frame(this.serverTime);
 					this.FrameExecuted?.Invoke(frameTime);
 				}
-				await Task.Delay(8);
+				await Task.Delay(FrameTime);
 			}
 			//complete all actions after stop
 			this.DequeueActions();
@@ -471,6 +472,10 @@ namespace JKClient {
 				this.ClearConnection();
 			}
 			this.actionsQueue.Enqueue(disconnect);
+		}
+//TODO: base on this.realTime changes to be more precise
+		public void WaitFrames(int count = 1) {
+			Task.Delay(FrameTime*count).Wait(FrameTime*count);
 		}
 		public static IClientHandler GetKnownClientHandler(in ServerInfo serverInfo) {
 			if (serverInfo == null) {
