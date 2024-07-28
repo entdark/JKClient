@@ -13,11 +13,30 @@ namespace JKClient {
 		private const int RetransmitTimeOut = 3000;
 		private const int MaxPacketUserCmds = 32;
 		private const string DefaultName = "AssetslessClient";
-		private const string UserInfo = "\\name\\"+JKClient.DefaultName+"\\rate\\25000\\snaps\\40\\model\\kyle/default\\forcepowers\\7-1-032330000000001333\\color1\\4\\color2\\4\\handicap\\100\\teamtask\\0\\sex\\male\\password\\\\cg_predictItems\\1\\saber1\\single_1\\saber2\\none\\char_color_red\\255\\char_color_green\\255\\char_color_blue\\255\\engine\\jkclient\\assets\\0";
 		private readonly Random random = new Random();
 		private readonly int port;
-		private readonly InfoString userInfo = new InfoString(UserInfo);
-		private readonly ConcurrentQueue<Action> actionsQueue = new ConcurrentQueue<Action>();
+		private readonly InfoString userInfo = new() {
+			["name"] = JKClient.DefaultName,
+			["rate"] = "25000",
+			["snaps"] = "40",
+			["model"] = "kyle/default",
+			["forcepowers"] = "7-1-032330000000001333",
+			["color1"] = "4",
+			["color2"] = "4",
+			["handicap"] = "100",
+			["teamtask"] = "0",
+			["sex"] = "male",
+			["password"] = "",
+			["cg_predictItems"] = "1",
+			["saber1"] = "single_1",
+			["saber2"] = "none",
+			["char_color_red"] = "255",
+			["char_color_green"] = "255",
+			["char_color_blue"] = "255",
+			["engine"] = "jkclient",
+			["assets"] = "0"
+		};
+		private readonly ConcurrentQueue<Action> actionsQueue = new();
 		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
