@@ -152,7 +152,7 @@ namespace JKClient {
 		internal static unsafe string ToString(byte *b, int len, Encoding encoding = null) {
 			bool allowAll = encoding != null || Common.AllowAllEncodingCharacters;
 			byte []s = Common.FilterUnusedEncodingCharacters(b, len, allowAll);
-			encoding = encoding ?? Common.Encoding;
+			encoding ??= Common.Encoding;
 			return encoding.GetString(s).TrimEnd('\0');
 		}
 		internal static unsafe string ToString(sbyte *b, int len, Encoding encoding = null) {
