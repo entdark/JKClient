@@ -13,7 +13,7 @@ namespace JKClient {
 		private const int RetransmitTimeOut = 3000;
 		private const int MaxPacketUserCmds = 32;
 		private const string DefaultName = "AssetslessClient";
-		private readonly Random random = new Random();
+		private readonly Random random = new();
 		private readonly int port;
 		private readonly InfoString userInfo = new() {
 			["name"] = JKClient.DefaultName,
@@ -94,7 +94,7 @@ namespace JKClient {
 			}
 		}
 		public ClientInfo []ClientInfo => this.clientGame?.ClientInfo;
-		private readonly ServerInfo serverInfo = new ServerInfo();
+		private readonly ServerInfo serverInfo = new();
 		public ServerInfo ServerInfo {
 			get {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
