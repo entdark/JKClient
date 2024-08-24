@@ -105,6 +105,7 @@ namespace JKClient {
 					this.serverInfo.PlayersInfo = clientInfoRange.Where(i => this.ClientInfo[i].InfoValid).Select(i => new ServerInfo.PlayerInfo(ref this.ClientInfo[i])).ToArray();
 					this.serverInfo.Clients = this.serverInfo.PlayersInfo.Length;
 				} else {
+					this.serverInfo.PlayersInfo = null;
 					this.serverInfo.Clients = 0;
 				}
 				this.serverInfo.SetConfigstringInfo(info);
