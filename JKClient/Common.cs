@@ -138,7 +138,7 @@ namespace JKClient {
 			} while (c1 != 0);
 			return 0;
 		}
-		internal static int Atoi(this string str) {
+		public static int Atoi(this string str) {
 			return int.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out int integer) ? integer : 0;
 		}
 		internal static int HashKey(sbyte []str, int maxlen) {
