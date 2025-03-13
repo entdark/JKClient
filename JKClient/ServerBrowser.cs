@@ -28,9 +28,9 @@ namespace JKClient {
 					this.masterServers.AddRange(customMasterServers);
 				}
 			}
-			this.globalServers = new ConcurrentDictionary<NetAddress, ServerInfo>(new NetAddressComparer());
-			this.serverInfoTasks = new ConcurrentDictionary<NetAddress, ServerInfoTask>(new NetAddressComparer());
-			this.serverInfoTasksToRemove = new HashSet<NetAddress>(new NetAddressComparer());
+			this.globalServers = new ConcurrentDictionary<NetAddress, ServerInfo>(new NetAddress.Comparer());
+			this.serverInfoTasks = new ConcurrentDictionary<NetAddress, ServerInfoTask>(new NetAddress.Comparer());
+			this.serverInfoTasksToRemove = new HashSet<NetAddress>(new NetAddress.Comparer());
 		}
 		private protected override void OnStop(bool afterFailure) {
 			this.getListTCS?.TrySetCanceled();

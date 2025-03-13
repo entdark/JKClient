@@ -70,13 +70,13 @@ namespace JKClient {
 		public bool Equals(NetAddress other) {
 			return this == other;
 		}
-	}
-	public sealed class NetAddressComparer : EqualityComparer<NetAddress> {
-		public override bool Equals(NetAddress x, NetAddress y) {
-			return x == y;
-		}
-		public override int GetHashCode(NetAddress obj) {
-			return obj.GetHashCode();
+		public sealed class Comparer : EqualityComparer<NetAddress> {
+			public override bool Equals(NetAddress x, NetAddress y) {
+				return x == y;
+			}
+			public override int GetHashCode(NetAddress obj) {
+				return obj.GetHashCode();
+			}
 		}
 	}
 }
