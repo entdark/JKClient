@@ -12,6 +12,7 @@ namespace JKClient {
 		void SetUserInfoKeyValue(string key, string value);
 	}
 	public abstract class ClientGame {
+		public const int ScoreNotPresent = -9999;
 		protected const int MaxClientScoreSend = 32;
 		protected readonly bool Initialized = false;
 		protected readonly int ClientNum;
@@ -34,6 +35,8 @@ namespace JKClient {
 			get;
 			private protected set;
 		}
+		public int Scores1 { get; private protected set; }
+		public int Scores2 { get; private protected set; }
 		public int Timer => Time - LevelStartTime;
 		internal unsafe ClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			this.Client = client;
@@ -44,6 +47,8 @@ namespace JKClient {
 			this.Snap = null;
 			this.NextSnap = null;
 			this.LevelStartTime = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.LevelStartTime)).Atoi();
+			this.Scores1 = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Scores1)).Atoi();
+			this.Scores2 = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Scores2)).Atoi();
 			Common.MemSet(this.Entities, 0);
 			this.ClientsInfo = new ClientInfo[this.Client.MaxClients];
 			for (int i = 0; i < this.Client.MaxClients; i++) {
@@ -220,6 +225,10 @@ namespace JKClient {
 			int num = command[1].Atoi();
 			if (num == this.GetConfigstringIndex(Configstring.LevelStartTime)) {
 				this.LevelStartTime = this.Client.GetConfigstring(num).Atoi();
+			} else if (num == this.GetConfigstringIndex(Configstring.Scores1)) {
+				this.Scores1 = this.Client.GetConfigstring(num).Atoi();
+			} else if (num == this.GetConfigstringIndex(Configstring.Scores2)) {
+				this.Scores2 = this.Client.GetConfigstring(num).Atoi();
 			}
 			int csPlayers = this.GetConfigstringIndex(Configstring.Players);
 			if (num >= csPlayers && num < csPlayers+this.Client.MaxClients) {
@@ -306,6 +315,8 @@ namespace JKClient {
 		protected abstract int GetEntityType(EntityType entityType);
 		protected abstract int GetEntityFlag(EntityFlag entityFlag);
 		public enum Configstring {
+			Scores1 = 6,
+			Scores2 = 7,
 			GameVersion = 20,
 			LevelStartTime = 21,
 			Items = 27,
