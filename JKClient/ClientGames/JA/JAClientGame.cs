@@ -1,14 +1,58 @@
 ﻿using System;
+using System.Linq;
 
 namespace JKClient {
 	public class JAClientGame : ClientGame {
+		public const int SiegeRoundBeginTime = 5000;
+		public int SiegeRoundState { get; private protected set; }
+		public int BeatingSiegeTime { get; private protected set; }
+		public int SiegeRoundBeganTime { get; private protected set; }
+		public int SiegeRoundTime { get; set; }
 		public JAClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum)
-			: base(client, serverMessageNum, serverCommandSequence, clientNum) {}
+			: base(client, serverMessageNum, serverCommandSequence, clientNum) {
+			this.ParseSiegeState(this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.SiegeState)));
+			if (this.Client.ServerInfo.GameType == GameType.Siege) {
+				this.BeatingSiegeTime = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.SiegeTimeOverride)).Atoi();
+			}
+		}
+		protected virtual void ParseSiegeState(string str) {
+			const char SiegeStatesDivider = '|';
+			if (string.IsNullOrEmpty(str)) {
+				return;
+			}
+			if (str.Contains(SiegeStatesDivider)) {
+				string []states = str.Split(SiegeStatesDivider);
+				this.SiegeRoundState = states[0].Atoi();
+				this.SiegeRoundTime = states[1].Atoi();
+				if (this.SiegeRoundState == 0 || this.SiegeRoundState == 2) {
+					this.SiegeRoundBeganTime = this.SiegeRoundTime;
+				}
+			} else {
+				this.SiegeRoundState = str.Atoi();
+				this.SiegeRoundTime = this.Time;
+			}
+		}
+		protected override void ConfigstringModified(Command command) {
+			int num = command[1].Atoi();
+			int csSiegeState = this.GetConfigstringIndex(Configstring.SiegeState);
+			if (num >= csSiegeState && num < csSiegeState+1) {
+				this.ParseSiegeState(this.Client.GetConfigstring(num));
+			}
+			int csSiegeTimeOverride = this.GetConfigstringIndex(Configstring.SiegeTimeOverride);
+			if (num >= csSiegeTimeOverride && num < csSiegeTimeOverride+1) {
+				this.BeatingSiegeTime = this.Client.GetConfigstring(num).Atoi();
+			}
+			base.ConfigstringModified(command);
+		}
 		protected override int GetConfigstringIndex(Configstring index) {
 			if (index <= Configstring.Items) {
 				return (int)index;
 			}
 			switch (index) {
+			case Configstring.SiegeState:
+				return (int)ConfigstringJA.SiegeState;
+			case Configstring.SiegeTimeOverride:
+				return (int)ConfigstringJA.SiegeTimeOverride;
 			case Configstring.Sounds:
 				return (int)ConfigstringJA.Sounds;
 			case Configstring.Players:
@@ -66,6 +110,8 @@ namespace JKClient {
 			return ev;
 		}
 		public enum ConfigstringJA {
+			SiegeState = 293,
+			SiegeTimeOverride = 295,
 			Sounds = 811,
 			Players = 1131
 		}

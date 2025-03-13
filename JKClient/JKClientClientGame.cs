@@ -122,6 +122,7 @@ namespace JKClient {
 			}
 		}
 		int IJKClientImport.MaxClients => this.ClientHandler.MaxClients;
+		ServerInfo IJKClientImport.ServerInfo => this.ServerInfo;
 		void IJKClientImport.ExecuteServerCommand(CommandEventArgs eventArgs) {
 			this.ServerCommandExecuted?.Invoke(eventArgs);
 		}

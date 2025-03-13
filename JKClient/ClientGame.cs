@@ -3,6 +3,7 @@
 namespace JKClient {
 	public interface IJKClientImport {
 		internal int MaxClients { get; }
+		internal ServerInfo ServerInfo { get; }
 		internal void GetCurrentSnapshotNumber(out int snapshotNumber, out int serverTime);
 		internal bool GetSnapshot(in int snapshotNumber, ref Snapshot snapshot);
 		internal bool GetServerCommand(in int serverCommandNumber, out Command command);
@@ -320,6 +321,8 @@ namespace JKClient {
 			GameVersion = 20,
 			LevelStartTime = 21,
 			Items = 27,
+			SiegeState,
+			SiegeTimeOverride,
 			Sounds,
 			Players
 		}
