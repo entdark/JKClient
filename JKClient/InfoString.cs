@@ -10,7 +10,7 @@ namespace JKClient {
 			internal set => base[key] = value ?? string.Empty;
 		}
 		internal InfoString() {}
-		internal InfoString(string infoString) : base(new InfoStringComparer()) {
+		internal InfoString(string infoString) : base(new InfoString.Comparer()) {
 			if (string.IsNullOrEmpty(infoString)) {
 				return;
 			}
@@ -39,7 +39,7 @@ namespace JKClient {
 			}
 			return builder.ToString();
 		}
-		private class InfoStringComparer : EqualityComparer<string> {
+		private new class Comparer : EqualityComparer<string> {
 			public override bool Equals(string x, string y) {
 				return x.Equals(y, StringComparison.OrdinalIgnoreCase);
 			}
