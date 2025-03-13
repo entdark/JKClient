@@ -23,7 +23,42 @@ namespace JKClient {
 					return;
 				}
 			}
+#if false
 			this.serverTime = this.snap.ServerTime;
+#else
+			if (!this.snap.Valid) {
+				throw new JKClientException("SetTime: !this.snap.Valid");
+			}
+			if (this.snap.ServerTime < this.oldFrameServerTime) {
+				throw new JKClientException("this.snap.ServerTime < this.oldFrameServerTime");
+			}
+			this.oldFrameServerTime = this.snap.ServerTime;
+			this.serverTime = this.realTime + this.serverTimeDelta;
+			if (this.serverTime < this.oldServerTime) {
+				this.serverTime = this.oldServerTime;
+			}
+			this.oldServerTime = this.serverTime;
+			if (this.realTime + this.serverTimeDelta >= this.snap.ServerTime - 5) {
+				this.extrapolatedSnapshot = true;
+			}
+			if (this.newSnapshots) {
+				this.newSnapshots = false;
+				int newDelta = this.snap.ServerTime - this.realTime;
+				int deltaDelta = Math.Abs(newDelta - this.serverTimeDelta);
+				if (deltaDelta > 500) {
+					this.serverTimeDelta = newDelta;
+					this.oldServerTime = this.snap.ServerTime;
+					this.serverTime = this.snap.ServerTime;
+				} else if (deltaDelta > 100) {
+					this.serverTimeDelta = (this.serverTimeDelta + newDelta) >> 1;
+				} else if (this.extrapolatedSnapshot) {
+					this.extrapolatedSnapshot = false;
+					this.serverTimeDelta -= 2;
+				} else {
+					this.serverTimeDelta++;
+				}
+			}
+#endif
 		}
 		private ClientGame InitClientGame() {
 			this.Status = ConnectionStatus.Primed;
@@ -99,7 +134,7 @@ namespace JKClient {
 		}
 		bool IJKClientImport.GetSnapshot(in int snapshotNumber, ref Snapshot snapshot) {
 			if (snapshotNumber > this.snap.MessageNum) {
-				throw new JKClientException("GetSnapshot: snapshotNumber > this.snapshot.messageNum");
+				throw new JKClientException("GetSnapshot: snapshotNumber > this.snap.MessageNum");
 			}
 			if (this.snap.MessageNum - snapshotNumber >= JKClient.PacketBackup) {
 				return false;

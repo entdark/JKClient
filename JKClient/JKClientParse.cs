@@ -10,6 +10,10 @@ namespace JKClient {
 #region ClientActive
 		private ClientSnapshot snap = new ClientSnapshot();
 		private int serverTime = 0;
+		private int oldServerTime = 0;
+		private int oldFrameServerTime = 0;
+		private int serverTimeDelta = 0;
+		private bool extrapolatedSnapshot = false;
 		private bool newSnapshots = false;
 		private GameState gameState = new GameState();
 		private int parseEntitiesNum = 0;
@@ -166,6 +170,10 @@ namespace JKClient {
 		private unsafe void ClearState() {
 			this.snap = new ClientSnapshot();
 			this.serverTime = 0;
+			this.oldServerTime = 0;
+			this.oldFrameServerTime = 0;
+			this.serverTimeDelta = 0;
+			this.extrapolatedSnapshot = false;
 			this.newSnapshots = false;
 			Common.MemSet(ref this.gameState, 0);
 			this.parseEntitiesNum = 0;

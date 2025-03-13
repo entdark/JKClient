@@ -22,7 +22,10 @@ namespace JKClient {
 		private protected int ServerCommandSequence = 0;
 		private protected readonly ClientEntity []Entities = new ClientEntity[Common.MaxGEntities];
 		private protected readonly IJKClientImport Client;
-		private protected int ServerTime;
+#region ClientGameStatic
+		private protected int LevelStartTime = 0;
+		public int Time { get; private protected set; }
+#endregion
 		private protected readonly Snapshot []ActiveSnapshots = new Snapshot[2] {
 			new Snapshot(),
 			new Snapshot()
@@ -31,6 +34,7 @@ namespace JKClient {
 			get;
 			private protected set;
 		}
+		public int Timer => Time - LevelStartTime;
 		internal unsafe ClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			this.Client = client;
 			this.ClientNum = clientNum;
@@ -39,6 +43,7 @@ namespace JKClient {
 			this.LatestSnapshotNum = 0;
 			this.Snap = null;
 			this.NextSnap = null;
+			this.LevelStartTime = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.LevelStartTime)).Atoi();
 			Common.MemSet(this.Entities, 0);
 			this.ClientsInfo = new ClientInfo[this.Client.MaxClients];
 			for (int i = 0; i < this.Client.MaxClients; i++) {
@@ -47,7 +52,7 @@ namespace JKClient {
 			this.Initialized = true;
 		}
 		internal virtual void Frame(int serverTime) {
-			this.ServerTime = serverTime;
+			this.Time = serverTime;
 			this.ProcessSnapshots();
 			if (this.NeedNotifyClientInfoChanged) {
 				this.Client.NotifyClientInfoChanged();
@@ -85,7 +90,7 @@ namespace JKClient {
 						throw new JKClientException("ProcessSnapshots: Server time went backwards");
 					}
 				}
-				if (this.ServerTime >= this.Snap.ServerTime && this.ServerTime < this.NextSnap.ServerTime) {
+				if (this.Time >= this.Snap.ServerTime && this.Time < this.NextSnap.ServerTime) {
 					break;
 				}
 				this.TransitionSnapshot();
@@ -165,7 +170,7 @@ namespace JKClient {
 			this.TransitionPlayerState(ref this.Snap.PlayerState, ref oldFrame.PlayerState);
 		}
 		private protected virtual void ResetEntity(ref ClientEntity cent) {
-			if (cent.SnapshotTime < this.ServerTime - ClientEntity.EventValidMsec) {
+			if (cent.SnapshotTime < this.Time - ClientEntity.EventValidMsec) {
 				cent.PreviousEvent = 0;
 			}
 		}
@@ -213,9 +218,12 @@ namespace JKClient {
 		}
 		protected virtual void ConfigstringModified(Command command) {
 			int num = command[1].Atoi();
-			int configstringPlayers = this.GetConfigstringIndex(Configstring.Players);
-			if (num >= configstringPlayers && num < configstringPlayers+this.Client.MaxClients) {
-				this.NewClientInfo(num - configstringPlayers);
+			if (num == this.GetConfigstringIndex(Configstring.LevelStartTime)) {
+				this.LevelStartTime = this.Client.GetConfigstring(num).Atoi();
+			}
+			int csPlayers = this.GetConfigstringIndex(Configstring.Players);
+			if (num >= csPlayers && num < csPlayers+this.Client.MaxClients) {
+				this.NewClientInfo(num - csPlayers);
 			}
 		}
 		protected virtual void NewClientInfo(int clientNum) {
@@ -298,7 +306,9 @@ namespace JKClient {
 		protected abstract int GetEntityType(EntityType entityType);
 		protected abstract int GetEntityFlag(EntityFlag entityFlag);
 		public enum Configstring {
-			GameVersion,
+			GameVersion = 20,
+			LevelStartTime = 21,
+			Items = 27,
 			Sounds,
 			Players
 		}

@@ -5,6 +5,9 @@ namespace JKClient {
 		public JOClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum)
 			: base(client, serverMessageNum, serverCommandSequence, clientNum) {}
 		protected override int GetConfigstringIndex(Configstring index) {
+			if (index <= Configstring.Items) {
+				return (int)index;
+			}
 			switch (index) {
 			case Configstring.Sounds:
 				return (int)ConfigstringJO.Sounds;
