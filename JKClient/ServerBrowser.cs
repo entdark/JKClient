@@ -169,11 +169,10 @@ namespace JKClient {
 		private void ServerStatusResponse(in NetAddress address, in Message msg) {
 			var info = new InfoString(msg.ReadStringLineAsString());
 			if ((this.serverInfoTasks.TryGetValue(address, out var serverInfoTask) && serverInfoTask.ServerInfo is var serverInfo) || this.globalServers.TryGetValue(address, out serverInfo)) {
-				var players = new List<ServerInfo.PlayerInfo>();
+				var players = new List<ClientInfo>();
 				for (string s = msg.ReadStringLineAsString(); !string.IsNullOrEmpty(s); s = msg.ReadStringLineAsString()) {
 					var command = new Command(s);
-					var playerInfo = new ServerInfo.PlayerInfo(command);
-					players.Add(playerInfo);
+					players.Add(new ClientInfo(command));
 				}
 				serverInfo.PlayersInfo = players.ToArray();
 				serverInfo.Clients = players.Count(playerInfo => playerInfo.Ping > 0);

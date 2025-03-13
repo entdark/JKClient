@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace JKClient {
-	//TODO: remake to struct?
+//TODO: remake to struct?
 	public sealed class ServerInfo {
 		public NetAddress Address { get; internal set; }
 		public string HostName;
@@ -23,7 +23,7 @@ namespace JKClient {
 		public ClientVersion Version;
 		public bool Pure;
 		public InfoString RawInfo { get; private set; }
-		public PlayerInfo []PlayersInfo { get; internal set;}
+		public ClientInfo []PlayersInfo { get; internal set;}
 		internal bool InfoSet;
 		internal long Start = Common.Milliseconds;
 		public string this[string key] {
@@ -77,26 +77,6 @@ namespace JKClient {
 		}
 		public override int GetHashCode() {
 			return this.Address.GetHashCode();
-		}
-		public class PlayerInfo {
-			public int ClientNum { get; init; } = -1;
-			public string Name { get; init; }
-			public int Score { get; init; }
-			public int Ping { get; init; }
-			public object ModData { get; init; }
-			public PlayerInfo() {}
-			internal PlayerInfo(Command command) {
-				this.Name = command[2];
-				this.Score = command[0].Atoi();
-				this.Ping = command[1].Atoi();
-			}
-			internal PlayerInfo(ref ClientInfo clientInfo) {
-				this.ClientNum = clientInfo.ClientNum;
-				this.Name = clientInfo.Name;
-				this.Score = clientInfo.Score;
-				this.Ping = clientInfo.Ping;
-				this.ModData = clientInfo.ModData;
-			}
 		}
 	}
 	public sealed class ServerInfoComparer : EqualityComparer<ServerInfo> {

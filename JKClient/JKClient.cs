@@ -93,16 +93,16 @@ namespace JKClient {
 				this.UpdateUserInfo();
 			}
 		}
-		public ClientInfo []ClientInfo => this.clientGame?.ClientInfo;
+		public ClientGame ClientGame => this.clientGame;
 		private readonly ServerInfo serverInfo = new();
 		public ServerInfo ServerInfo {
 			get {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
 				var info = new InfoString(serverInfoCSStr);
 				this.serverInfo.Address = this.serverAddress;
-				if (this.ClientInfo != null) {
-					var clientInfoRange = Enumerable.Range(0, this.ClientInfo.Length);
-					this.serverInfo.PlayersInfo = clientInfoRange.Where(i => this.ClientInfo[i].InfoValid).Select(i => new ServerInfo.PlayerInfo(ref this.ClientInfo[i])).ToArray();
+				if (this.clientGame?.ClientsInfo is {} clientsInfo) {
+					var clientInfoRange = Enumerable.Range(0, this.clientGame.ClientsInfo.Length);
+					this.serverInfo.PlayersInfo = clientInfoRange.Where(i => this.clientGame.ClientsInfo[i].InfoValid).Select(i => this.clientGame.ClientsInfo[i]).ToArray();
 					this.serverInfo.Clients = this.serverInfo.PlayersInfo.Length;
 				} else {
 					this.serverInfo.PlayersInfo = null;

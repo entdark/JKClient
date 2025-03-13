@@ -17,9 +17,9 @@
 				int score = command[i*15+5].Atoi();
 				int ping = command[i*15+6].Atoi();
 				int deaths = command[i*15+18].Atoi();
-				this.ClientInfo[clientNum].Score = score;
-				this.ClientInfo[clientNum].Ping = ping;
-				this.ClientInfo[clientNum].ModData = deaths;
+				this.ClientsInfo[clientNum].Score = score;
+				this.ClientsInfo[clientNum].Ping = ping;
+				this.ClientsInfo[clientNum].ModData = deaths;
 			}
 			this.NeedNotifyClientInfoChanged = true;
 		}

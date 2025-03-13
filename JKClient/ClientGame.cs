@@ -27,7 +27,7 @@ namespace JKClient {
 			new Snapshot(),
 			new Snapshot()
 		};
-		internal ClientInfo []ClientInfo {
+		public ClientInfo []ClientsInfo {
 			get;
 			private protected set;
 		}
@@ -40,7 +40,7 @@ namespace JKClient {
 			this.Snap = null;
 			this.NextSnap = null;
 			Common.MemSet(this.Entities, 0);
-			this.ClientInfo = new ClientInfo[this.Client.MaxClients];
+			this.ClientsInfo = new ClientInfo[this.Client.MaxClients];
 			for (int i = 0; i < this.Client.MaxClients; i++) {
 				this.NewClientInfo(i);
 			}
@@ -222,13 +222,14 @@ namespace JKClient {
 			string configstring = this.Client.GetConfigstring(clientNum + this.GetConfigstringIndex(Configstring.Players));
 			if (string.IsNullOrEmpty(configstring) || configstring[0] == '\0'
 				|| !configstring.Contains("n")) {
-				this.ClientInfo[clientNum].Clear();
+				this.ClientsInfo[clientNum].Clear();
 			} else {
 				var info = new InfoString(configstring);
-				this.ClientInfo[clientNum].ClientNum = clientNum;
-//				this.ClientInfo[clientNum].Team = (Team)info["t"].Atoi();
-				this.ClientInfo[clientNum].Name = info["n"];
-				this.ClientInfo[clientNum].InfoValid = true;
+				var t = info["t"].Atoi();
+				this.ClientsInfo[clientNum].ClientNum = clientNum;
+				this.ClientsInfo[clientNum].Team = Enum.IsDefined(typeof(Team), t) ? (Team)t : Team.Free;
+				this.ClientsInfo[clientNum].Name = info["n"];
+				this.ClientsInfo[clientNum].InfoValid = true;
 			}
 			if (this.Initialized) {
 				this.NeedNotifyClientInfoChanged = true;
@@ -247,8 +248,8 @@ namespace JKClient {
 				}
 				int score = command[i*14+5].Atoi();
 				int ping = command[i*14+6].Atoi();
-				this.ClientInfo[clientNum].Score = score;
-				this.ClientInfo[clientNum].Ping = ping;
+				this.ClientsInfo[clientNum].Score = score;
+				this.ClientsInfo[clientNum].Ping = ping;
 			}
 			this.NeedNotifyClientInfoChanged = true;
 		}
@@ -286,7 +287,7 @@ namespace JKClient {
 				clientNum = 0;
 			}
 			if (es.EntityType == this.GetEntityType(EntityType.Player)) {
-				if (!this.ClientInfo[clientNum].InfoValid) {
+				if (!this.ClientsInfo[clientNum].InfoValid) {
 					return EntityEvent.None;
 				}
 			}

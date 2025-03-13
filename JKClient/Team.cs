@@ -1,5 +1,5 @@
 ﻿namespace JKClient {
-	internal enum Team {
+	public enum Team {
 		Free,
 		Red,
 		Blue,

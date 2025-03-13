@@ -54,7 +54,7 @@ namespace JKClient {
 				if (es.GroundEntityNum >= 0 && es.GroundEntityNum < this.Client.MaxClients) {
 					int clientNum = es.GroundEntityNum;
 					string description = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Sounds) + es.EventParm);
-					string message = $"<{this.ClientInfo[clientNum].Name}^7{Common.EscapeCharacter}: {description}>";
+					string message = $"<{this.ClientsInfo[clientNum].Name}^7{Common.EscapeCharacter}: {description}>";
 					var command = new Command(new string[] { "chat", message });
 					this.Client.ExecuteServerCommand(new CommandEventArgs(command));
 				}
