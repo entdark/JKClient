@@ -78,13 +78,13 @@ namespace JKClient {
 		public override int GetHashCode() {
 			return this.Address.GetHashCode();
 		}
-	}
-	public sealed class ServerInfoComparer : EqualityComparer<ServerInfo> {
-		public override bool Equals(ServerInfo x, ServerInfo y) {
-			return x?.Address == y?.Address;
-		}
-		public override int GetHashCode(ServerInfo obj) {
-			return obj?.Address.GetHashCode() ?? 0;
+		public sealed class Comparer : EqualityComparer<ServerInfo> {
+			public override bool Equals(ServerInfo x, ServerInfo y) {
+				return x?.Address == y?.Address;
+			}
+			public override int GetHashCode(ServerInfo obj) {
+				return obj?.Address.GetHashCode() ?? 0;
+			}
 		}
 	}
 }
