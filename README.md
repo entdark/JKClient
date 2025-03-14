@@ -41,7 +41,7 @@ serverBrowser.Dispose();
 ```
 
 ```csharp
-async Task ExceptionCallback(JKClientException exception) {
+void ExceptionCallback(JKClientException exception) {
 	Debug.WriteLine(exception);
 }
 ```
