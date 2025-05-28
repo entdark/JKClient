@@ -32,11 +32,7 @@ namespace JKClient {
 			}
 		}
 		public void Add(int offset, int bits, NetFieldAdjust adjust = null) {
-			this.Add(new NetField() {
-				Offset = offset,
-				Bits = bits,
-				Adjust = adjust
-			});
+			this.Add(new NetField(offset, bits, adjust));
 		}
 		public void Add(string fieldName, int extraOffset, int bits, NetFieldAdjust adjust = null) {
 			this.Add(Marshal.OffsetOf(this.netType, fieldName).ToInt32() + extraOffset, bits, adjust);
@@ -44,8 +40,18 @@ namespace JKClient {
 		public void Add(string fieldName, int bits, NetFieldAdjust adjust = null) {
 			this.Add(fieldName, 0, bits, adjust);
 		}
+		public void Add(string fieldName, string subFieldName, Type subType, int extraOffset, int bits, NetFieldAdjust adjust = null) {
+			this.Add(fieldName, Marshal.OffsetOf(subType, subFieldName).ToInt32() + extraOffset, bits, adjust);
+		}
+		public void Add(string fieldName, string subFieldName, Type subType, int bits, NetFieldAdjust adjust = null) {
+			this.Add(fieldName, subFieldName, subType, 0, bits, adjust);
+		}
 		public NetFieldsArray Override(int index, int bits) {
 			this[index].Bits = bits;
+			return this;
+		}
+		public NetFieldsArray Insert(int index, int offset, int bits, NetFieldAdjust adjust = null) {
+			this.Insert(index, new NetField(offset, bits, adjust));
 			return this;
 		}
 	}

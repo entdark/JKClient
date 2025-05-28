@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Numerics;
 #if NETSTANDARD2_1
 using System.Reflection;
 using System.Reflection.Emit;
@@ -178,6 +179,44 @@ namespace JKClient {
 				}
 			}
 			return s;
+		}
+		public static Vector3 LerpAngles(Vector3 from, Vector3 to, float fraction) {
+			var d = to-from;
+			if (d.X > 180.0f) {
+				to.X -= 360.0f;
+			} else if (d.X < -180.0f) {
+				to.X += 360.0f;
+			}
+			if (d.Y > 180.0f) {
+				to.Y -= 360.0f;
+			} else if (d.Y < -180.0f) {
+				to.Y += 360.0f;
+			}
+			if (d.Z > 180.0f) {
+				to.Z -= 360.0f;
+			} else if (d.Z < -180.0f) {
+				to.Z += 360.0f;
+			}
+			return Vector3.Lerp(from, to, fraction);
+		}
+		public static void ToVectors(this Vector3 angles, ref Vector3 forward, ref Vector3 right, ref Vector3 up) {
+			Vector3 radAngles = angles*(float)(Math.PI/180.0);
+			double pitchSin = Math.Sin(radAngles.X),
+				pitchCos = Math.Cos(radAngles.X),
+				yawSin = Math.Sin(radAngles.Y),
+				yawCos = Math.Cos(radAngles.Y),
+				rollSin = Math.Sin(radAngles.Z),
+				rollCos = Math.Cos(radAngles.Z);
+			forward = new Vector3((float)(pitchCos*yawCos),(float)(pitchCos*yawSin),(float)-pitchSin);
+			right = new Vector3((float)(-1.0*rollSin*pitchSin*yawCos+-1.0*rollCos*-yawSin),(float)(-1.0*rollSin*pitchSin*yawSin+-1.0*rollCos*yawCos),(float)(-1.0*rollSin*pitchCos));
+			up = new Vector3((float)(rollCos*pitchSin*yawCos+-rollSin*-yawSin),(float)(rollCos*pitchSin*yawSin+-rollSin*yawCos),(float)(rollCos*pitchCos));
+		}
+		public static Vector3 []ToAxis(this Vector3 angles) {
+			Vector3 []axis = new Vector3[3];
+			Vector3 right = default;
+			angles.ToVectors(ref axis[0], ref right, ref axis[2]);
+			axis[1] = Vector3.Negate(right);
+			return axis;
 		}
 	}
 }

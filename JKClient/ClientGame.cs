@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 
 namespace JKClient {
 	public interface IJKClientImport {
@@ -9,11 +10,14 @@ namespace JKClient {
 		internal bool GetServerCommand(in int serverCommandNumber, out Command command);
 		internal string GetConfigstring(in int index);
 		internal void ExecuteServerCommand(CommandEventArgs eventArgs);
+		internal void ExecuteEntityEvent(EntityEventArgs eventArgs);
 		internal void NotifyClientInfoChanged();
+		internal bool GetDefaultState(int index, ref EntityState state, in int entityFlagPermanent);
 		void SetUserInfoKeyValue(string key, string value);
 	}
 	public abstract class ClientGame {
 		public const int ScoreNotPresent = -9999;
+		internal const int DefaultGravity = 800;
 		protected const int MaxClientScoreSend = 32;
 		protected readonly bool Initialized = false;
 		protected readonly int ClientNum;
@@ -22,7 +26,7 @@ namespace JKClient {
 		private protected int ProcessedSnapshotNum = 0;
 		private protected Snapshot Snap = null, NextSnap = null;
 		private protected int ServerCommandSequence = 0;
-		private protected readonly ClientEntity []Entities = new ClientEntity[Common.MaxGEntities];
+		private protected float FrameInterpolation;
 		private protected readonly IJKClientImport Client;
 #region ClientGameStatic
 		private protected int LevelStartTime = 0;
@@ -32,38 +36,119 @@ namespace JKClient {
 			new Snapshot(),
 			new Snapshot()
 		};
+		public ClientEntity []Entities {
+			get;
+			private protected init;
+		}
 		public ClientInfo []ClientsInfo {
 			get;
-			private protected set;
+			private protected init;
 		}
 		public int Scores1 { get; private protected set; }
 		public int Scores2 { get; private protected set; }
 		public int Timer => Time - LevelStartTime;
-		internal unsafe ClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
+		internal ClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum) {
 			this.Client = client;
 			this.ClientNum = clientNum;
-			this.ProcessedSnapshotNum = serverMessageNum;
-			this.ServerCommandSequence = serverCommandSequence;
+			this.Entities = new ClientEntity[Common.MaxGEntities];
+			Common.MemSet(this.Entities, 0);
 			this.LatestSnapshotNum = 0;
 			this.Snap = null;
 			this.NextSnap = null;
-			this.LevelStartTime = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.LevelStartTime)).Atoi();
-			this.Scores1 = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Scores1)).Atoi();
-			this.Scores2 = this.Client.GetConfigstring(this.GetConfigstringIndex(Configstring.Scores2)).Atoi();
-			Common.MemSet(this.Entities, 0);
+			this.ProcessedSnapshotNum = serverMessageNum;
+			this.ServerCommandSequence = serverCommandSequence;
+			this.LevelStartTime = this.GetConfigstring(Configstring.LevelStartTime).Atoi();
+			this.Scores1 = this.GetConfigstring(Configstring.Scores1).Atoi();
+			this.Scores2 = this.GetConfigstring(Configstring.Scores2).Atoi();
 			this.ClientsInfo = new ClientInfo[this.Client.MaxClients];
 			for (int i = 0; i < this.Client.MaxClients; i++) {
 				this.NewClientInfo(i);
 			}
 			this.Initialized = true;
 		}
-		internal virtual void Frame(int serverTime) {
+		internal virtual bool Frame(int serverTime) {
 			this.Time = serverTime;
 			this.ProcessSnapshots();
+			if (this.Snap == null) {
+				return false;
+			}
+			this.PreparePacketEntities();
+			this.PlayerStateToEntityState(ref this.Snap.PlayerState, ref this.Entities[this.Snap.PlayerState.ClientNum].CurrentState);
+			this.Entities[this.Snap.PlayerState.ClientNum].CurrentValid = true;
+			this.Entities[this.Snap.PlayerState.ClientNum].Added = false;
+			this.AddPacketEntities();
 			if (this.NeedNotifyClientInfoChanged) {
 				this.Client.NotifyClientInfoChanged();
 				this.NeedNotifyClientInfoChanged = false;
 			}
+			return true;
+		}
+		private protected virtual void PreparePacketEntities() {
+			if (this.NextSnap != null) {
+				int delta = this.NextSnap.ServerTime - this.Snap.ServerTime;
+				if (delta == 0) {
+					this.FrameInterpolation = 0.0f;
+				} else {
+					this.FrameInterpolation = (float)(this.Time - this.Snap.ServerTime) / delta;
+				}
+			} else {
+				this.FrameInterpolation = 0.0f;
+			}
+		}
+		private protected virtual void AddPacketEntities() {
+			this.AddClientEntity(ref this.Entities[this.Snap.PlayerState.ClientNum]);
+			for (int num = 0; num < this.Snap.NumEntities; num++) {
+				int number = this.Snap.Entities[num].Number;
+				if (number != this.Snap.PlayerState.ClientNum) {
+					ref var cent = ref this.Entities[number];
+					this.AddClientEntity(ref cent);
+				}
+			}
+		}
+		private protected virtual void AddClientEntity(ref ClientEntity cent) {
+			int entityType = cent.CurrentState.EntityType;
+			if (entityType >= this.GetEntityType(EntityType.Events)) {
+				return;
+			}
+			if (this.Snap.PlayerState.PlayerMoveType == PlayerMoveType.Intermission) {
+				entityType = cent.CurrentState.EntityType;
+				if (entityType == this.GetEntityType(EntityType.General)
+					|| entityType == this.GetEntityType(EntityType.Player)
+					|| entityType == this.GetEntityType(EntityType.Invisible)) {
+					return;
+				}
+			}
+			if (this.Snap.PlayerState.ClientNum == cent.CurrentState.Number && this.ClientsInfo[this.Snap.PlayerState.ClientNum].Team == Team.Spectator) {
+//				return;
+			}
+			this.CalcEntityLerpPositions(ref cent);
+			cent.Added = true;
+		}
+		private protected virtual bool CalcEntityLerpPositions(ref ClientEntity cent) {
+			ref EntityState currentState = ref cent.CurrentState,
+				nextState = ref cent.NextState;
+			if (currentState.Number < this.Client.MaxClients) {
+				currentState.PositionTrajectory.Type = TrajectoryType.Interpolate;
+				nextState.PositionTrajectory.Type = TrajectoryType.Interpolate;
+			}
+			if (cent.Interpolate && currentState.PositionTrajectory.Type == TrajectoryType.Interpolate) {
+				this.InterpolateEntityPosition(ref cent);
+				return true;
+			}
+			cent.LerpOrigin = currentState.PositionTrajectory.Evaluate(this.Snap.ServerTime);
+			cent.LerpAngles = currentState.AnglesTrajectory.Evaluate(this.Snap.ServerTime);
+			return false;
+		}
+		private protected virtual void InterpolateEntityPosition(ref ClientEntity cent) {
+			ref EntityState currentState = ref cent.CurrentState,
+				nextState = ref cent.NextState;
+			Vector3 current, next;
+			current = currentState.PositionTrajectory.Evaluate(this.Snap.ServerTime);
+			next = nextState.PositionTrajectory.Evaluate(this.NextSnap?.ServerTime ?? 0);
+			cent.LerpOrigin = Vector3.Lerp(current, next, this.FrameInterpolation);
+			current = currentState.AnglesTrajectory.Evaluate(this.Snap.ServerTime);
+			next = nextState.AnglesTrajectory.Evaluate(this.NextSnap?.ServerTime ?? 0);
+			cent.LerpAngles = Common.LerpAngles(current, next, this.FrameInterpolation);
 		}
 		private protected virtual void ProcessSnapshots() {
 			this.Client.GetCurrentSnapshotNumber(out int n, out int _);
@@ -119,7 +204,7 @@ namespace JKClient {
 		}
 		private protected virtual void SetInitialSnapshot(in Snapshot snap) {
 			this.Snap = snap;
-			this.Snap.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].CurrentState);
+			this.PlayerStateToEntityState(ref this.Snap.PlayerState, ref this.Entities[snap.PlayerState.ClientNum].CurrentState);
 			this.ExecuteNewServerCommands(snap.ServerCommandSequence);
 			int count = this.Snap.NumEntities;
 			for (int i = 0; i < count; i++) {
@@ -128,13 +213,14 @@ namespace JKClient {
 				cent.CurrentState = es;
 				cent.Interpolate = false;
 				cent.CurrentValid = true;
+				cent.Added = false;
 				this.ResetEntity(ref cent);
 				this.CheckEvents(ref cent);
 			}
 		}
 		private protected virtual void SetNextSnap(in Snapshot snap) {
 			this.NextSnap = snap;
-			this.NextSnap.PlayerState.ToEntityState(ref this.Entities[snap.PlayerState.ClientNum].NextState);
+			this.PlayerStateToEntityState(ref this.NextSnap.PlayerState, ref this.Entities[snap.PlayerState.ClientNum].NextState);
 			int count = this.NextSnap.NumEntities;
 			for (int i = 0; i < count; i++) {
 				ref var es = ref this.NextSnap.Entities[i];
@@ -154,10 +240,11 @@ namespace JKClient {
 				ref var es = ref this.Snap.Entities[i];
 				ref var cent = ref this.Entities[es.Number];
 				cent.CurrentValid = false;
+				cent.Added = false;
 			}
 			var oldFrame = this.Snap;
 			this.Snap = this.NextSnap;
-			this.Snap.PlayerState.ToEntityState(ref this.Entities[this.Snap.PlayerState.ClientNum].CurrentState);
+			this.PlayerStateToEntityState(ref this.Snap.PlayerState, ref this.Entities[this.Snap.PlayerState.ClientNum].CurrentState);
 			this.Entities[this.Snap.PlayerState.ClientNum].Interpolate = false;
 			count = this.Snap.NumEntities;
 			for (int i = 0; i < count; i++) {
@@ -165,6 +252,7 @@ namespace JKClient {
 				ref var cent = ref this.Entities[es.Number];
 				cent.CurrentState = cent.NextState;
 				cent.CurrentValid = true;
+				cent.Added = false;
 				if (!cent.Interpolate) {
 					this.ResetEntity(ref cent);
 				}
@@ -179,6 +267,8 @@ namespace JKClient {
 			if (cent.SnapshotTime < this.Time - ClientEntity.EventValidMsec) {
 				cent.PreviousEvent = 0;
 			}
+			cent.LerpOrigin = cent.CurrentState.Origin;
+			cent.LerpAngles = cent.CurrentState.Angles;
 		}
 		private protected virtual unsafe void TransitionPlayerState(ref PlayerState ps, ref PlayerState ops) {
 			if (ps.ClientNum != ops.ClientNum) {
@@ -236,6 +326,9 @@ namespace JKClient {
 				this.NewClientInfo(num - csPlayers);
 			}
 		}
+		protected virtual string GetConfigstring(Configstring index) {
+			return this.Client.GetConfigstring(this.GetConfigstringIndex(index));
+		}
 		protected virtual void NewClientInfo(int clientNum) {
 			string configstring = this.Client.GetConfigstring(clientNum + this.GetConfigstringIndex(Configstring.Players));
 			if (string.IsNullOrEmpty(configstring) || configstring[0] == '\0'
@@ -291,6 +384,7 @@ namespace JKClient {
 					return;
 				}
 			}
+			cent.LerpOrigin = es.PositionTrajectory.Evaluate(this.Snap.ServerTime);
 			this.HandleEvent(new EntityEventData(in cent));
 		}
 		protected virtual EntityEvent HandleEvent(EntityEventData eventData) {
@@ -311,10 +405,92 @@ namespace JKClient {
 			}
 			return ev;
 		}
+		private protected virtual unsafe void PlayerStateToEntityState(ref PlayerState ps, ref EntityState es) {
+			if (ps.PlayerMoveType == PlayerMoveType.Intermission || ps.PlayerMoveType == PlayerMoveType.Spectator) {
+				es.EntityType = this.GetEntityType(EntityType.Invisible);
+			} else if (ps.Stats[(int)Stat.Health] <= Common.GibHealth) {
+				es.EntityType = this.GetEntityType(EntityType.Invisible);
+			} else {
+				es.EntityType = this.GetEntityType(EntityType.Player);
+			}
+			es.Number = es.ClientNum = ps.ClientNum;
+			es.PositionTrajectory.Type = TrajectoryType.Interpolate;
+			es.PositionTrajectory.Base = ps.Origin;
+			es.PositionTrajectory.Delta = ps.Velocity;
+			es.AnglesTrajectory.Type = TrajectoryType.Interpolate;
+			es.AnglesTrajectory.Base = ps.ViewAngles;
+			es.EntityFlags = ps.EntityFlags;
+			if (ps.Stats[(int)Stat.Health] <= 0) {
+				es.EntityFlags |= this.GetEntityFlag(EntityFlag.Dead);
+			} else {
+				es.EntityFlags &= ~this.GetEntityFlag(EntityFlag.Dead);
+			}
+			if (ps.ExternalEvent != 0) {
+				es.Event = ps.ExternalEvent;
+				es.EventParm = ps.ExternalEventParm;
+			} else if (ps.EntityEventSequence < ps.EventSequence) {
+				if (ps.EntityEventSequence < ps.EventSequence - PlayerState.MaxEvents) {
+					ps.EntityEventSequence = ps.EventSequence - PlayerState.MaxEvents;
+				}
+				int sequence = ps.EntityEventSequence & (PlayerState.MaxEvents-1);
+				es.Event = ps.Events[sequence] | ((ps.EntityEventSequence & 3) << 8);
+				es.EventParm = ps.EventParms[sequence];
+				ps.EntityEventSequence++;
+			}
+			es.Weapon = ps.Weapon;
+			es.GroundEntityNum = ps.GroundEntityNum;
+			es.Powerups = 0;
+			for (int i = 0; i < (int)Powerup.Max; i++) {
+				if (ps.Powerups[i] != 0) {
+					es.Powerups |= 1 << i;
+				}
+			}
+			es.VehicleNum = ps.VehicleNum;
+		}
+		public virtual bool IsInvisible(ref ClientEntity cent) {
+			return cent.CurrentState.EntityType == this.GetEntityType(EntityType.Invisible);
+		}
+		public virtual bool IsPlayer(ref ClientEntity cent) {
+			return cent.CurrentState.EntityType == this.GetEntityType(EntityType.Player)
+				&& cent.CurrentState.ClientNum >= 0 && cent.CurrentState.ClientNum < this.Client.MaxClients;
+		}
+		public virtual bool IsVehicle(ref ClientEntity cent, ref ClientEntity player) {
+			return false;
+		}
+		public virtual bool IsMissile(ref ClientEntity cent) {
+			return cent.CurrentState.EntityType == this.GetEntityType(EntityType.Missile);
+		}
+		public virtual bool IsPredictedClient(ref ClientEntity cent) {
+			return cent.CurrentState.ClientNum == this.Snap.PlayerState.ClientNum;
+		}
+		public virtual bool IsFollowed(ref ClientEntity cent) {
+			return this.IsPredictedClient(ref cent) && (this.Snap.PlayerState.PlayerMoveFlags & PlayerMoveFlag.Follow) != 0;
+		}
+		public virtual bool IsNoDraw(ref ClientEntity cent) {
+			return (cent.CurrentState.EntityFlags & this.GetEntityFlag(EntityFlag.NoDraw)) != 0;
+		}
+		public virtual bool IsDead(ref ClientEntity cent) {
+			return (cent.CurrentState.EntityFlags & this.GetEntityFlag(EntityFlag.Dead)) != 0;
+		}
+		public virtual Team GetFlagTeam(ref ClientEntity cent) {
+			if (this.IsPlayer(ref cent)) {
+				if ((cent.CurrentState.Powerups & (1 << this.GetPowerup(Powerup.RedFlag))) != 0) {
+					return Team.Red;
+				} else if ((cent.CurrentState.Powerups & (1 << this.GetPowerup(Powerup.BlueFlag))) != 0) {
+					return Team.Blue;
+				} else if ((cent.CurrentState.Powerups & (1 << this.GetPowerup(Powerup.NeutralFlag))) != 0) {
+					return Team.Blue;
+				}
+			}
+			return Team.Spectator;
+		}
 		protected abstract int GetConfigstringIndex(Configstring index);
 		protected abstract EntityEvent GetEntityEvent(int entityEvent);
 		protected abstract int GetEntityType(EntityType entityType);
 		protected abstract int GetEntityFlag(EntityFlag entityFlag);
+		protected abstract int GetPowerup(Powerup powerup);
+		protected abstract int GetWeapon(Weapon weapon);
+		public abstract Weapon GetWeapon(ref ClientEntity cent, out bool altFire);
 		public enum Configstring {
 			Scores1 = 6,
 			Scores2 = 7,
@@ -327,12 +503,22 @@ namespace JKClient {
 			Players
 		}
 		public enum EntityFlag : int {
+			Dead,
 			TeleportBit,
-			PlayerEvent
+			PlayerEvent,
+			NoDraw,
+			AltFiring
 		}
 		public enum EntityEvent : int {
 			None,
+			DisruptorMainShot,
+			DisruptorSniperShot,
+			PlayEffect,
 			VoiceCommandSound,
+			ConcAltImpact,
+			MissileHit,
+			MissileMiss,
+			MissileMissMetal,
 			Bits = 0x300
 		}
 		public enum EntityType : int {
@@ -357,14 +543,71 @@ namespace JKClient {
 			Grapple,
 			Events
 		}
+		public enum Powerup : int {
+			None,
+			Quad,
+			Battlesuit,
+			Haste,
+			Invis,
+			Regen,
+			Flight,
+			Pull,
+			RedFlag,
+			BlueFlag,
+			NeutralFlag,
+			Scout,
+			Guard,
+			Doubler,
+			AmmoRegen,
+			Invulnerability,
+			ShieldHit,
+			SpeedBurst,
+			Disint4,
+			Speed,
+			Cloaked,
+			ForceLightning,
+			ForceEnlightenedLight,
+			ForceEnlightenedDark,
+			ForceBoon,
+			Ysalamiri,
+			NumPowerups,
+			Max = 16
+		}
+		public enum Weapon : int {
+			//jk
+			None,
+			StunBaton,
+			Melee,
+			Saber,
+			BryarPistol,
+			Blaster,
+			Disruptor,
+			Bowcaster,
+			Repeater,
+			Demp2,
+			Flechette,
+			RocketLauncher,
+			Thermal,
+			TripMine,
+			DetPack,
+			Concussion,
+			BryarOld,
+			EmplacedGun,
+			Turret,
+			//quake3
+			Gauntlet,
+			Machinegun,
+			Shotgun,
+			GrenadeLauncher,
+			Lightning,
+			Railgun,
+			Plasmagun,
+			BFG,
+			GrapplingHook,
+			NumWeapons
+		}
 		public sealed class EntityEventData {
-			internal ClientEntity Cent;
-			public int Event => this.Cent.CurrentState.Event;
-			public int EventParm => this.Cent.CurrentState.EventParm;
-			public int EntityNum => this.Cent.CurrentState.Number;
-			public int ClientNum => this.Cent.CurrentState.ClientNum;
-			public int OtherEntityNum => this.Cent.CurrentState.OtherEntityNum;
-			public int GroundEntityNum => this.Cent.CurrentState.GroundEntityNum;
+			public ClientEntity Cent;
 			private EntityEventData() {}
 			internal EntityEventData(in ClientEntity cent) {
 				this.Cent = cent;

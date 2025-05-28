@@ -6,6 +6,7 @@ namespace JKClient {
 	public sealed partial class JKClient : IJKClientImport {
 		private readonly StringBuilder bigInfoString = new StringBuilder(Common.BigInfoString, Common.BigInfoString);
 		public event Action<CommandEventArgs> ServerCommandExecuted;
+		public event Action<EntityEventArgs> EntityEventExecuted;
 		private void SetTime() {
 			if (this.Status != ConnectionStatus.Active) {
 				if (this.Status != ConnectionStatus.Primed) {
@@ -126,6 +127,9 @@ namespace JKClient {
 		void IJKClientImport.ExecuteServerCommand(CommandEventArgs eventArgs) {
 			this.ServerCommandExecuted?.Invoke(eventArgs);
 		}
+		void IJKClientImport.ExecuteEntityEvent(EntityEventArgs eventArgs) {
+			this.EntityEventExecuted?.Invoke(eventArgs);
+		}
 		void IJKClientImport.NotifyClientInfoChanged() {
 			this.ServerInfoChanged?.Invoke(this.ServerInfo);
 		}
@@ -206,5 +210,14 @@ rescan:
 			return true;
 		}
 		unsafe string IJKClientImport.GetConfigstring(in int index) => this.GetConfigstring(index);
+		bool IJKClientImport.GetDefaultState(int index, ref EntityState state, in int entityFlagPermanent) {
+			if (index < 0 || index >= Common.MaxGEntities) {
+				return false;
+			} else if ((this.entityBaselines[index].EntityFlags & entityFlagPermanent) == 0) {
+				return false;
+			}
+			state = this.entityBaselines[index];
+			return true;
+		}
 	}
 }

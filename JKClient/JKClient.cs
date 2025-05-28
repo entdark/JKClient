@@ -168,8 +168,10 @@ namespace JKClient {
 				this.CheckForResend();
 				this.SetTime();
 				if (this.Status >= ConnectionStatus.Primed) {
-					this.clientGame.Frame(this.serverTime);
-					this.FrameExecuted?.Invoke(frameTime);
+					bool processedSnapshots = this.clientGame.Frame(this.serverTime);
+					if (processedSnapshots) {
+						this.FrameExecuted?.Invoke(frameTime);
+					}
 				}
 				await Task.Delay(FrameTime);
 			}

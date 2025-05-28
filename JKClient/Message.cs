@@ -343,7 +343,7 @@ namespace JKClient {
 			bool isPilot() {
 				return this.ReadBits(1) != 0;
 			}
-			var fields = clientHandler.GetPlayerStateFields(isVehicle, isPilot);
+			var fields = clientHandler.GetPlayerStateFields(isVehicle, isPilot, out int count);
 			int lc = this.ReadByte();
 			int* fromF, toF;
 			int trunc;
@@ -368,7 +368,7 @@ namespace JKClient {
 				}
 				fields[i].Adjust?.Invoke(toF);
 			}
-			for (int i = lc; i < fields.Count; i++) {
+			for (int i = lc; i < count; i++) {
 				fromF = (int*)((byte*)from + fields[i].Offset);
 				toF = (int*)((byte*)to + fields[i].Offset);
 				*toF = *fromF;
@@ -408,7 +408,7 @@ namespace JKClient {
 					int bits = this.ReadShort();
 					for (int i = 0; i < 16; i++) {
 						if ((bits & (1<<i)) != 0) {
-							this.ReadLong();
+							to->Powerups[i] = this.ReadLong();
 						}
 					}
 				}

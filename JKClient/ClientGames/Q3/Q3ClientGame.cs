@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace JKClient {
 	public class Q3ClientGame : ClientGame {
@@ -26,13 +27,8 @@ namespace JKClient {
 			return EntityEvent.None;
 		}
 		protected override int GetEntityFlag(EntityFlag entityFlag) {
-			if (Enum.IsDefined(typeof(EntityFlagQ3), (int)entityFlag)) {
-				switch (entityFlag) {
-				case EntityFlag.TeleportBit:
-					return (int)EntityFlagQ3.TeleportBit;
-				case EntityFlag.PlayerEvent:
-					return (int)EntityFlagQ3.PlayerEvent;
-				}
+			if (Enum.TryParse(entityFlag.ToString(), out EntityFlagQ3 result)) {
+				return (int)result;
 			}
 			return 0;
 		}
@@ -55,6 +51,38 @@ namespace JKClient {
 				throw new JKClientException($"Invalid entity type: {entityType}");
 			}
 		}
+		protected override int GetPowerup(Powerup powerup) {
+			if (Enum.TryParse(powerup.ToString(), out PowerupQ3 result)) {
+				return (int)result;
+			}
+			return 0;
+		}
+		protected override int GetWeapon(Weapon weapon) {
+			if (Enum.TryParse(weapon.ToString(), out WeaponQ3 result)) {
+				return (int)result;
+			}
+			return 0;
+		}
+		public override Weapon GetWeapon(ref ClientEntity cent, out bool altFire) {
+			altFire = false;
+			if (Enum.IsDefined(typeof(WeaponQ3), cent.CurrentState.Weapon)) {
+				string ws = ((WeaponQ3)cent.CurrentState.Weapon).ToString();
+				return Enum.GetValues(typeof(Weapon)).Cast<Weapon>().FirstOrDefault(w => w.ToString() == ws);
+			}
+			return Weapon.None;
+		}
+		public override Team GetFlagTeam(ref ClientEntity cent) {
+			if (cent.CurrentState.EntityType == this.GetEntityType(EntityType.Item)) {
+				if (cent.CurrentState.ModelIndex == 34) {
+					return Team.Red;
+				} else if (cent.CurrentState.ModelIndex == 35) {
+					return Team.Blue;
+				}
+			} else {
+				return base.GetFlagTeam(ref cent);
+			}
+			return Team.Spectator;
+		}
 		public enum ConfigstringQ3 {
 			GameVersion = 20,
 			Sounds = 288,
@@ -62,8 +90,10 @@ namespace JKClient {
 		}
 		[Flags]
 		public enum EntityFlagQ3 : int {
+			Dead = (1<<0),
 			TeleportBit = (1<<2),
-			PlayerEvent = (1<<4)
+			PlayerEvent = (1<<4),
+			NoDraw = (1<<7)
 		}
 		public enum EntityEventQ3 : int {
 			None
@@ -83,6 +113,38 @@ namespace JKClient {
 			Grapple,
 			Team,
 			Events
+		}
+		public enum PowerupQ3 : int {
+			None,
+			Quad,
+			Battlesuit,
+			Haste,
+			Invis,
+			Regen,
+			Flight,
+			RedFlag,
+			BlueFlag,
+			NeutralFlag,
+			Scout,
+			Guard,
+			Doubler,
+			AmmoRegen,
+			Invulnerability,
+			NumPowerups
+		}
+		public enum WeaponQ3 : int {
+			None,
+			Gauntlet,
+			Machinegun,
+			Shotgun,
+			GrenadeLauncher,
+			RocketLauncher,
+			Lightning,
+			Railgun,
+			Plasmagun,
+			BFG,
+			GrapplingHook,
+			NumWeapons
 		}
 	}
 }

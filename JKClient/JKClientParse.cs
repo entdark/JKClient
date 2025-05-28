@@ -286,7 +286,7 @@ namespace JKClient {
 					oldstate = null;
 					oldnum = 99999;
 				}
-				EntityState *newstate = parseEntitiesPinned[this.parseEntitiesNum];
+				EntityState *newstate = parseEntitiesPinned[this.parseEntitiesNum & (JKClient.MaxParseEntities-1)];
 				if (oldstate == null && (newnum == (Common.MaxGEntities-1))) {
 					break;
 				} else if (oldnum < newnum) {
@@ -305,7 +305,7 @@ namespace JKClient {
 				if (newstate->Number == Common.MaxGEntities-1)
 					continue;
 				this.parseEntitiesNum++;
-				this.parseEntitiesNum &= (JKClient.MaxParseEntities-1);
+//				this.parseEntitiesNum &= (JKClient.MaxParseEntities-1);
 				newSnap->NumEntities++;
 			}
 		}

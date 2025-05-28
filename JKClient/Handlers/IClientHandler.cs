@@ -18,7 +18,7 @@ namespace JKClient {
 		bool CanParseSnapshot();
 		ClientGame CreateClientGame(IJKClientImport client, int serverMessageNum, int serverCommandSequence, int clientNum);
 		IList<NetField> GetEntityStateFields();
-		IList<NetField> GetPlayerStateFields(bool isVehicle, Func<bool> isPilot);
+		IList<NetField> GetPlayerStateFields(bool isVehicle, Func<bool> isPilot, out int count);
 		void ClearState();
 		void SetExtraConfigstringInfo(in ServerInfo serverInfo, in InfoString info);
 	}
