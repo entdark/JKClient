@@ -18,11 +18,9 @@ namespace JKClient {
 			return 0;
 		}
 		protected override EntityEvent GetEntityEvent(int entityEvent) {
-			if (Enum.IsDefined(typeof(EntityEventJO), entityEvent)) {
-				switch ((EntityEventJO)entityEvent) {
-				default:
-					break;
-				}
+			if (Enum.IsDefined(typeof(EntityEventJO), entityEvent)
+				&& Enum.TryParse(((EntityEventJO)entityEvent).ToString(), out EntityEvent result)) {
+				return result;
 			}
 			return EntityEvent.None;
 		}
@@ -66,6 +64,20 @@ namespace JKClient {
 			}
 			return Weapon.None;
 		}
+		public override Team GetFlagTeam(ref ClientEntity cent) {
+			if (cent.CurrentState.EntityType == this.GetEntityType(EntityType.Item)) {
+				if (cent.CurrentState.ModelIndex == 37) {
+					return Team.Red;
+				} else if (cent.CurrentState.ModelIndex == 38) {
+					return Team.Blue;
+				} else if (cent.CurrentState.ModelIndex == 39) {
+					return Team.Free;
+				}
+			} else {
+				return base.GetFlagTeam(ref cent);
+			}
+			return Team.Spectator;
+		}
 		protected override EntityEvent HandleEvent(EntityEventData eventData) {
 			ref var es = ref eventData.Cent.CurrentState;
 			var ev = base.HandleEvent(eventData);
@@ -95,20 +107,6 @@ namespace JKClient {
 			}
 			this.Client.ExecuteEntityEvent(new EntityEventArgs(ev, ref eventData.Cent));
 			return ev;
-		}
-		public override Team GetFlagTeam(ref ClientEntity cent) {
-			if (cent.CurrentState.EntityType == this.GetEntityType(EntityType.Item)) {
-				if (cent.CurrentState.ModelIndex == 37) {
-					return Team.Red;
-				} else if (cent.CurrentState.ModelIndex == 38) {
-					return Team.Blue;
-				} else if (cent.CurrentState.ModelIndex == 39) {
-					return Team.Free;
-				}
-			} else {
-				return base.GetFlagTeam(ref cent);
-			}
-			return Team.Spectator;
 		}
 		public enum ConfigstringJO {
 			Sounds = 288,

@@ -18,11 +18,9 @@ namespace JKClient {
 			return 0;
 		}
 		protected override EntityEvent GetEntityEvent(int entityEvent) {
-			if (Enum.IsDefined(typeof(EntityEventQ3), entityEvent)) {
-				switch ((EntityEventQ3)entityEvent) {
-				default:
-					break;
-				}
+			if (Enum.IsDefined(typeof(EntityEventQ3), entityEvent)
+				&& Enum.TryParse(((EntityEventQ3)entityEvent).ToString(), out EntityEvent result)) {
+				return result;
 			}
 			return EntityEvent.None;
 		}
@@ -63,10 +61,11 @@ namespace JKClient {
 			}
 			return 0;
 		}
-		public override Weapon GetWeapon(ref ClientEntity cent, out bool altFire) {
-			altFire = false;
+		public override Weapon GetWeapon(ref ClientEntity cent, out bool firing) {
+			firing = false;
 			if (Enum.IsDefined(typeof(WeaponQ3), cent.CurrentState.Weapon)) {
 				string ws = ((WeaponQ3)cent.CurrentState.Weapon).ToString();
+				firing = (cent.CurrentState.EntityFlags & (int)EntityFlagQ3.Firing) != 0;
 				return Enum.GetValues(typeof(Weapon)).Cast<Weapon>().FirstOrDefault(w => w.ToString() == ws);
 			}
 			return Weapon.None;
@@ -83,6 +82,11 @@ namespace JKClient {
 			}
 			return Team.Spectator;
 		}
+		protected override EntityEvent HandleEvent(EntityEventData eventData) {
+			var ev = base.HandleEvent(eventData);
+			this.Client.ExecuteEntityEvent(new EntityEventArgs(ev, ref eventData.Cent));
+			return ev;
+		}
 		public enum ConfigstringQ3 {
 			GameVersion = 20,
 			Sounds = 288,
@@ -93,10 +97,19 @@ namespace JKClient {
 			Dead = (1<<0),
 			TeleportBit = (1<<2),
 			PlayerEvent = (1<<4),
-			NoDraw = (1<<7)
+			NoDraw = (1<<7),
+			Firing = (1<<8)
 		}
 		public enum EntityEventQ3 : int {
-			None
+			None,
+			FireWeapon = 23,
+			BulletHitFlesh = 48,
+			BulletHitWall = 49,
+			MissileHit = 50,
+			MissileMiss = 51,
+			MissileMissMetal = 52,
+			Railtrail = 53,
+			Shotgun = 54
 		}
 		public enum EntityTypeQ3 : int {
 			General,

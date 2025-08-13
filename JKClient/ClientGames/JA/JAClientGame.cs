@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
 
 namespace JKClient {
 	public class JAClientGame : ClientGame {
@@ -166,6 +165,29 @@ namespace JKClient {
 			}
 			return Weapon.None;
 		}
+		public override bool IsVehicle(ref ClientEntity cent, ref ClientEntity player) {
+			int owner = cent.CurrentState.Owner;
+			bool isVehicle = cent.CurrentState.EntityType == this.GetEntityType(EntityType.NPC) && cent.CurrentState.NPCClass == NPCClass.Vehicle
+				&& owner >= 0 && owner < this.Client.MaxClients;
+			if (isVehicle) {
+				player = this.Entities[owner];
+			}
+			return isVehicle;
+		}
+		public override Team GetFlagTeam(ref ClientEntity cent) {
+			if (cent.CurrentState.EntityType == this.GetEntityType(EntityType.Item)) {
+				if (cent.CurrentState.ModelIndex == 46) {
+					return Team.Red;
+				} else if (cent.CurrentState.ModelIndex == 47) {
+					return Team.Blue;
+				} else if (cent.CurrentState.ModelIndex == 48) {
+					return Team.Free;
+				}
+			} else {
+				return base.GetFlagTeam(ref cent);
+			}
+			return Team.Spectator;
+		}
 		protected override EntityEvent HandleEvent(EntityEventData eventData) {
 			ref var es = ref eventData.Cent.CurrentState;
 			if (es.EntityType == this.GetEntityType(EntityType.NPC)) {
@@ -210,29 +232,6 @@ namespace JKClient {
 			}
 			this.Client.ExecuteEntityEvent(new EntityEventArgs(ev, ref eventData.Cent));
 			return ev;
-		}
-		public override bool IsVehicle(ref ClientEntity cent, ref ClientEntity player) {
-			int owner = cent.CurrentState.Owner;
-			bool isVehicle = cent.CurrentState.EntityType == this.GetEntityType(EntityType.NPC) && cent.CurrentState.NPCClass == NPCClass.Vehicle
-				&& owner >= 0 && owner < this.Client.MaxClients;
-			if (isVehicle) {
-				player = this.Entities[owner];
-			}
-			return isVehicle;
-		}
-		public override Team GetFlagTeam(ref ClientEntity cent) {
-			if (cent.CurrentState.EntityType == this.GetEntityType(EntityType.Item)) {
-				if (cent.CurrentState.ModelIndex == 46) {
-					return Team.Red;
-				} else if (cent.CurrentState.ModelIndex == 47) {
-					return Team.Blue;
-				} else if (cent.CurrentState.ModelIndex == 48) {
-					return Team.Free;
-				}
-			} else {
-				return base.GetFlagTeam(ref cent);
-			}
-			return Team.Spectator;
 		}
 		public enum ConfigstringJA {
 			SiegeState = 293,

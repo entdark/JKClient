@@ -508,6 +508,7 @@ namespace JKClient {
 			TeleportBit,
 			PlayerEvent,
 			NoDraw,
+			Firing,
 			AltFiring
 		}
 		public enum EntityEvent : int {
@@ -517,9 +518,14 @@ namespace JKClient {
 			PlayEffect,
 			VoiceCommandSound,
 			ConcAltImpact,
+			FireWeapon,
+			BulletHitFlesh,
+			BulletHitWall,
 			MissileHit,
 			MissileMiss,
 			MissileMissMetal,
+			Railtrail,
+			Shotgun,
 			Bits = 0x300
 		}
 		public enum EntityType : int {
