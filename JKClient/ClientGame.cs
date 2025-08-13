@@ -9,6 +9,7 @@ namespace JKClient {
 		internal bool GetSnapshot(in int snapshotNumber, ref Snapshot snapshot);
 		internal bool GetServerCommand(in int serverCommandNumber, out Command command);
 		internal string GetConfigstring(in int index);
+		internal void SendClientCommand(string cmd);
 		internal void ExecuteServerCommand(CommandEventArgs eventArgs);
 		internal void ExecuteEntityEvent(EntityEventArgs eventArgs);
 		internal void NotifyClientInfoChanged();

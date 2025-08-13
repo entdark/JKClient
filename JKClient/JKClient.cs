@@ -440,6 +440,9 @@ namespace JKClient {
 				Marshal.Copy(encoding.GetBytes(cmd+'\0'), 0, (IntPtr)(reliableCommand), encoding.GetByteCount(cmd)+1);
 			}
 		}
+		void IJKClientImport.SendClientCommand(string cmd) {
+			this.ExecuteCommand(cmd);
+		}
 		public void ExecuteCommand(string cmd) {
 			void executeCommand() {
 				if (cmd.StartsWith("rcon ", StringComparison.OrdinalIgnoreCase)) {
