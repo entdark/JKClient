@@ -58,5 +58,23 @@ namespace JKClient {
 				yield return token.ToString();
 			}
 		}
+		public override string ToString() {
+			if (this.Length <= 0) {
+				return string.Empty;
+			}
+			var builder = new StringBuilder();
+			for (int i = 0; i < this.Length; i++) {
+				if (i > 0) {
+					builder
+						.Append(' ');
+				}
+				builder
+					.Append('"')
+					.Append(this.arguments[i])
+					.Append('"');
+
+			}
+			return builder.ToString();
+		}
 	}
 }
