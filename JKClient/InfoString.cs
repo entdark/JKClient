@@ -9,7 +9,7 @@ namespace JKClient {
 			get => this.TryGetValue(key, out string value) ? value : string.Empty;
 			internal set => base[key] = value ?? string.Empty;
 		}
-		internal InfoString() {}
+		internal InfoString() : base(new InfoString.Comparer()) {}
 		internal InfoString(string infoString) : base(new InfoString.Comparer()) {
 			if (string.IsNullOrEmpty(infoString)) {
 				return;
