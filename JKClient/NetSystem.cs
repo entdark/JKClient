@@ -104,7 +104,7 @@ namespace JKClient {
 					return false;
 				}
 				var ipEndPoint = endPoint as IPEndPoint;
-				address = new NetAddress(ipEndPoint.Address.GetAddressBytes(), (ushort)ipEndPoint.Port);
+				address = ipEndPoint.ToNetAddress();
 				msg.CurSize = ret;
 				return true;
 			} catch (SocketException exception) {
@@ -159,6 +159,9 @@ namespace JKClient {
 	internal static class NetSystemExtensions {
 		public static IPEndPoint ToIPEndPoint(this NetAddress address) {
 			return new IPEndPoint(new IPAddress(address.IP), address.Port);
+		}
+		public static NetAddress ToNetAddress(this IPEndPoint ipEndPoint) {
+			return new NetAddress(ipEndPoint.Address.GetAddressBytes(), (ushort)ipEndPoint.Port);
 		}
 	}
 }
