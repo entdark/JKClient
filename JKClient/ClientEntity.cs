@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace JKClient {
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
-	public unsafe struct ClientEntity {
+	public struct ClientEntity {
 		internal const int EventValidMsec = 300;
 		internal EntityState CurrentState;
 		internal EntityState NextState;

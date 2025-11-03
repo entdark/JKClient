@@ -92,7 +92,7 @@ namespace JKClient {
 			}
 			serverInfo.ForceDisable = info["g_forcePowerDisable"].Atoi() != 0;
 		}
-		private static unsafe readonly NetFieldsArray entityStateFields15 = new NetFieldsArray(typeof(EntityState)) {
+		private static readonly unsafe NetFieldsArray entityStateFields15 = new NetFieldsArray(typeof(EntityState)) {
 			{	nameof(EntityState.PositionTrajectory)	,	nameof(Trajectory.Time)		,	typeof(Trajectory)	,	32	},
 			{	nameof(EntityState.PositionTrajectory)	,	nameof(Trajectory.Base)		,	typeof(Trajectory)	,	sizeof(float)*0	,	0	},
 			{	nameof(EntityState.PositionTrajectory)	,	nameof(Trajectory.Base)		,	typeof(Trajectory)	,	sizeof(float)*1	,	0	},
@@ -185,7 +185,7 @@ namespace JKClient {
 		};
 		private static readonly NetFieldsArray entityStateFields16 = new NetFieldsArray(entityStateFields15)
 			.Override(44, 5);
-		private static unsafe readonly NetFieldsArray playerStateFields15 = new NetFieldsArray(typeof(PlayerState)) {
+		private static readonly unsafe NetFieldsArray playerStateFields15 = new NetFieldsArray(typeof(PlayerState)) {
 			{	0	,	32	},
 			{	nameof(PlayerState.Origin)	,	sizeof(float)*0	,	0	},
 			{	nameof(PlayerState.Origin)	,	sizeof(float)*1	,	0	},
@@ -300,7 +300,7 @@ namespace JKClient {
 			{	0	,	0	},
 			{	0	,	0	}
 		};
-		private static unsafe readonly NetFieldsArray playerStateFields16 = new NetFieldsArray(playerStateFields15)
+		private static readonly NetFieldsArray playerStateFields16 = new NetFieldsArray(playerStateFields15)
 			.Insert(79, 0, 1)
 			.Insert(80, 0, 1)
 			.Insert(81, 0, 1);

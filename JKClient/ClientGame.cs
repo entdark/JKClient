@@ -337,7 +337,7 @@ namespace JKClient {
 				this.ClientsInfo[clientNum].Clear();
 			} else {
 				var info = new InfoString(configstring);
-				var t = info["t"].Atoi();
+				int t = info["t"].Atoi();
 				this.ClientsInfo[clientNum].ClientNum = clientNum;
 				this.ClientsInfo[clientNum].Team = Enum.IsDefined(typeof(Team), t) ? (Team)t : Team.Free;
 				this.ClientsInfo[clientNum].Name = info["n"];
@@ -613,7 +613,8 @@ namespace JKClient {
 			GrapplingHook,
 			NumWeapons
 		}
-		public sealed class EntityEventData {
+
+		protected sealed class EntityEventData {
 			public ClientEntity Cent;
 			private EntityEventData() {}
 			internal EntityEventData(in ClientEntity cent) {

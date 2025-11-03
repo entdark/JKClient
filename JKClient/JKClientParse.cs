@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text;
-
 namespace JKClient {
 	public sealed partial class JKClient {
 		private const int PacketBackup = 32;
@@ -167,7 +165,7 @@ namespace JKClient {
 				return Common.ToString(cs, Common.StrLen(cs));
 			}
 		}
-		private unsafe void ClearState() {
+		private void ClearState() {
 			this.snap = new ClientSnapshot();
 			this.serverTime = 0;
 			this.oldServerTime = 0;
@@ -326,7 +324,7 @@ namespace JKClient {
 			if (block == 0) {
 				int downloadSize = msg.ReadLong();
 				if (downloadSize < 0) {
-					fixed (sbyte* s = msg.ReadString()) {
+					fixed (sbyte *s = msg.ReadString()) {
 						byte* ss = (byte*)s;
 						throw new JKClientException($"{Common.ToString(ss, sizeof(sbyte)*Common.MaxStringChars)}");
 					}

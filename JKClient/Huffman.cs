@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 namespace JKClient {
-	internal unsafe sealed class Huffman : IDisposable {
+	internal sealed unsafe class Huffman : IDisposable {
 		private const int HuffMax = 256;
 		private const int NodesMax = Huffman.HuffMax*3;
 		private const int NotYetTransmitted = Huffman.HuffMax;
@@ -260,7 +260,7 @@ namespace JKClient {
 			Huffman.Fast.PutBit(bit, fout, ref offset);
 			this.bloc = offset;
 		}
-		public static unsafe void Compress(Message msg, int offset) {
+		public static void Compress(Message msg, int offset) {
 			int size = msg.CurSize - offset;
 			if (size <= 0) {
 				return;
@@ -287,7 +287,7 @@ namespace JKClient {
 			Marshal.FreeHGlobal((IntPtr)this.nodeList);
 			Marshal.FreeHGlobal((IntPtr)this.nodePtrs);
 		}
-		private unsafe struct Node {
+		private struct Node {
 			public Node* left, right, parent;
 			public Node* next, prev;
 			public Node** head;
@@ -313,12 +313,12 @@ namespace JKClient {
 					bits >>= 1;
 				}
 			}
-			public static unsafe short GetAllBits(byte []fin, int offset) {
+			public static short GetAllBits(byte []fin, int offset) {
 				fixed (byte *f = &fin[offset>>3]) {
 					return (short)((*(uint*)f) >> (offset&7));
 				}
 			}
-			public static unsafe void OffsetReceive(ref int ch, byte []fin, ref int offset, ushort []decoderTable) {
+			public static void OffsetReceive(ref int ch, byte []fin, ref int offset, ushort []decoderTable) {
 				fixed (byte *f = &fin[offset>>3]) {
 					ushort code = (ushort)(((*(uint*)f) >> (offset&7))&0x7ff);
 					ch = decoderTable[code];

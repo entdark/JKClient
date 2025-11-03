@@ -2,8 +2,8 @@
 using System.Runtime.InteropServices;
 
 namespace JKClient {
-	internal readonly unsafe struct PinnedObject<T> : IDisposable where T : unmanaged {
-		private readonly GCHandle handle;
+	internal unsafe struct PinnedObject<T> : IDisposable where T : unmanaged {
+		private GCHandle handle;
 		public IntPtr Address => this.handle.AddrOfPinnedObject();
 		public T *Pointer => (T*)this.Address;
 		public T *this[int offset] => this.Pointer + offset;

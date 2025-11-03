@@ -52,7 +52,7 @@ namespace JKClient {
 			}
 		}
 	}
-	public enum TrajectoryType : int {
+	internal enum TrajectoryType : int {
 		Stationary,
 		Interpolate,
 		Linear,

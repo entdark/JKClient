@@ -86,7 +86,7 @@ namespace JKClient {
 				return (GameType)(gameType+5);
 			}
 		}
-		private static unsafe readonly NetFieldsArray entityStateFields68 = new NetFieldsArray(typeof(EntityState)) {
+		private static readonly unsafe NetFieldsArray entityStateFields68 = new NetFieldsArray(typeof(EntityState)) {
 			{	nameof(EntityState.PositionTrajectory)	,	nameof(Trajectory.Time)		,	typeof(Trajectory)	,	32	},
 			{	nameof(EntityState.PositionTrajectory)	,	nameof(Trajectory.Base)		,	typeof(Trajectory)	,	sizeof(float)*0	,	0	},
 			{	nameof(EntityState.PositionTrajectory)	,	nameof(Trajectory.Base)		,	typeof(Trajectory)	,	sizeof(float)*1	,	0	},
@@ -155,7 +155,7 @@ namespace JKClient {
 			{	0	,	32	},
 			{	0	,	16	}
 		};
-		private static unsafe readonly NetFieldsArray playerStateFields68 = new NetFieldsArray(typeof(PlayerState)) {
+		private static readonly unsafe NetFieldsArray playerStateFields68 = new NetFieldsArray(typeof(PlayerState)) {
 			{	0	,	32	},
 			{	nameof(PlayerState.Origin)	,	sizeof(float)*0	,	0	},
 			{	nameof(PlayerState.Origin)	,	sizeof(float)*1	,	0	},

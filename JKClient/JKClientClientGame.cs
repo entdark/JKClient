@@ -209,7 +209,7 @@ rescan:
 			}
 			return true;
 		}
-		unsafe string IJKClientImport.GetConfigstring(in int index) => this.GetConfigstring(index);
+		string IJKClientImport.GetConfigstring(in int index) => this.GetConfigstring(index);
 		bool IJKClientImport.GetDefaultState(int index, ref EntityState state, in int entityFlagPermanent) {
 			if (index < 0 || index >= Common.MaxGEntities) {
 				return false;

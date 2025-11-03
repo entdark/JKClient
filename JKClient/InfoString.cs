@@ -41,7 +41,7 @@ namespace JKClient {
 		}
 		private new class Comparer : EqualityComparer<string> {
 			public override bool Equals(string x, string y) {
-				return x.Equals(y, StringComparison.OrdinalIgnoreCase);
+				return string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
 			}
 			public override int GetHashCode(string obj) {
 				return obj.GetHashCode();
