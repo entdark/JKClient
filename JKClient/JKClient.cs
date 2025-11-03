@@ -37,7 +37,6 @@ namespace JKClient {
 			["assets"] = "0"
 		};
 		private readonly ConcurrentQueue<Action> actionsQueue = new();
-		private ClientGame clientGame;
 		private TaskCompletionSource<bool> connectTCS;
 #region ClientConnection
 		private int clientNum = 0;
@@ -93,16 +92,16 @@ namespace JKClient {
 				this.UpdateUserInfo();
 			}
 		}
-		public ClientGame ClientGame => this.clientGame;
+		public ClientGame ClientGame { get; private set; }
 		private readonly ServerInfo serverInfo = new();
 		public ServerInfo ServerInfo {
 			get {
 				string serverInfoCSStr = this.GetConfigstring(GameState.ServerInfo);
 				var info = new InfoString(serverInfoCSStr);
 				this.serverInfo.Address = this.serverAddress;
-				if (this.clientGame?.ClientsInfo is {} clientsInfo) {
-					var clientInfoRange = Enumerable.Range(0, this.clientGame.ClientsInfo.Length);
-					this.serverInfo.PlayersInfo = clientInfoRange.Where(i => this.clientGame.ClientsInfo[i].InfoValid).Select(i => this.clientGame.ClientsInfo[i]).ToArray();
+				if (this.ClientGame?.ClientsInfo is {} clientsInfo) {
+					var clientInfoRange = Enumerable.Range(0, clientsInfo.Length);
+					this.serverInfo.PlayersInfo = clientInfoRange.Where(i => clientsInfo[i].InfoValid).Select(i => clientsInfo[i]).ToArray();
 					this.serverInfo.Clients = this.serverInfo.PlayersInfo.Length;
 				} else {
 					this.serverInfo.PlayersInfo = null;
@@ -168,7 +167,7 @@ namespace JKClient {
 				this.CheckForResend();
 				this.SetTime();
 				if (this.Status >= ConnectionStatus.Primed) {
-					bool processedSnapshots = this.clientGame.Frame(this.serverTime);
+					bool processedSnapshots = this.ClientGame.Frame(this.serverTime);
 					if (processedSnapshots) {
 						this.FrameExecuted?.Invoke(frameTime);
 					}

@@ -120,7 +120,7 @@ namespace JKClient {
 				this.ParseRMG(msg);
 			}
 			this.SystemInfoChanged();
-			this.clientGame = this.InitClientGame();
+			this.ClientGame = this.InitClientGame();
 			this.ServerInfoChanged?.Invoke(this.ServerInfo);
 		}
 		private void ParseRMG(in Message msg) {
@@ -182,7 +182,7 @@ namespace JKClient {
 			Common.MemSet(this.snapshots, 0);
 			Common.MemSet(this.entityBaselines, 0);
 			Common.MemSet(this.parseEntities, 0);
-			this.clientGame = null;
+			this.ClientGame = null;
 			this.ClientHandler.ClearState();
 		}
 		private void ClearConnection() {
