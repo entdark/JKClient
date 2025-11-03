@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
 #if NETSTANDARD2_1
@@ -16,7 +17,8 @@ namespace JKClient {
 		internal const int MaxGEntities = (1<<Common.GEntitynumBits);
 		internal const int GibHealth = -40;
 		public const string EscapeCharacter = "\u0019";
-		internal static long Milliseconds => (DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond);
+		private static readonly Stopwatch stopwatch = Stopwatch.StartNew();
+		internal static long Milliseconds => Common.stopwatch.ElapsedMilliseconds;
 #if NETSTANDARD2_1
 		private static Action<IntPtr, byte, int> memSetDelegate;
 #endif
