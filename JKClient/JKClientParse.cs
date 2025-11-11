@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+
 namespace JKClient {
 	public sealed partial class JKClient {
 		private const int PacketBackup = 32;
 		private const int PacketMask = (JKClient.PacketBackup-1);
-		private const int MaxParseEntities = 2048;
+		private const int MaxParseEntities = JKClient.PacketBackup * 256;
 #region ClientActive
 		private ClientSnapshot snap = new ClientSnapshot();
 		private int serverTime = 0;
