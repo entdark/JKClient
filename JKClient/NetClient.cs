@@ -26,7 +26,7 @@ namespace JKClient {
 			this.Started = true;
 			this.OnStart();
 			this.cts = new CancellationTokenSource();
-			Task.Run(async () => await this.Run(this.cts.Token), this.cts.Token)
+			Task.Factory.StartNew(async () => await this.Run(this.cts.Token), TaskCreationOptions.LongRunning)
 				.ContinueWith((t) => {
 					this.Stop(true);
 					if (restartOnFailure) {
