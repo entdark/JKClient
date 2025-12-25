@@ -219,8 +219,8 @@ namespace JKClient {
 			this.connectPacketCount++;
 			switch (this.Status) {
 			case ConnectionStatus.Connecting:
-				this.ClientHandler.RequestAuthorization((address, data2) => {
-					this.OutOfBandPrint(address, data2);
+				this.ClientHandler.RequestAuthorization((address, data) => {
+					this.OutOfBandPrint(address, data);
 				});
 				this.OutOfBandPrint(this.serverAddress, $"getchallenge {this.challenge}");
 				break;
