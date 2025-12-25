@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace JKClient {
 	public class Q3ClientGame : ClientGame {
@@ -18,14 +17,13 @@ namespace JKClient {
 			return 0;
 		}
 		protected override EntityEvent GetEntityEvent(int entityEvent) {
-			if (Enum.IsDefined(typeof(EntityEventQ3), entityEvent)
-				&& Enum.TryParse(((EntityEventQ3)entityEvent).ToString(), out EntityEvent result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(EntityEventQ3), entityEvent), out EntityEvent result)) {
 				return result;
 			}
 			return EntityEvent.None;
 		}
 		protected override int GetEntityFlag(EntityFlag entityFlag) {
-			if (Enum.TryParse(entityFlag.ToString(), out EntityFlagQ3 result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(EntityFlag), entityFlag), out EntityFlagQ3 result)) {
 				return (int)result;
 			}
 			return 0;
@@ -50,23 +48,21 @@ namespace JKClient {
 			}
 		}
 		protected override int GetPowerup(Powerup powerup) {
-			if (Enum.TryParse(powerup.ToString(), out PowerupQ3 result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(Powerup), powerup), out PowerupQ3 result)) {
 				return (int)result;
 			}
 			return 0;
 		}
 		protected override int GetWeapon(Weapon weapon) {
-			if (Enum.TryParse(weapon.ToString(), out WeaponQ3 result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(Weapon), weapon), out WeaponQ3 result)) {
 				return (int)result;
 			}
 			return 0;
 		}
 		public override Weapon GetWeapon(ref ClientEntity cent, out bool firing) {
-			firing = false;
-			if (Enum.IsDefined(typeof(WeaponQ3), cent.CurrentState.Weapon)) {
-				string ws = ((WeaponQ3)cent.CurrentState.Weapon).ToString();
-				firing = (cent.CurrentState.EntityFlags & (int)EntityFlagQ3.Firing) != 0;
-				return Enum.GetValues(typeof(Weapon)).Cast<Weapon>().FirstOrDefault(w => w.ToString() == ws);
+			firing = (cent.CurrentState.EntityFlags & (int)EntityFlagQ3.Firing) != 0;
+			if (Enum.TryParse(Enum.GetName(typeof(WeaponQ3), cent.CurrentState.Weapon), out Weapon weapon)) {
+				return weapon;
 			}
 			return Weapon.None;
 		}

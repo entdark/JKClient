@@ -123,14 +123,13 @@ namespace JKClient {
 			return 0;
 		}
 		protected override EntityEvent GetEntityEvent(int entityEvent) {
-			if (Enum.IsDefined(typeof(EntityEventJA), entityEvent)
-				&& Enum.TryParse(((EntityEventJA)entityEvent).ToString(), out EntityEvent result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(EntityEventJA), entityEvent), out EntityEvent result)) {
 				return result;
 			}
 			return EntityEvent.None;
 		}
 		protected override int GetEntityFlag(EntityFlag entityFlag) {
-			if (Enum.TryParse(entityFlag.ToString(), out EntityFlagJA result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(EntityFlag), entityFlag), out EntityFlagJA result)) {
 				return (int)result;
 			}
 			return 0;
@@ -146,22 +145,21 @@ namespace JKClient {
 			}
 		}
 		protected override int GetPowerup(Powerup powerup) {
-			if (Enum.TryParse(powerup.ToString(), out PowerupJA result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(Powerup), powerup), out PowerupJA result)) {
 				return (int)result;
 			}
 			return 0;
 		}
 		protected override int GetWeapon(Weapon weapon) {
-			if (Enum.TryParse(weapon.ToString(), out WeaponJA result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(Weapon), weapon), out WeaponJA result)) {
 				return (int)result;
 			}
 			return 0;
 		}
 		public override Weapon GetWeapon(ref ClientEntity cent, out bool altFire) {
 			altFire = (cent.CurrentState.EntityFlags & (int)EntityFlagJA.AltFiring) != 0;
-			if (Enum.IsDefined(typeof(WeaponJA), cent.CurrentState.Weapon)) {
-				string ws = ((WeaponJA)cent.CurrentState.Weapon).ToString();
-				return Enum.GetValues(typeof(Weapon)).Cast<Weapon>().FirstOrDefault(w => w.ToString() == ws);
+			if (Enum.TryParse(Enum.GetName(typeof(WeaponJA), cent.CurrentState.Weapon), out Weapon weapon)) {
+				return weapon;
 			}
 			return Weapon.None;
 		}

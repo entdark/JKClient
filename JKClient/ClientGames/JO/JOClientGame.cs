@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace JKClient {
 	public class JOClientGame : ClientGame {
@@ -18,14 +17,13 @@ namespace JKClient {
 			return 0;
 		}
 		protected override EntityEvent GetEntityEvent(int entityEvent) {
-			if (Enum.IsDefined(typeof(EntityEventJO), entityEvent)
-				&& Enum.TryParse(((EntityEventJO)entityEvent).ToString(), out EntityEvent result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(EntityEventJO), entityEvent), out EntityEvent result)) {
 				return result;
 			}
 			return EntityEvent.None;
 		}
 		protected override int GetEntityFlag(EntityFlag entityFlag) {
-			if (Enum.TryParse(entityFlag.ToString(), out EntityFlagJO result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(EntityFlag), entityFlag), out EntityFlagJO result)) {
 				return (int)result;
 			}
 			return 0;
@@ -45,22 +43,21 @@ namespace JKClient {
 			}
 		}
 		protected override int GetPowerup(Powerup powerup) {
-			if (Enum.TryParse(powerup.ToString(), out PowerupJO result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(Powerup), powerup), out PowerupJO result)) {
 				return (int)result;
 			}
 			return 0;
 		}
 		protected override int GetWeapon(Weapon weapon) {
-			if (Enum.TryParse(weapon.ToString(), out WeaponJO result)) {
+			if (Enum.TryParse(Enum.GetName(typeof(Weapon), weapon), out WeaponJO result)) {
 				return (int)result;
 			}
 			return 0;
 		}
 		public override Weapon GetWeapon(ref ClientEntity cent, out bool altFire) {
 			altFire = (cent.CurrentState.EntityFlags & (int)EntityFlagJO.AltFiring) != 0;
-			if (Enum.IsDefined(typeof(WeaponJO), cent.CurrentState.Weapon)) {
-				string ws = ((WeaponJO)cent.CurrentState.Weapon).ToString();
-				return Enum.GetValues(typeof(Weapon)).Cast<Weapon>().FirstOrDefault(w => w.ToString() == ws);
+			if (Enum.TryParse(Enum.GetName(typeof(WeaponJO), cent.CurrentState.Weapon), out Weapon weapon)) {
+				return weapon;
 			}
 			return Weapon.None;
 		}
