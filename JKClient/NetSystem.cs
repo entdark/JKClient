@@ -125,15 +125,14 @@ namespace JKClient {
 			}
 		}
 		public static async Task<NetAddress> StringToAddressAsync(string address, ushort port = 0) {
-			byte []ip;
 			int index = address.IndexOf(':');
 			if (port <= 0) {
-				port = index >= 0 && ushort.TryParse(address.Substring(index+1), NumberStyles.Integer, CultureInfo.InvariantCulture, out ushort p) ? p : NetSystem.PortServer;
+				port = index >= 0 && ushort.TryParse(address.Substring(index+1), NumberStyles.None, CultureInfo.InvariantCulture, out ushort p) ? p : NetSystem.PortServer;
 			}
 			if (index < 0) {
 				index = address.Length;
 			}
-			ip = IPAddress.TryParse(address.Substring(0, index), out IPAddress ipAddress) ? ipAddress.GetAddressBytes() : null;
+			byte []ip = IPAddress.TryParse(address.Substring(0, index), out IPAddress ipAddress) ? ipAddress.GetAddressBytes() : null;
 			if (ip == null) {
 				try {
 					var hostEntry = await Dns.GetHostEntryAsync(address);
